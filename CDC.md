@@ -18,3 +18,5 @@
 - gestion du nombre de places disponibles
 
 - catégories de places
+
+- éditer les billets
