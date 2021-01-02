@@ -54,7 +54,7 @@ De façon identique, chaque jeu de données est constitué de 8 fichiers :
 - `transfers.txt`
 - `trips.txt`
 
-![Schéma conceptuel des jeux de données horaires de la SNCF][./diagrammes/bdd_sncf_horaires.png]
+![Schéma conceptuel des jeux de données horaires de la SNCF](./diagrammes/bdd_sncf_horaires.png)
 
 Le schéma relationnel est le suivant :
 - agency(agency_id, agency_name, agency_url, agency_timezone, agency_lang)
@@ -191,8 +191,8 @@ Nous excluons ce fichier.
 Les fichiers de données SNCF sont lus dans leur forme brute par le programme `reservation`. 
 Seuls les champs nécessaires aux fonctions du programme sont conservés.
 
-![Schéma conceptuel des données traitées par le programme (noms des champs originaux)][./diagrammes/bdd_horaires_en.png]
+![Schéma conceptuel des données traitées par le programme (noms des champs originaux)](./diagrammes/bdd_horaires_en.png)
 
 Les champs sont francisés pour être plus explicites.
 
-![Schéma conceptuel des données traitées par le programme (noms des champs du programme)][./diagrammes/bdd_horaires_fr.png]
+![Schéma conceptuel des données traitées par le programme (noms des champs du programme)](./diagrammes/bdd_horaires_fr.png)
