@@ -1,5 +1,112 @@
 # Cahier des charges
 
+<!-- DANS LE FICHIER DES SUJETS
+  logiciel de réservation de place de trains pour une compagnie  nationale (SNCF). Seuls les trajets directs intérieurs sont à envisager. La réservation de places, retire le nombre de place des places disponibles. Prévoir plusieurs catégories de places, donc plusieurs prix. Le logiciel doit permettre d'afficher les horaires, les tarifs et d'effectuer les réservations. 
+-->
+
+<!-- MES NOTES LORS DE LA PRESENTATION DES SUJETS
+  Pareil (que l'avion), y a des trains différents. Les trains sont différents, n'ont pas le même nb de wagons, le même nb de place (tgv duplex)
+  Typologie de trains. 
+  1re classe, 2e classe, selon si ça existe sur les trains. Le train fait des escales : ça multiplie les possibilités par rapport à l'avion.
+  Peut-être gérer la variation du tarif selon le remplissage. 
+-->
+
+<!-- DANS LE MAIL DE JANVIER
+  Cahier des charges (CDC) - Analyse : Document WORD, PDF ou OpenOffice de 30 pages + ou - 5 pages (25 pages min - 35 pages max) : 
+  vous devez d’abord commencer par l’analyse « métier » c’est a dire expliquer le fonctionnement métier. 
+  Par exemple pour une bibliothèque il faut expliquer tout son fonctionnement comme si je ne connaissais rien. 
+  Vous présentez votre analyse, ce que vous avez compris, vos choix en termes de modélisation des données et de traitements. 
+  Vous expliquez vos difficultés rencontrées. Et seulement à la fin vous faites le lien avec votre programme (succinctement donc c’est pas la majorité des pages!). 
+-->
+
+## Présentation générale
+
+### Contexte
+
+La SNCF est une compagnie ferroviaire ayant entre autres activités le transport de voyageurs.
+Elle souhaite disposer d'un logiciel (programme ?) de réservation de place : `reservation`.
+
+### Portée
+
+`reservation` est un programme de réservation de place dans les différents modes de transport assurés par la SNCF.
+
+Il permet xx fonctions principales : (ne pas s'arrêter aux interfaces présentées à l'utilisateur ?)
+
+- la consultation d'horaires de voyage entre deux gares données à une date donnée ;
+- la consultation des tarifs de ces voyages selon (préciser plus tard ?)
+  - la classe du wagon
+  - (le profil du voyageur : carte de réduction)
+- la réservation de places
+- (la gestion des réservations d'un client)
+
+- la gestion des places
+- le calcul des tarifs de voyage
+
+`reservation` ne permet pas :
+
+- la réservation de voyages incluant des correspondances.
+
+### Définitions
+
+**gare** : (dire que c'est toutes les stations de départ et d'arrivée possibles parce que des fois je suppose que c'est des gares routières)
+
+**train** : tout véhicule dont la circulation est assurée par la SNCF et dont l'utilisateur peut réserver une place. Les trains sont de différents types, qu'ils circulent sur voie ferrée ou routière (TGV, INOUI, TER, OUIGO, Car).
+
+**voyage** (on peut changer de terme) : déplacement entre deux gares
+
+...
+
+### Vue d'ensemble
+
+Dire comment est structurée la suite du document
+
+## Analyse métier
+
+La SNCF assure la circulation de différents types de trains.
+
+
+### Voyage
+
+Le processus de réservation d'une place de train suit généralement les étapes suivantes :
+
+- choix de la gare/ville de départ
+- choix de la gare/ville d'arrivée
+- choix de la date
+- choix des options de voyage : classe de wagon, tarif particulier.
+
+Certaines villes possèdent plusieurs gares.
+C'est le cas des grandes villes et des villes possédant une gare historique et une gare TGV située en dehors de la ville sur une ligne à grande vitesse.
+Le voyageur peut souhaiter réserver une place pour un voyage au départ ou à l'arrivée d'une ville, indépendamment de la gare.
+Les résultats affichés doivent inclure les différentes gares d'une même ville.
+
+### Train
+
+Un train est composé de 
+
+
+
+Un voyageur/agent doit pouvoir consulter les horaires de voyages en indiquant :
+
+- la ville de départ
+- la ville d'arrivée
+
+Un voyageur/agent doit pouvoir réserver des places en choisissant :
+
+- la gare de départ
+- la gare d'arrivée
+- la date du voyage
+- le nombre de places
+
+
+
+
+## Spécifications (le lien avec notre programme)
+
+
+
+------------------
+
+
 ## Fonctions
 
 - afficher les horaires
