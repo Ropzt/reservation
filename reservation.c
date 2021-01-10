@@ -40,7 +40,7 @@ struct resultat { /*--- Creation du type structure resultat ---*/
 //  struct resultat *p_suiv      ;
 } ;
 
-struct resultat_nodate { /*--- Creation du type structure resultat sans la pr�cision de la date ---*/
+struct resultat_nodate { /*--- Creation du type structure resultat sans la précision de la date ---*/
   char dep_gare[MAXstrNOMGARE] ;
   char arr_gare[MAXstrNOMGARE] ;
   int  num_train               ;
@@ -59,15 +59,14 @@ struct resultat_nodate { /*--- Creation du type structure resultat sans la pr�
 } ;
 
 struct horaire *tab_horaires   ; /*--- Declaration de la variable tab_horaires ---*/
-struct resultat *tab_resultats ; /*--- Declaration de la variable tab_resultats ---*/
+//struct resultat *tab_resultats ; /*--- Declaration de la variable tab_resultats ---*/
 struct resultat_nodate *tab_resultats_nodate ; /*--- Declaration de la variable tab_resultats_nodate ---*/
 
 /* --- déclarations préliminaires --- */
 void chargement_horaires() ;
 void lance_recherche()     ;
 
-void recherche_gare_depart(char rechgare[], struct horaire gare_dep_trouve[], int *nb_gare_dep_trouve);
-void recherche_gare_arrivee(char rechgare[], struct horaire gare_arr_trouve[], int *nb_gare_arr_trouve) ;
+struct horaire * recherche_horaire(char rechgare[], int *nb_res_horaire) ;
 int compare(struct horaire gare_dep_trouve[], int *nb_gare_dep_trouve,struct horaire gare_arr_trouve[], int *nb_gare_arr_trouve );
 
 /* =========================== */
@@ -79,12 +78,15 @@ int main()
 
   int choix=-1 ; /* valeur lue au clavier (choix utilisateur) */
   
-  printf("Chargement des donnees en cours ... Veuillez Patienter, le programme va bientot demarrer\n");
+  printf("Chargement des données en cours... \nVeuillez patienter, le programme va bientôt démarrer\n\n");
 
   chargement_horaires() ; // chargement des données horaires
   
-  if(nbhoraire){
-    printf("Bienvenue chez SNCF Voyages.\n");
+  if(nbhoraire)
+  {
+    printf("===========================\n");
+    printf("Bienvenue chez SNCF Voyages\n");
+    printf("===========================\n");
   }
     
   while (choix != 0)
@@ -135,11 +137,11 @@ void chargement_horaires()
   char lettre;
   int  i, j, retour;
   
-  /* --- Allocation de mémoire aux structures tab_horaires --- */
+  /* --- Allocation de mémoire au tableau tab_horaires --- */
   tab_horaires = (struct horaire *) malloc(sizeof(struct horaire));
 
-  /*--- Ouverture fichier test --- */
-  //f1=fopen("./data_sncf/sncf_full_test1.txt", "r") ;
+  /*--- Ouverture fichier horaires --- */
+  //f1=fopen("./data_sncf/sncf_full_test.txt", "r") ;
   f1=fopen("./data_sncf/sncf_full.csv","r") ;
   
   i=nbhoraire ;
@@ -194,7 +196,7 @@ void chargement_horaires()
     i++;
     nbhoraire=i ;
     
-    /*--- realloc de la variable tab_horaires ---*/
+    /*--- realloc de mémoire au tableau tab_horaires ---*/
     tab_horaires = (struct horaire *) realloc(tab_horaires,sizeof(struct horaire) * (nbhoraire+1)) ;
   }
   
@@ -213,47 +215,47 @@ void chargement_horaires()
 /* --- Fonctions de recherche de voyage --- */
 /* ---------------------------------------- */
 
+/* Procédure lance_recherche() appelée par le menu */
 void lance_recherche()
 {
-  int  i, nbresdep=0, nbresarr=0, trouve=0;
+  int  i, nb_res_depart=0, nb_res_arrive=0, trouve=0;
   char garedep[MAXstrNOMGARE] ; // saisie utilisateur Gare de départ
   char garearr[MAXstrNOMGARE] ; // saisie utilisateur Gare d'arrivée
   int  datev                  ; // saisie utilisateur Date de voyage
-  struct horaire garedepres[100] ; // tableau de chaines quand il y a plusieurs gares dans la même ville // Jai modifie le type pour faire ressortir toutes les infos
-  struct horaire garearrres[100] ; // tableau de chaines quand il y a plusieurs gares dans la même ville // Pareil
-  
-  /* Départ */
-  printf("\nGare de départ : ");
-  scanf("%s",garedep) ;
-  convmaj(garedep) ;
-  recherche_gare_depart(garedep,garedepres,&nbresdep) ;
+  struct horaire *res_depart=NULL ; // pointeur de struct horaire pour les résultats au départ d'une gare
+  struct horaire *res_arrive=NULL ; // pointeur de struct horaire pour les résultats à l'arrivée d'une gare
 
-  if(nbresdep==0)
+  /* Départ */
+  printf("\nGare de départ : "); // invite de saisie
+  scanf("%s",garedep)          ; // récupération saisie utilisateur
+  convmaj(garedep)             ; // conversion en majuscule
+  res_depart = recherche_horaire(garedep,&nb_res_depart) ; // recherche_horaire reçoit la chaine saisie, le nombre de résultats et retourne un tableau de résultats
+
+  if(nb_res_depart==0) // Cas : pas de résultat au départ de la gare saisie
   {
     printf ("\nIl n'y a pas de train au départ de %s\n",garedep) ;
   }
-  else
-  {
-    
-    for (i=0; i < 20 ; i++) // à revoir après (on n'aura pas besoin de la boucle ici)
-    {
-      printf("%d; %s\n",garedepres[i].id ,garedepres[i].nom_gare ); 
-    }
+  else // Cas : des résultats au départ de la gare saisie
+  {    
+    // for (i=0; i < 10 ; i++) // à revoir après (on n'aura pas besoin de la boucle ici)
+    // {
+    //   printf("%d %s\n",res_depart[i].id ,res_depart[i].nom_gare ); 
+    // }
     
     /* Arrivée */
-    printf("Gare d'arrivée : ");
-    scanf("%s",garearr) ;
-    convmaj(garearr) ;
-    recherche_gare_arrivee(garearr,garearrres,&nbresarr) ;
+    printf("Gare d'arrivée : "); // invite de saisie
+    scanf("%s",garearr)        ; // récupération saisie utilisateur
+    convmaj(garearr)           ; // conversion en majuscule
+    res_arrive = recherche_horaire(garearr,&nb_res_arrive) ; // recherche_horaire reçoit la chaine saisie, le nombre de résultats et retourne un tableau de résultats
     
-    for (i=0; i < 20 ; i++) // à revoir après (on n'aura pas besoin de la boucle ici)
-    {
-      printf("%d; %s\n",garearrres[i].id ,garearrres[i].nom_gare); 
-    }
+    // for (i=0; i < 20 ; i++) // à revoir après (on n'aura pas besoin de la boucle ici)
+    // {
+    //   printf("%d; %s\n",res_arrive[i].id ,res_arrive[i].nom_gare); 
+    // }
     
     printf("comparaison en cours...\n");
     
-    trouve = compare(garedepres,&nbresdep,garearrres,&nbresarr);
+    trouve = compare(res_depart,&nb_res_depart,res_arrive,&nb_res_arrive);
     
     if(trouve==0)
     {
@@ -265,131 +267,67 @@ void lance_recherche()
       scanf("%",datev) ;
       if("il n'y a pas de train entre depart et arrivée à cette date")
       {
-        printf("\nAucun train ne circule entre %s et %s le 'date'\n",garedep, garearr, datev) ;
+        printf("\nAucun train ne circule entre %s et %s le %d\n",garedep, garearr, datev) ;
       }
-    }
-  }
-}
-
-void recherche_gare_depart(char rechgare[], struct horaire gare_dep_trouve[], int *nb_gare_dep_trouve)
-{
-  struct horaire unhoraire ;
-  int i ; // compteur horaire dans tab_horaires
-  int j ; // compteur caractère chaine
-  int k ; // compteur caractère sous-chaine
-  int position ;
-  int l=0 ; // compteur xième gare correspondante trouvée
-
-  struct horaire *horaires_dep_trouve ;
-
-  /* allocation de mémoire à la structure tab_resultats */
-  tab_resultats = (struct resultat *) malloc(sizeof(struct resultat));
-  /* allocation de mémoire à la structure horaires_dep_trouve */
-  horaires_dep_trouve = (struct horaire *) malloc(sizeof(struct horaire));
-
-
-  for (i=0;i<nbhoraire;i++)
-  {
-    unhoraire = tab_horaires[i] ;
-    for (j=0;unhoraire.nom_gare[j]!='\0';j++)
-    {
-      k=0;
-      if(unhoraire.nom_gare[j] == rechgare[k])
+      else
       {
-        position = j+1 ;
-        while (unhoraire.nom_gare[j] == rechgare[k])                                 // Jai modifie ton for(i=0; unhoraire.nom_gare[j] == rechgare[k];i++)
-        {
-          j++ ; // on va se faire engueuler de modifier le compteur dans la boucle
-          k++ ;
-        }
-
-        if(rechgare[k]=='\0')
-        {
-          //strcpy(gare_dep_trouve[l++],untrajet.nom_gare) ; // parce que je renvoyais un id en char
-          gare_dep_trouve[l] = unhoraire ;                                          // Je copie toutes les infos des gares trouvees 
-          horaires_dep_trouve[l++] = unhoraire ;
-          *nb_gare_dep_trouve=l ;
-
-          //printf("test 4 : %s\n",rechgare) ;
-          //tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (*nb_gare_dep_trouve+1));
-          horaires_dep_trouve = (struct horaire *) realloc(horaires_dep_trouve,sizeof(struct horaire) * (*nb_gare_dep_trouve+1));
-        }
-        else
-        {
-          j=position ;
-          position=0 ;
-        }
+        printf("C'est là que c'est velu...") ;
       }
     }
   }
-  /*
-  for(i=0;i<10;i++){
-    printf("%s\n",horaires_dep_trouve[i].nom_gare);
-  }
-  */
-  printf("%d\n", *nb_gare_dep_trouve);        // Affichage pour connaitre le nombre de resultats, a supprimer plus tard
 }
 
-void recherche_gare_arrivee(char rechgare[], struct horaire gare_arr_trouve[], int *nb_gare_arr_trouve)   //une simple copie/modif de celui plus haut
+/* Fonction de recherche d'horaires selon la gare saisie
+ (retourne un tableau d'horaires qui matchent la gare saisie) */
+struct horaire * recherche_horaire(char rechgare[], int *nb_res_horaire)
 {
-  struct horaire unhoraire ;
-  int i ; // compteur horaire dans tab_horaires
-  int j ; // compteur caractère chaine
-  int k ; // compteur caractère sous-chaine
-  int position ;
-  int l=0 ; // compteur xième gare correspondante trouvée
+  struct horaire unhoraire ;    // variable locale de type struct horaire
+  struct horaire *res_horaire ; // pointeur du tableau de résultats à retourner
+  int i        ; // compteur horaire dans tab_horaires
+  int j        ; // compteur caractère chaine
+  int k        ; // compteur caractère sous-chaine
+  int position ; // compteur de la position où le 1er caractère commun est trouvé
+  int l=0      ; // compteur xième gare correspondante trouvée
+  
+  /* allocation de mémoire au tableau de résultats res_horaire */
+  res_horaire = (struct horaire *) malloc(sizeof(struct horaire));
 
-  struct horaire *horaires_arr_trouve ;
-
-  /* allocation de mémoire à la structure tab_resultats */
-  tab_resultats = (struct resultat *) malloc(sizeof(struct resultat));
-  /* allocation de mémoire à la structure horaires_dep_trouve */
-  horaires_arr_trouve = (struct horaire *) malloc(sizeof(struct horaire));
-
-
-  for (i=0;i<nbhoraire;i++)
+  // boucle de comparaison de la saisie et du nom de gare du tableau d'horaires
+  for (i=0;i<nbhoraire;i++)                           // pour chaque ligne (de tab_horaires) de 0 à nbhoraires
   {
-    unhoraire = tab_horaires[i] ;
-    for (j=0;unhoraire.nom_gare[j]!='\0';j++)
+    unhoraire = tab_horaires[i] ;                     // copie de la ligne dans un struct horaire local
+    for (j=0;unhoraire.nom_gare[j]!='\0';j++)         // pour le caractère du nom de la gare, tant qu'il est différent de \O
     {
-      k=0;
-      if(unhoraire.nom_gare[j] == rechgare[k])
+      k=0;                                            // et du premier caractère de la saisie (sous-chaine)
+      if(unhoraire.nom_gare[j] == rechgare[k])        // si le caractère du nom de la gare est égal au caractère de la saisie
       {
-        position = j+1 ;
-        while (unhoraire.nom_gare[j] == rechgare[k])
+        position = j+1 ;                              // on mémorise la position de recherche.
+        while (unhoraire.nom_gare[j] == rechgare[k])  // tant que les deux caractères sont égaux...  // Jai modifie ton for(i=0; unhoraire.nom_gare[j] == rechgare[k];i++)
         {
-          j++ ; // on va se faire engueuler de modifier le compteur dans la boucle
-          k++ ;
+          j++ ;                                       // ... on passe au caractère suivant pour le nom de la gare
+          k++ ;                                       // ... et pour la saisie
         }
-
-        if(rechgare[k]=='\0')
+        if(rechgare[k]=='\0')                         // si la saisie (sous-chaine) arrive à la fin (= toute la sous-chaine a été trouvée dans la chaine)
         {
-          //strcpy(gare_dep_trouve[l++],untrajet.nom_gare) ; // parce que je renvoyais un id en char
-          gare_arr_trouve[l] = unhoraire ;
-          horaires_arr_trouve[l++] = unhoraire ;
-          *nb_gare_arr_trouve=l ;
-
-          //printf("test 4 : %s\n",rechgare) ;
-          //tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (*nb_gare_dep_trouve+1));
-          horaires_arr_trouve = (struct horaire *) realloc(horaires_arr_trouve,sizeof(struct horaire) * (*nb_gare_arr_trouve+1));
+          res_horaire = (struct horaire *) realloc(res_horaire,sizeof(struct horaire) * (*nb_res_horaire+1));
+                                                      // realloc de mémoire au tableau res_horaire
+          res_horaire[l] = unhoraire ;                // les infos horaires sont copiées dans le tableau res_horaire
+          l++ ;
+          *nb_res_horaire=l ;                         // le nombre d'horaires trouvés est actualisé
         }
-        else
+        else                                          // sinon (les caractères comparés de la chaine et de la sous-chaine sont différents)
         {
-          j=position ;
-          position=0 ;
+          j=position ;                                // on passe au caractère suivant la chaine (retour à la position retenue)
+          position=0 ;                                // la position est réinitialisée
         }
-      }
-    }
-  }
-  /*
-  for(i=0;i<10;i++){
-    printf("%s\n",horaires_arr_trouve[i].nom_gare);
-  }
-  */
-  printf("%d\n", *nb_gare_arr_trouve);
+      } /* fin du if caractère chaine = caractère sous-chaine (on passe au caractère de la chaine suivant en repartant du 1er caractère de la sous-chaine) */
+    } /* fin du for chaque caractère de la chaine */
+  } /* fin du for chaque ligne de tab_horaire */
+  return res_horaire ;
 }
 
-int compare(struct horaire gare_dep_trouve[], int *nb_gare_dep_trouve,struct horaire gare_arr_trouve[], int *nb_gare_arr_trouve ) //
+/* Fonction de comparaison des résultats départ/arrivée (recherche de match) */
+int compare(struct horaire gare_dep_trouve[], int *nb_gare_dep_trouve, struct horaire gare_arr_trouve[], int *nb_gare_arr_trouve ) //
 {
   int trouve=0;
   int i=0, j=0, l=0;
