@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 
-/* --- Déclaration des constantes --- */
+/* --- déclaration des constantes --- */
 #define MAXstrNOMGARE 100
 
 /* --- déclaration des variables globales --- */
@@ -40,12 +40,35 @@ struct resultat { /*--- Creation du type structure resultat ---*/
 //  struct resultat *p_suiv      ;
 } ;
 
+struct resultat_nodate { /*--- Creation du type structure resultat sans la pr�cision de la date ---*/
+  char dep_gare[MAXstrNOMGARE] ;
+  char arr_gare[MAXstrNOMGARE] ;
+  int  num_train               ;
+  int  lundi                   ;
+  int  mardi                   ;
+  int  mercredi                ;
+  int  jeudi                   ;
+  int  vendredi                ;
+  int  samedi                  ;
+  int  dimanche                ;
+  int  heure_dep               ;
+  int  heure_arr               ;
+  char type [10]               ;
+//  struct resultat_nodate *p_prec      ;
+//  struct resultat_nodate *p_suiv      ;
+} ;
+
 struct horaire *tab_horaires   ; /*--- Declaration de la variable tab_horaires ---*/
 struct resultat *tab_resultats ; /*--- Declaration de la variable tab_resultats ---*/
-  
+struct resultat_nodate *tab_resultats_nodate ; /*--- Declaration de la variable tab_resultats_nodate ---*/
+
 /* --- déclarations préliminaires --- */
 void chargement_horaires() ;
 void lance_recherche()     ;
+
+void recherche_gare_depart(char rechgare[], struct horaire gare_dep_trouve[], int *nb_gare_dep_trouve);
+void recherche_gare_arrivee(char rechgare[], struct horaire gare_arr_trouve[], int *nb_gare_arr_trouve) ;
+int compare(struct horaire gare_dep_trouve[], int *nb_gare_dep_trouve,struct horaire gare_arr_trouve[], int *nb_gare_arr_trouve );
 
 /* =========================== */
 /* === Programme principal === */
@@ -55,9 +78,15 @@ int main()
 {
 
   int choix=-1 ; /* valeur lue au clavier (choix utilisateur) */
+  
+  printf("Chargement des donnees en cours ... Veuillez Patienter, le programme va bientot demarrer\n");
 
   chargement_horaires() ; // chargement des données horaires
   
+  if(nbhoraire){
+    printf("Bienvenue chez SNCF Voyages.\n");
+  }
+    
   while (choix != 0)
   {
     printf("\n-1- Réserver\n") ;
@@ -172,11 +201,11 @@ void chargement_horaires()
   /*--- Fermeture fichier ---*/
   fclose(f1);
     
-  /*--- Test d'affichage ---*/
+  /*--- Test d'affichage ---
   for(i=0;i<100;i++)
   {
     printf("%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%s;%s\n", tab_horaires[i].id , tab_horaires[i].arrive , tab_horaires[i].depart , tab_horaires[i].stop_seq , tab_horaires[i].num_train , tab_horaires[i].lundi , tab_horaires[i].mardi , tab_horaires[i].mercredi , tab_horaires[i].jeudi , tab_horaires[i].vendredi , tab_horaires[i].samedi , tab_horaires[i].dimanche , tab_horaires[i].capacite , tab_horaires[i].type , tab_horaires[i].nom_gare  );
-  } 
+  } */
 }
 
 
@@ -184,18 +213,15 @@ void chargement_horaires()
 /* --- Fonctions de recherche de voyage --- */
 /* ---------------------------------------- */
 
-// à replacer là-haut :
-void recherche_gare_depart(char rechgare[], int gare_dep_trouve[], int *nb_gare_dep_trouve);
-void recherche_gare_arrivee() ;
-
 void lance_recherche()
 {
-  int  i, nbresdep=0;
+  int  i, nbresdep=0, nbresarr=0, trouve=0;
   char garedep[MAXstrNOMGARE] ; // saisie utilisateur Gare de départ
   char garearr[MAXstrNOMGARE] ; // saisie utilisateur Gare d'arrivée
   int  datev                  ; // saisie utilisateur Date de voyage
-  int  garedepres[20] ; // tableau de chaines quand il y a plusieurs gares dans la même ville
-
+  struct horaire garedepres[100] ; // tableau de chaines quand il y a plusieurs gares dans la même ville // Jai modifie le type pour faire ressortir toutes les infos
+  struct horaire garearrres[100] ; // tableau de chaines quand il y a plusieurs gares dans la même ville // Pareil
+  
   /* Départ */
   printf("\nGare de départ : ");
   scanf("%s",garedep) ;
@@ -208,17 +234,28 @@ void lance_recherche()
   }
   else
   {
-    for (i=0; i < nbresdep ; i++) // à revoir après (on n'aura pas besoin de la boucle ici)
+    
+    for (i=0; i < 20 ; i++) // à revoir après (on n'aura pas besoin de la boucle ici)
     {
-      printf("%d\n",garedepres[i] ); 
+      printf("%d; %s\n",garedepres[i].id ,garedepres[i].nom_gare ); 
     }
+    
     /* Arrivée */
     printf("Gare d'arrivée : ");
     scanf("%s",garearr) ;
     convmaj(garearr) ;
-    printf("%s",garedep) ;
-    //recherche_gare_arrivee() ;
-    if("il n'y a pas de correspondances entre gare dep et gare arr")
+    recherche_gare_arrivee(garearr,garearrres,&nbresarr) ;
+    
+    for (i=0; i < 20 ; i++) // à revoir après (on n'aura pas besoin de la boucle ici)
+    {
+      printf("%d; %s\n",garearrres[i].id ,garearrres[i].nom_gare); 
+    }
+    
+    printf("comparaison en cours...\n");
+    
+    trouve = compare(garedepres,&nbresdep,garearrres,&nbresarr);
+    
+    if(trouve==0)
     {
       printf ("\nIl n'y a pas de liaison entre %s et %s\n",garedep, garearr) ;
     }
@@ -234,7 +271,7 @@ void lance_recherche()
   }
 }
 
-void recherche_gare_depart(char rechgare[], int gare_dep_trouve[], int *nb_gare_dep_trouve)
+void recherche_gare_depart(char rechgare[], struct horaire gare_dep_trouve[], int *nb_gare_dep_trouve)
 {
   struct horaire unhoraire ;
   int i ; // compteur horaire dans tab_horaires
@@ -260,7 +297,7 @@ void recherche_gare_depart(char rechgare[], int gare_dep_trouve[], int *nb_gare_
       if(unhoraire.nom_gare[j] == rechgare[k])
       {
         position = j+1 ;
-        while (unhoraire.nom_gare[j] == rechgare[k])
+        while (unhoraire.nom_gare[j] == rechgare[k])                                 // Jai modifie ton for(i=0; unhoraire.nom_gare[j] == rechgare[k];i++)
         {
           j++ ; // on va se faire engueuler de modifier le compteur dans la boucle
           k++ ;
@@ -269,7 +306,7 @@ void recherche_gare_depart(char rechgare[], int gare_dep_trouve[], int *nb_gare_
         if(rechgare[k]=='\0')
         {
           //strcpy(gare_dep_trouve[l++],untrajet.nom_gare) ; // parce que je renvoyais un id en char
-          //gare_dep_trouve[l++] = unhoraire.id ;
+          gare_dep_trouve[l] = unhoraire ;                                          // Je copie toutes les infos des gares trouvees 
           horaires_dep_trouve[l++] = unhoraire ;
           *nb_gare_dep_trouve=l ;
 
@@ -285,9 +322,118 @@ void recherche_gare_depart(char rechgare[], int gare_dep_trouve[], int *nb_gare_
       }
     }
   }
+  /*
+  for(i=0;i<10;i++){
+    printf("%s\n",horaires_dep_trouve[i].nom_gare);
+  }
+  */
+  printf("%d\n", *nb_gare_dep_trouve);        // Affichage pour connaitre le nombre de resultats, a supprimer plus tard
 }
 
-void recherche_gare_arrivee(char rechgare[], int garearrtrouve[], int *nb_gare_arr_trouve)
+void recherche_gare_arrivee(char rechgare[], struct horaire gare_arr_trouve[], int *nb_gare_arr_trouve)   //une simple copie/modif de celui plus haut
 {
+  struct horaire unhoraire ;
+  int i ; // compteur horaire dans tab_horaires
+  int j ; // compteur caractère chaine
+  int k ; // compteur caractère sous-chaine
+  int position ;
+  int l=0 ; // compteur xième gare correspondante trouvée
 
+  struct horaire *horaires_arr_trouve ;
+
+  /* allocation de mémoire à la structure tab_resultats */
+  tab_resultats = (struct resultat *) malloc(sizeof(struct resultat));
+  /* allocation de mémoire à la structure horaires_dep_trouve */
+  horaires_arr_trouve = (struct horaire *) malloc(sizeof(struct horaire));
+
+
+  for (i=0;i<nbhoraire;i++)
+  {
+    unhoraire = tab_horaires[i] ;
+    for (j=0;unhoraire.nom_gare[j]!='\0';j++)
+    {
+      k=0;
+      if(unhoraire.nom_gare[j] == rechgare[k])
+      {
+        position = j+1 ;
+        while (unhoraire.nom_gare[j] == rechgare[k])
+        {
+          j++ ; // on va se faire engueuler de modifier le compteur dans la boucle
+          k++ ;
+        }
+
+        if(rechgare[k]=='\0')
+        {
+          //strcpy(gare_dep_trouve[l++],untrajet.nom_gare) ; // parce que je renvoyais un id en char
+          gare_arr_trouve[l] = unhoraire ;
+          horaires_arr_trouve[l++] = unhoraire ;
+          *nb_gare_arr_trouve=l ;
+
+          //printf("test 4 : %s\n",rechgare) ;
+          //tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (*nb_gare_dep_trouve+1));
+          horaires_arr_trouve = (struct horaire *) realloc(horaires_arr_trouve,sizeof(struct horaire) * (*nb_gare_arr_trouve+1));
+        }
+        else
+        {
+          j=position ;
+          position=0 ;
+        }
+      }
+    }
+  }
+  /*
+  for(i=0;i<10;i++){
+    printf("%s\n",horaires_arr_trouve[i].nom_gare);
+  }
+  */
+  printf("%d\n", *nb_gare_arr_trouve);
+}
+
+int compare(struct horaire gare_dep_trouve[], int *nb_gare_dep_trouve,struct horaire gare_arr_trouve[], int *nb_gare_arr_trouve ) //
+{
+  int trouve=0;
+  int i=0, j=0, l=0;
+  tab_resultats_nodate = (struct resultat_nodate *) malloc(sizeof(struct resultat_nodate));           // une structure avec un peu plus d'infos que resultat
+  
+  printf("%d ; %s : %d\n", gare_dep_trouve[i].id, gare_dep_trouve[i].nom_gare, gare_dep_trouve[i].stop_seq);  // simple test d'affichage, c'est ici que j'ai vu le probleme de transfert
+  printf("%d ; %s : %d\n", gare_arr_trouve[i].id, gare_arr_trouve[i].nom_gare, gare_arr_trouve[i].stop_seq);
+  
+  while(i<*nb_gare_arr_trouve){                                                     // pour chaque arrivee, on test tous les departs
+    while(j<*nb_gare_dep_trouve){
+      if( gare_dep_trouve[j].id == gare_arr_trouve[i].id)                       // condition id = id
+      {
+        if(gare_dep_trouve[j].stop_seq < gare_arr_trouve[i].stop_seq)          // condition depart avant arrivee
+        {
+
+          strcpy(tab_resultats_nodate[l].dep_gare, gare_dep_trouve[j].nom_gare) ;   // copie de toutes les infos selon la structure resultat_nodate
+          strcpy(tab_resultats_nodate[l].arr_gare, gare_arr_trouve[i].nom_gare) ;
+            tab_resultats_nodate[l].num_train = gare_dep_trouve[j].num_train ;
+          tab_resultats_nodate[l].lundi     = gare_dep_trouve[j].lundi     ;
+          tab_resultats_nodate[l].mardi     = gare_dep_trouve[j].mardi     ;
+          tab_resultats_nodate[l].mercredi  = gare_dep_trouve[j].mercredi  ;
+          tab_resultats_nodate[l].jeudi     = gare_dep_trouve[j].jeudi     ;
+          tab_resultats_nodate[l].vendredi  = gare_dep_trouve[j].vendredi  ;
+          tab_resultats_nodate[l].samedi    = gare_dep_trouve[j].samedi    ;
+          tab_resultats_nodate[l].dimanche  = gare_dep_trouve[j].dimanche  ;
+          tab_resultats_nodate[l].heure_dep = gare_dep_trouve[j].depart    ;
+          tab_resultats_nodate[l].heure_arr = gare_arr_trouve[i].arrive    ;
+          strcpy(tab_resultats_nodate[l].type, gare_dep_trouve[j].type)    ;
+          l++;
+          trouve++;
+          printf("%d\n", trouve);                                               // evidemment ce printf n'a pas encore marche pour moi
+          tab_resultats_nodate = (struct resultat_nodate *) realloc(tab_resultats_nodate,sizeof(struct resultat_nodate) * (trouve));
+          
+        }// fin du if2
+      }// fin du if1
+      j++;                 // increment du while pour les depart
+    }// fin du while2
+    i++;                     // increment du while pour les arrivees
+  }// fin du while1 
+  
+  for(i=0;i<trouve;i++){    // affichage de test, n'a pas encore marche evidement
+    printf("%s ; %s ; %d ; %d ; %d\n", tab_resultats_nodate[i].dep_gare, tab_resultats_nodate[i].arr_gare, tab_resultats_nodate[i].num_train, tab_resultats_nodate[i].heure_dep, tab_resultats_nodate[i].heure_arr );
+  }
+     
+  return(trouve);          // on retourne trouve qui nous servira dans le if de lance_recherche pour passer � la date, compare() est donc une fonction en int
+  
 }
