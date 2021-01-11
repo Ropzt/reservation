@@ -59,15 +59,13 @@ struct resultat { /*--- Creation du type structure resultat ---*/
 /* --- déclaration des variables globales --- */
 int nbhoraire=0 ; // nb de données horaires
 struct horaire *tab_horaires   ; /*--- Declaration de la variable tab_horaires ---*/
-//struct resultat *tab_resultats ; /*--- Declaration de la variable tab_resultats ---*/
-//struct resultat_nodate *tab_resultats_nodate ; /*--- Declaration de la variable tab_resultats_nodate ---*/
 
 /* --- déclarations préliminaires --- */
 void chargement_horaires() ;
 void chargement_horaires_alternatif() ;
 void lance_recherche()     ;
 struct horaire * recherche_horaire(char rechgare[], int *nb_res_horaire) ;
-struct resultat_nodate * compare(struct horaire gare_dep_trouve[], int *nb_gare_dep_trouve, struct horaire gare_arr_trouve[], int *nb_gare_arr_trouve, int *nb_res_trouve ) ;
+struct resultat_nodate * compare(struct horaire gare_dep_trouve[], int nb_gare_dep_trouve, struct horaire gare_arr_trouve[], int nb_gare_arr_trouve, int *nb_res_trouve ) ;
 
 /* =========================== */
 /* === Programme principal === */
@@ -75,7 +73,6 @@ struct resultat_nodate * compare(struct horaire gare_dep_trouve[], int *nb_gare_
 
 int main()
 {
-
   int choix=-1 ; /* valeur lue au clavier (choix utilisateur) */
   
   printf("Chargement des données en cours... \nVeuillez patienter, le programme va bientôt démarrer\n\n");
@@ -127,11 +124,14 @@ void convmaj(char chaine[])
     chaine[i] = toupper(chaine[i]) ;
   }
 }
+
 /* -------------------------------------------- */
 /* --- Procédures de chargement des données --- */
 /* -------------------------------------------- */
 
+// ~~~~~~~~~~~
 /* --- Chargement des données horaires --- */
+// ~~~~~~~~~~~
 void chargement_horaires_alternatif()
 {
   FILE *f1;
@@ -216,7 +216,9 @@ void chargement_horaires_alternatif()
   fclose(f1) ;
 }
 
+// ~~~~~~~~~~~
 /* --- Chargement des données horaires --- */
+// ~~~~~~~~~~~
 void chargement_horaires()
 {
   FILE *f1;
@@ -338,7 +340,7 @@ void lance_recherche()
     convmaj(garearr)           ; // conversion en majuscule
     res_arrive = recherche_horaire(garearr,&nb_res_arrive) ; // recherche_horaire reçoit la chaine saisie, le nombre de résultats et retourne un tableau de résultats
     
-    tab_res_nodate = compare(res_depart,&nb_res_depart,res_arrive,&nb_res_arrive,&nb_res_trouve);
+    tab_res_nodate = compare(res_depart,nb_res_depart,res_arrive,nb_res_arrive,&nb_res_trouve);
     
     if(nb_res_trouve==0)
     {
@@ -417,7 +419,7 @@ struct horaire * recherche_horaire(char rechgare[], int *nb_res_horaire)
 /* Fonction de comparaison des résultats départ/arrivée 
   (retourne un tableau des résultats, construit à partir des match) */
 // ~~~~~~~~~~~
-struct resultat_nodate * compare(struct horaire gare_dep_trouve[], int *nb_gare_dep_trouve, struct horaire gare_arr_trouve[], int *nb_gare_arr_trouve, int *nb_res_trouve ) //
+struct resultat_nodate * compare(struct horaire gare_dep_trouve[], int nb_gare_dep_trouve, struct horaire gare_arr_trouve[], int nb_gare_arr_trouve, int *nb_res_trouve ) //
 {
   int i=0 ; // compteur résultats à l'arrivée
   int j=0 ; // compteur résultats au départ
@@ -427,9 +429,9 @@ struct resultat_nodate * compare(struct horaire gare_dep_trouve[], int *nb_gare_
   /* allocation de mémoire au tableau de résultats tab_resultats_nodate */
   tab_resultats_nodate = (struct resultat_nodate *) malloc(sizeof(struct resultat_nodate));
 
-  for(i=0 ; i<*nb_gare_arr_trouve ; i++)                                          // pour chaque arrivee
+  for(i=0 ; i<nb_gare_arr_trouve ; i++)                                          // pour chaque arrivee
   {                                                   
-    for (j=0 ; j<*nb_gare_dep_trouve ; j++)
+    for (j=0 ; j<nb_gare_dep_trouve ; j++)
     {                                                 // pour chaque départ
       if( gare_dep_trouve[j].id == gare_arr_trouve[i].id)                         // condition id départ = id arrivée
       {
