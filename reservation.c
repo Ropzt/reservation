@@ -113,6 +113,9 @@ int main()
               break ;
       case 3: printf("à faire : mes billets\n");
               break ;
+      case 0: printf("\nÀ bientôt sur SNCF Voyages !\n");
+              break ;
+      default: printf("\nDésolés, nous n'avons pas compris votre choix, recommencez\n") ; break ;
     } /* Fin du switch */
   } /* Fin du while */
 } /* Fin du main */
@@ -362,11 +365,11 @@ void lance_recherche()
     }
     else // Cas : des résultats entre la gare de départ et la gare d'arrivée
     {
-  	  /* -- Date -- */
+      /* -- Date -- */
       date_sys(&jour_sys, &mois_sys, &annee_sys)       ; // récupère la date du système
   // printf("Nous somme le %d/%d/%d\n", jour_sys, mois_sys, annee_sys) ;
       printf("Entrez une date (format JJ/MM/AAAA) : ") ; // invite de saisie
-  	  scanf("%d/%d/%d",&jour, &mois, &annee)           ; // récupération saisie utilisateur date de voyage
+      scanf("%d/%d/%d",&jour, &mois, &annee)           ; // récupération saisie utilisateur date de voyage
       while ((jour_sys > jour) | (mois_sys > mois) | (annee_sys > annee))
       {
         printf("\nNous ne proposons pas de voyage dans le passé\n") ;
@@ -376,7 +379,7 @@ void lance_recherche()
         scanf("%d/%d/%d",&jour, &mois, &annee)          ; // récupération saisie utilisateur date de voyage
       }
       j_semaine = jour_semaine(jour, mois, annee, jour_sys, mois_sys, annee_sys)     ; // calcul du jour de la semaine de la date de voyage
-    	/*
+      /*
       strcpy(date_rech,jour) ;
       strcat(date_rech,'/')  ;
       strcat(date_rech,mois) ;
@@ -393,23 +396,23 @@ void lance_recherche()
       }
       else
       {
-        while (choix2 != 5)
+        while (choix2 != 0)
         {
-      		printf("\n") ;
-          printf("------------------------------------------------------------------------------------\n") ;
-          printf(" n° | Gare de départ         | Gare d'arrivée         | numéro | hh:mm| hh:mm| Type\n") ;
-          printf("------------------------------------------------------------------------------------\n") ;
-        	for(i=0;i<nb_res_date;i++)
+          printf("\n") ;
+          printf("--------------------------------------------------------------------------------------\n") ;
+          printf(" n° | Gare de départ         | Gare d'arrivée         | numéro | hh:mm | hh:mm | Type\n") ;
+          printf("--------------------------------------------------------------------------------------\n") ;
+          for(i=0;i<nb_res_date;i++)
           {
-            printf("%3d | %-22s | %-22s | %6d | %4d | %4d | %s\n", i+1, tab_res[i].dep_gare, tab_res[i].arr_gare, tab_res[i].num_train, tab_res[i].heure_dep, tab_res[i].heure_arr, tab_res[i].type) ;
-  		    }
-          printf("------------------------------------------------------------------------------------\n") ;
+            printf("%3d | %-22s | %-22s | %6d | %5d | %5d | %s\n", i+1, tab_res[i].dep_gare, tab_res[i].arr_gare, tab_res[i].num_train, tab_res[i].heure_dep, tab_res[i].heure_arr, tab_res[i].type) ;
+          }
+          printf("--------------------------------------------------------------------------------------\n") ;
           printf("\n") ;
           printf("-1- Choisir un train circulant le %d %d/%d/%d\n",j_semaine, jour, mois, annee) ; // faire une fonction qui actualise la date (mutualiser avec jour_semaine ?)
           printf("-2- Voir les trains du jour précédent\n") ;
           printf("-3- Voir les trains du jour suivant\n") ;
           printf("-4- Modifier la recherche\n") ;
-          printf("-5- Retour à l'accueil\n") ;
+          printf("-0- Retour à l'accueil\n") ;
           printf("\nChoix : ") ;
           scanf("%d",&choix2) ;
 
@@ -441,7 +444,7 @@ void lance_recherche()
               break;
             case 4: printf("c'est peut-être pas la peine de faire cette entrée si c'est pour demander 'voulez vous changer le départ, oui, non, voulez-vous changer l'arrivée, oui, non etc.\n") ;
             break;
-            case 5: break;
+            case 0: break;
             default: printf("\nDésolés, nous n'avons pas compris votre choix, recommencez\n") ; break ;
           }
         }
@@ -598,78 +601,78 @@ int jour_semaine(int jour_rech, int mois_rech, int annee_rech, int jour, int moi
   for(i=annee; i<=annee_rech;i++)  /* Est-ce qu'on a vraiment besoin de ça ? 
   On n'a qu'à juste utiliser le if qui dit si annee_rech est bissextile*/
   {                              
-  	if((i % 4 == 0 && i % 100 != 0) || i % 400 == 0)
+    if((i % 4 == 0 && i % 100 != 0) || i % 400 == 0)
     {
-  		annee_bi[j++]=i;
-  	}
+      annee_bi[j++]=i;
+    }
   }
   j=0;
 
   /* -- Incrementation des jours -- */
   while((jour != jour_rech) | (mois != mois_rech) | (annee != annee_rech)) // tant qu'on n'atteint pas la date recherchée
   {                                                                        // on incrémente les 4 paramètres de date
-  	switch(mois)                                                           // (jour et mois selon le nombre de jours du mois)
-  	{
-  		case 1 : case 3 : case 5 : case 7 : case 8 : case 10 : case 12 : // les mois de 31 jours
-  			if(jour<31)            // si le jour n'est pas le 31
+    switch(mois)                                                           // (jour et mois selon le nombre de jours du mois)
+    {
+      case 1 : case 3 : case 5 : case 7 : case 8 : case 10 : case 12 : // les mois de 31 jours
+        if(jour<31)            // si le jour n'est pas le 31
         {
-  				jour++;              // incrémentation du jour
-  			}
+          jour++;              // incrémentation du jour
+        }
         else                   // si le jour est le 31 (dernier du mois)
         {
-  				jour=1;              // le prochain jour est le 1er
-  				mois++;              // du mois suivant
-  			}
-  			break;
-  		case 2 :                 // en février
-  			if(annee==annee_bi[j]) // si l'année est bissextile
+          jour=1;              // le prochain jour est le 1er
+          mois++;              // du mois suivant
+        }
+        break;
+      case 2 :                 // en février
+        if(annee==annee_bi[j]) // si l'année est bissextile
         {
-  				if(jour<29)          // si le jour n'est pas 29 (dernier du mois)
+          if(jour<29)          // si le jour n'est pas 29 (dernier du mois)
           {
-  					jour++;	           // incrémentation du jour
-  				}
+            jour++;            // incrémentation du jour
+          }
           else                 // sinon (le jour est le dernier du mois)
           {
-  					jour=1;            // le prochain jour est le 01/03
-  					mois++;
-  					// j++;
-  				}
-  			}
+            jour=1;            // le prochain jour est le 01/03
+            mois++;
+            // j++;
+          }
+        }
         else                   // si l'année n'est pas bissextile
         {
-  				if(jour<28)          // si le jour n'est pas 28 (dernier du mois)
+          if(jour<28)          // si le jour n'est pas 28 (dernier du mois)
           {         
-  					jour++;            // incrémentation du jour
-  				}
+            jour++;            // incrémentation du jour
+          }
           else                 // sinon (le jour est le dernier du mois)
           {
-  					jour=1;            // le prochain jour est le 01/03
-  					mois++;
-  				}
-  			}
-  			break;
-  		default :                // pour tous les autres mois (ceux de 30 jours)
-  			if(jour<30)            // si le jour n'est pas le 30 (dernier du mois)
+            jour=1;            // le prochain jour est le 01/03
+            mois++;
+          }
+        }
+        break;
+      default :                // pour tous les autres mois (ceux de 30 jours)
+        if(jour<30)            // si le jour n'est pas le 30 (dernier du mois)
         {
-  				jour++;              // incrémentation du jour
-  			}
+          jour++;              // incrémentation du jour
+        }
         else                   // sinon (le jour est le dernier du mois)
         {
-  				jour=1;              // le prochain jour est le 1er
-  				mois++;              // du mois suivant
-  			}
-  			break;
-  	}
-  	if(mois==13)                                                          // (année si on a changé d'année dans le switch)
-  	{
+          jour=1;              // le prochain jour est le 1er
+          mois++;              // du mois suivant
+        }
+        break;
+    }
+    if(mois==13)                                                          // (année si on a changé d'année dans le switch)
+    {
       mois=1;
-  		annee++;
-  	}
-  	j_semaine++;                                                          // (jour de la semaine)
-  	if (j_semaine==7)
-  		j_semaine=0;                                                        // remise à 0 si jour de la semaine 7 (convention : 0 à 6)          
+      annee++;
+    }
+    j_semaine++;                                                          // (jour de la semaine)
+    if (j_semaine==7)
+      j_semaine=0;                                                        // remise à 0 si jour de la semaine 7 (convention : 0 à 6)          
   } /* fin du while d'incrémentation d'un jour */
-  	return j_semaine; // renvoie un int
+    return j_semaine; // renvoie un int
 }
 
 // ~~~~~~~~~~~
@@ -678,145 +681,145 @@ int jour_semaine(int jour_rech, int mois_rech, int annee_rech, int jour, int moi
 // ~~~~~~~~~~~
 struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int *nb_res_nodate, int j_semaine, int *nb_res_date  /*, char date_rech[SizeDate]*/ )       //la plus belle des fonctions
 {
-	
+  
   // printf("passage dans date : jour de la semaine %d\n", j_semaine);
   // printf("passage dans date : numéro de train du 2e résultat du tableau de résultats no date %d\n", tab_res_nodate[1].num_train);     // ces 2 printf ne s'allument pas, la fonction n'arrive donc pas a s'executer
-  int i=0 ; // compteur de tab_resultat_nodate										// j'ai mis en commentaire toutes les mentions de la date dans la structure resultat jusqu'a trouver comment convertir proprement
+  int i=0 ; // compteur de tab_resultat_nodate                    // j'ai mis en commentaire toutes les mentions de la date dans la structure resultat jusqu'a trouver comment convertir proprement
   int j=0 ; // compteur de tab_resultat
   struct resultat *tab_resultats ; // pointeur du tableau de résultats communs à retourner
   
   /* allocation de mémoire au tableau de résultats tab_resultats */
   tab_resultats = (struct resultat *) malloc(sizeof(struct resultat));
-	
-	switch(j_semaine)        // en fonction de j_semaine, on cherche dans la bonne colonne
+  
+  switch(j_semaine)        // en fonction de j_semaine, on cherche dans la bonne colonne
   {
-		case 0: 
-			for(i=0;i<*nb_res_nodate;i++)
+    case 0: 
+      for(i=0;i<*nb_res_nodate;i++)
       {
-				if(tab_res_nodate[i].dimanche)
+        if(tab_res_nodate[i].dimanche)
         {
-					strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ;
+          strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ;
           strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
-          // strcpy(tab_resultats[j].date    , date_rech) 			  	        ;
+          // strcpy(tab_resultats[j].date    , date_rech)                   ;
           strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-        	tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
+          tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
           tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
-         	tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
-          			
+          tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
+                
           j++;
           tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
-				}
-			}
-			break;
-		case 1:
-			for(i=0;i<*nb_res_nodate;i++)
+        }
+      }
+      break;
+    case 1:
+      for(i=0;i<*nb_res_nodate;i++)
       {
-				if(tab_res_nodate[i].lundi)
+        if(tab_res_nodate[i].lundi)
         {
-					strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
-          strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
-          // strcpy(tab_resultats[j].date    , date_rech)                  ;
-          strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-        	tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
-          tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
-         	tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
-          			
-          j++;
-          tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
-				}
-			}
-			break;
-		case 2:
-			for(i=0;i<*nb_res_nodate;i++)
-      {
-				if(tab_res_nodate[i].mardi)
-        {
-					strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
+          strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
           strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
           // strcpy(tab_resultats[j].date    , date_rech)                  ;
           strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-        	tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
+          tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
           tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
-         	tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
-          			
+          tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
+                
           j++;
           tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
-				}
-			}
-			break;
-		case 3:
-			for(i=0;i<*nb_res_nodate;i++)
+        }
+      }
+      break;
+    case 2:
+      for(i=0;i<*nb_res_nodate;i++)
       {
-				if(tab_res_nodate[i].mercredi)
+        if(tab_res_nodate[i].mardi)
         {
-					strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
+          strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
           strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
           // strcpy(tab_resultats[j].date    , date_rech)                  ;
           strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-        	tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
+          tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
           tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
-         	tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
-          			
+          tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
+                
           j++;
           tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
-				}
-			}
-			break;
-		case 4:
-			for(i=0;i<*nb_res_nodate;i++)
+        }
+      }
+      break;
+    case 3:
+      for(i=0;i<*nb_res_nodate;i++)
       {
-				if(tab_res_nodate[i].jeudi)
+        if(tab_res_nodate[i].mercredi)
         {
-					strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
+          strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
           strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
           // strcpy(tab_resultats[j].date    , date_rech)                  ;
           strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-        	tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
+          tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
           tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
-         	tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
-          			
+          tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
+                
           j++;
           tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
-				}
-			}
-			break;
-		case 5:
-			for(i=0;i<*nb_res_nodate;i++)
+        }
+      }
+      break;
+    case 4:
+      for(i=0;i<*nb_res_nodate;i++)
       {
-				if(tab_res_nodate[i].vendredi)
+        if(tab_res_nodate[i].jeudi)
         {
-					strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
+          strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
           strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
           // strcpy(tab_resultats[j].date    , date_rech)                  ;
           strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-        	tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
+          tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
           tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
-         	tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
-          			
+          tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
+                
           j++;
           tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
-				}
-			}
-			break;
-		case 6:
-			for(i=0;i<*nb_res_nodate;i++)
+        }
+      }
+      break;
+    case 5:
+      for(i=0;i<*nb_res_nodate;i++)
       {
-				if(tab_res_nodate[i].samedi)
+        if(tab_res_nodate[i].vendredi)
         {
-					strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
+          strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
           strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
           // strcpy(tab_resultats[j].date    , date_rech)                  ;
           strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-        	tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
+          tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
           tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
-         	tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
-          			
+          tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
+                
           j++;
           tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
-				}
-			}
-			break;
-	}     
+        }
+      }
+      break;
+    case 6:
+      for(i=0;i<*nb_res_nodate;i++)
+      {
+        if(tab_res_nodate[i].samedi)
+        {
+          strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
+          strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
+          // strcpy(tab_resultats[j].date    , date_rech)                  ;
+          strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
+          tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
+          tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
+          tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
+                
+          j++;
+          tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
+        }
+      }
+      break;
+  }     
   *nb_res_date = j   ;
   return tab_resultats ;
 }
