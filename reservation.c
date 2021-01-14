@@ -68,10 +68,12 @@ struct horaire *tab_horaires   ; /*--- Declaration de la variable tab_horaires -
 void chargement_horaires() ;
 void chargement_horaires_alternatif() ;
 void lance_recherche()     ;
-int jour_semaine(int jour_rech, int mois_rech, int annee_rech);
+void date_sys(int *jour, int *mois, int *annee) ;
+// int jour_semaine(int jour_rech, int mois_rech, int annee_rech);
+int jour_semaine(int jour_rech, int mois_rech, int annee_rech, int jour, int mois, int annee) ;
 struct horaire * recherche_horaire(char rechgare[], int *nb_res_horaire) ;
-struct resultat_nodate * compare(struct horaire gare_dep_trouve[], int nb_gare_dep_trouve, struct horaire gare_arr_trouve[], int nb_gare_arr_trouve, int *nb_res_trouve ) ;
-struct resultat * date(struct resultat_nodate tab_res_nodate[], int *nb_res_trouve, int j_semaine  /*, char date_rech[SizeDate]*/ );
+struct resultat_nodate * compare_nodate(struct horaire gare_dep_trouve[], int nb_gare_dep_trouve, struct horaire gare_arr_trouve[], int nb_gare_arr_trouve, int *nb_res_nodate ) ;
+struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int *nb_res_nodate, int j_semaine, int *nb_res_date  /*, char date_rech[SizeDate]*/ );
 
 /* =========================== */
 /* === Programme principal === */
@@ -320,8 +322,11 @@ void lance_recherche()
   int  i ;
   int  nb_res_depart=0 ;
   int  nb_res_arrive=0 ;
-  int  nb_res_trouve=0 ;
-  int jour, mois, annee, j_semaine ; // trouver le jour de la semaine
+  int  nb_res_nodate=0 ;
+  int  nb_res_date=0   ;
+  int jour_sys, mois_sys, annee_sys, j_sem_sys ; // éléments de la date du système
+  int jour, mois, annee, j_semaine             ; // éléments de la date de voyage
+  int choix2 ;
 
   char garedep[MAXstrNOMGARE] ; // saisie utilisateur Gare de départ
   char garearr[MAXstrNOMGARE] ; // saisie utilisateur Gare d'arrivée
@@ -349,19 +354,28 @@ void lance_recherche()
     convmaj(garearr)                                ; // conversion en majuscule
     res_arrive = recherche_horaire(garearr,&nb_res_arrive) ; // recherche_horaire reçoit la chaine saisie, le nombre de résultats et retourne un tableau de résultats
     
-    tab_res_nodate = compare(res_depart,nb_res_depart,res_arrive,nb_res_arrive,&nb_res_trouve);
+    tab_res_nodate = compare_nodate(res_depart,nb_res_depart,res_arrive,nb_res_arrive,&nb_res_nodate);
     
-    if(nb_res_trouve==0) // Cas : pas de résultat entre la gare de départ et la gare d'arrivée
+    if(nb_res_nodate==0) // Cas : pas de résultat entre la gare de départ et la gare d'arrivée
     {
       printf ("\nIl n'y a pas de liaison entre %s et %s\n",garedep, garearr) ;
     }
     else // Cas : des résultats entre la gare de départ et la gare d'arrivée
     {
   	  /* -- Date -- */
-  	  printf("Entrez une date (format JJ/MM/AAAA) : "); // invite de saisie
-  	  scanf("%d/%d/%d",&jour, &mois, &annee)          ; // récupération saisie utilisateur date de voyage
-      j_semaine = jour_semaine(jour, mois, annee)     ; // calcul du jour de la semaine de la date de voyage
-      printf("le %d/%d/%d est un %d\n",jour,mois,annee, j_semaine);
+      date_sys(&jour_sys, &mois_sys, &annee_sys)       ; // récupère la date du système
+  // printf("Nous somme le %d/%d/%d\n", jour_sys, mois_sys, annee_sys) ;
+      printf("Entrez une date (format JJ/MM/AAAA) : ") ; // invite de saisie
+  	  scanf("%d/%d/%d",&jour, &mois, &annee)           ; // récupération saisie utilisateur date de voyage
+      while ((jour_sys > jour) | (mois_sys > mois) | (annee_sys > annee))
+      {
+        printf("\nNous ne proposons pas de voyage dans le passé\n") ;
+        printf("\nGare de départ                      : %s\n",garedep); 
+        printf("Gare d'arrivée                      : %s\n",garearr);
+        printf("Entrez une date (format JJ/MM/AAAA) : "); // invite de saisie
+        scanf("%d/%d/%d",&jour, &mois, &annee)          ; // récupération saisie utilisateur date de voyage
+      }
+      j_semaine = jour_semaine(jour, mois, annee, jour_sys, mois_sys, annee_sys)     ; // calcul du jour de la semaine de la date de voyage
     	/*
       strcpy(date_rech,jour) ;
       strcat(date_rech,'/')  ;
@@ -371,18 +385,66 @@ void lance_recherche()
       */
       
       //printf("%s\n", date_rech);
-      tab_res = date(tab_res_nodate, &nb_res_trouve,j_semaine  /*,date_rech*/);
+      tab_res = compare_avecdate(tab_res_nodate, &nb_res_nodate, j_semaine, &nb_res_date /*,date_rech*/);
 
-      if(nb_res_trouve==0)
+      if(nb_res_nodate==0)
       {
         printf("\nAucun train ne circule entre %s et %s le %s\n",garedep, garearr, date_rech) ;
       }
       else
       {
-      	for(i=0;i<nb_res_trouve;i++)
+        while (choix2 != 5)
         {
-      		printf("%s | %s | %d | %d | %d | %s\n", tab_res[i].dep_gare, tab_res[i].arr_gare, tab_res[i].num_train, tab_res[i].heure_dep, tab_res[i].heure_arr, tab_res[i].type) ;
-		    }
+      		printf("\n") ;
+          printf("------------------------------------------------------------------------------------\n") ;
+          printf(" n° | Gare de départ         | Gare d'arrivée         | numéro | hh:mm| hh:mm| Type\n") ;
+          printf("------------------------------------------------------------------------------------\n") ;
+        	for(i=0;i<nb_res_date;i++)
+          {
+            printf("%3d | %-22s | %-22s | %6d | %4d | %4d | %s\n", i+1, tab_res[i].dep_gare, tab_res[i].arr_gare, tab_res[i].num_train, tab_res[i].heure_dep, tab_res[i].heure_arr, tab_res[i].type) ;
+  		    }
+          printf("------------------------------------------------------------------------------------\n") ;
+          printf("\n") ;
+          printf("-1- Choisir un train circulant le %d %d/%d/%d\n",j_semaine, jour, mois, annee) ; // faire une fonction qui actualise la date (mutualiser avec jour_semaine ?)
+          printf("-2- Voir les trains du jour précédent\n") ;
+          printf("-3- Voir les trains du jour suivant\n") ;
+          printf("-4- Modifier la recherche\n") ;
+          printf("-5- Retour à l'accueil\n") ;
+          printf("\nChoix : ") ;
+          scanf("%d",&choix2) ;
+
+          switch (choix2)
+          {
+            case 1: printf("choisir un train (n°) : ") ;
+            break;
+            case 2:
+              if (j_semaine == 0)
+              {
+                j_semaine = 6 ;
+              }
+              else
+              {
+                j_semaine-- ;
+              }
+              tab_res=compare_avecdate(tab_res_nodate, &nb_res_nodate, j_semaine, &nb_res_date) ;
+            break;
+            case 3: 
+              if (j_semaine == 6)
+              {
+                j_semaine = 0 ;
+              }
+              else
+              {
+                j_semaine++ ;
+              }
+              tab_res=compare_avecdate(tab_res_nodate, &nb_res_nodate, j_semaine, &nb_res_date) ;
+              break;
+            case 4: printf("c'est peut-être pas la peine de faire cette entrée si c'est pour demander 'voulez vous changer le départ, oui, non, voulez-vous changer l'arrivée, oui, non etc.\n") ;
+            break;
+            case 5: break;
+            default: printf("\nDésolés, nous n'avons pas compris votre choix, recommencez\n") ; break ;
+          }
+        }
       }
     }
   }
@@ -443,7 +505,7 @@ struct horaire * recherche_horaire(char rechgare[], int *nb_res_horaire)
 /* Fonction de comparaison des résultats départ/arrivée 
   (retourne un tableau des résultats, construit à partir des match) */
 // ~~~~~~~~~~~
-struct resultat_nodate * compare(struct horaire gare_dep_trouve[], int nb_gare_dep_trouve, struct horaire gare_arr_trouve[], int nb_gare_arr_trouve, int *nb_res_trouve ) //
+struct resultat_nodate * compare_nodate(struct horaire gare_dep_trouve[], int nb_gare_dep_trouve, struct horaire gare_arr_trouve[], int nb_gare_arr_trouve, int *nb_res_nodate) //
 {
   int i=0 ; // compteur résultats à l'arrivée
   int j=0 ; // compteur résultats au départ
@@ -489,26 +551,17 @@ struct resultat_nodate * compare(struct horaire gare_dep_trouve[], int nb_gare_d
       } // fin du if sur les stop_sequence
     } // fin du for Gare de départ
   } // fin du for Gare d'arrivée     
-  *nb_res_trouve = k ;
+  *nb_res_nodate = k ;
   return tab_resultats_nodate ;
 }
 
-// ~~~~~~~~~~~
-/* Fonction de calcul du jour de la semaine de la date donnée
-   (la fonction incrémente les paramètres de la date système 
-    (jour de la semaine, jour, mois, année) jusqu'à atteindre
-    la date recherchée pour en connaitre le jour de la semaine)*/
-// ~~~~~~~~~~~
-int jour_semaine(int jour_rech, int mois_rech, int annee_rech)
+void date_sys(int *jour, int *mois, int *annee)
 {
   time_t nb_sec_1970, temps ;
   struct tm date ;
 
-  int jour, mois, annee ; // éléments de la date système
+  // int jour, mois, annee ; // éléments de la date système
   int j_semaine ;         // jour de la semaine de la date système
-
-  int i, j=0 ;
-  int annee_bi[10];   //tableau d'années bissextiles
 
   /* -- met la date en francais -- */
   setlocale(LC_ALL,"");
@@ -522,10 +575,24 @@ int jour_semaine(int jour_rech, int mois_rech, int annee_rech)
   date = *localtime(&nb_sec_1970);
 
   /* Éléments intelligibles de la date du système */
-  jour      = date.tm_mday       ; // jour du système
-  mois      = date.tm_mon  +1    ; // mois du système
-  annee     = date.tm_year +1900 ; // année du système
+  *jour      = date.tm_mday       ; // jour du système
+  *mois      = date.tm_mon  +1    ; // mois du système
+  *annee     = date.tm_year +1900 ; // année du système
   j_semaine = date.tm_wday       ; // jour de la semaine du système
+}
+
+// ~~~~~~~~~~~
+/* Fonction de calcul du jour de la semaine de la date donnée
+   (la fonction incrémente les paramètres de la date système 
+    (jour de la semaine, jour, mois, année) jusqu'à atteindre
+    la date recherchée pour en connaitre le jour de la semaine)*/
+// ~~~~~~~~~~~
+int jour_semaine(int jour_rech, int mois_rech, int annee_rech, int jour, int mois, int annee)
+{
+  int j_semaine ;         // jour de la semaine de la date système
+
+  int i, j=0 ;
+  int annee_bi[10];   //tableau d'années bissextiles
 
   /* -- Construction du tableau des prochaines annees bissextiles -- */
   for(i=annee; i<=annee_rech;i++)  /* Est-ce qu'on a vraiment besoin de ça ? 
@@ -609,7 +676,7 @@ int jour_semaine(int jour_rech, int mois_rech, int annee_rech)
 /* Fonction de selection des resultats en fonction du jour de la semaine desire 
   (retourne un tableau des résultats, construit à partir des match) */
 // ~~~~~~~~~~~
-struct resultat * date(struct resultat_nodate tab_res_nodate[], int *nb_res_trouve, int j_semaine  /*, char date_rech[SizeDate]*/)       //la plus belle des fonctions
+struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int *nb_res_nodate, int j_semaine, int *nb_res_date  /*, char date_rech[SizeDate]*/ )       //la plus belle des fonctions
 {
 	
   // printf("passage dans date : jour de la semaine %d\n", j_semaine);
@@ -624,7 +691,7 @@ struct resultat * date(struct resultat_nodate tab_res_nodate[], int *nb_res_trou
 	switch(j_semaine)        // en fonction de j_semaine, on cherche dans la bonne colonne
   {
 		case 0: 
-			for(i=0;i<*nb_res_trouve;i++)
+			for(i=0;i<*nb_res_nodate;i++)
       {
 				if(tab_res_nodate[i].dimanche)
         {
@@ -642,7 +709,7 @@ struct resultat * date(struct resultat_nodate tab_res_nodate[], int *nb_res_trou
 			}
 			break;
 		case 1:
-			for(i=0;i<*nb_res_trouve;i++)
+			for(i=0;i<*nb_res_nodate;i++)
       {
 				if(tab_res_nodate[i].lundi)
         {
@@ -660,7 +727,7 @@ struct resultat * date(struct resultat_nodate tab_res_nodate[], int *nb_res_trou
 			}
 			break;
 		case 2:
-			for(i=0;i<*nb_res_trouve;i++)
+			for(i=0;i<*nb_res_nodate;i++)
       {
 				if(tab_res_nodate[i].mardi)
         {
@@ -678,7 +745,7 @@ struct resultat * date(struct resultat_nodate tab_res_nodate[], int *nb_res_trou
 			}
 			break;
 		case 3:
-			for(i=0;i<*nb_res_trouve;i++)
+			for(i=0;i<*nb_res_nodate;i++)
       {
 				if(tab_res_nodate[i].mercredi)
         {
@@ -696,7 +763,7 @@ struct resultat * date(struct resultat_nodate tab_res_nodate[], int *nb_res_trou
 			}
 			break;
 		case 4:
-			for(i=0;i<*nb_res_trouve;i++)
+			for(i=0;i<*nb_res_nodate;i++)
       {
 				if(tab_res_nodate[i].jeudi)
         {
@@ -714,7 +781,7 @@ struct resultat * date(struct resultat_nodate tab_res_nodate[], int *nb_res_trou
 			}
 			break;
 		case 5:
-			for(i=0;i<*nb_res_trouve;i++)
+			for(i=0;i<*nb_res_nodate;i++)
       {
 				if(tab_res_nodate[i].vendredi)
         {
@@ -732,7 +799,7 @@ struct resultat * date(struct resultat_nodate tab_res_nodate[], int *nb_res_trou
 			}
 			break;
 		case 6:
-			for(i=0;i<*nb_res_trouve;i++)
+			for(i=0;i<*nb_res_nodate;i++)
       {
 				if(tab_res_nodate[i].samedi)
         {
@@ -750,6 +817,6 @@ struct resultat * date(struct resultat_nodate tab_res_nodate[], int *nb_res_trou
 			}
 			break;
 	}     
-  *nb_res_trouve = j   ;
+  *nb_res_date = j   ;
   return tab_resultats ;
 }
