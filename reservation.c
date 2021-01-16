@@ -74,6 +74,7 @@ int jour_semaine(int jour_rech, int mois_rech, int annee_rech, int jour, int moi
 struct horaire * recherche_horaire(char rechgare[], int *nb_res_horaire) ;
 struct resultat_nodate * compare_nodate(struct horaire gare_dep_trouve[], int nb_gare_dep_trouve, struct horaire gare_arr_trouve[], int nb_gare_arr_trouve, int *nb_res_nodate ) ;
 struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int *nb_res_nodate, int j_semaine, int *nb_res_date  /*, char date_rech[SizeDate]*/ );
+struct resultat * tri(struct resultat tab_res[], int *nb_res_date  /*, char date_rech[SizeDate]*/ );
 
 /* =========================== */
 /* === Programme principal === */
@@ -335,7 +336,7 @@ void lance_recherche()
   struct horaire *res_arrive=NULL ; // pointeur de struct horaire pour les résultats à l'arrivée d'une gare
   struct resultat_nodate *tab_res_nodate=NULL ; // pointeur de struct resultat_nodate pour les résultats communs
   struct resultat *tab_res=NULL ; // pointeur de struct resultat pour les résultats communs
-
+  struct resultat *tab_res_tri=NULL ; // pointeur de struct resultat pour les résultats communs
   /* Départ */
   printf("\nGare de départ                      : "); // invite de saisie
   scanf("%s",garedep)                               ; // récupération saisie utilisateur gare de départ
@@ -386,8 +387,9 @@ void lance_recherche()
       
       //printf("%s\n", date_rech);
       tab_res = compare_avecdate(tab_res_nodate, &nb_res_nodate, j_semaine, &nb_res_date /*,date_rech*/);
+      tab_res_tri = tri(tab_res, &nb_res_date);
 
-      if(nb_res_nodate==0)
+      if(nb_res_date==0)
       {
         printf("\nAucun train ne circule entre %s et %s ce jour la\n",garedep, garearr) ;
       }
@@ -402,7 +404,12 @@ void lance_recherche()
           printf("------------------------------------------------------------------------------------\n") ;
         	for(i=0;i<nb_res_date;i++)
           {
-            printf("%3d | %-22s | %-22s | %6d | %4d | %4d | %s\n", i+1, tab_res[i].dep_gare, tab_res[i].arr_gare, tab_res[i].num_train, tab_res[i].heure_dep, tab_res[i].heure_arr, tab_res[i].type) ;
+            printf("%3d | %-22s | %-22s | %6d | %4d | %4d | %s\n", i+1, tab_res_tri[i].dep_gare, 
+																		tab_res_tri[i].arr_gare, 
+																		tab_res_tri[i].num_train, 
+																		tab_res_tri[i].heure_dep, 
+																		tab_res_tri[i].heure_arr, 
+																		tab_res_tri[i].type) ;
   		    }
           printf("------------------------------------------------------------------------------------\n") ;
           printf("\n") ;
@@ -914,4 +921,62 @@ struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int 
 	}     
   *nb_res_date = j   ;
   return tab_resultats ;
+}
+
+struct resultat * tri(struct resultat tab_res[], int *nb_res_date  /*, char date_rech[SizeDate]*/ ) 
+{
+	int k;	// compteur pour trouver le moment a partir duquel il faut decaler les valeurs du tableau
+	int i;  // compteur du tableau en entree
+	int l;	// compteur du decalage
+	int m=0;  // compteur de tab_resultats_tri
+	int decalage=0;
+	struct resultat *tab_resultats_tri ; // pointeur du tableau de résultats communs à retourner
+  
+ 	/* allocation de mémoire au tableau de résultats tab_resultats */
+ 	tab_resultats_tri = (struct resultat *) malloc(sizeof(struct resultat));
+ 	
+ 	
+ 	
+ 	for(i=0;i<*nb_res_date;i++)
+ 	{
+ 		k=0;
+ 		while( (decalage==0) && (k<=m) )   // on regarde le tab_resultats pour savoir ou on doit ajouter notre nouvelle valeur, retourne un booleen
+		{
+							
+			if(tab_res[i].heure_dep < tab_resultats_tri[k].heure_dep)
+			{
+				decalage=1;
+			}	
+			k++;
+		}
+		k--;
+						
+		if(decalage)  // decalage si requis 
+		{
+			for(l=m; l>k ;l--)
+			{
+				strcpy(tab_resultats_tri[l].dep_gare, tab_resultats_tri[l-1].dep_gare) ;
+          		strcpy(tab_resultats_tri[l].arr_gare, tab_resultats_tri[l-1].arr_gare) ;
+          					// strcpy(tab_resultats[j].date    , date_rech) 			  	        ;
+          		strcpy(tab_resultats_tri[l].type    , tab_resultats_tri[l-1].type)     ;
+        		tab_resultats_tri[l].num_train = tab_resultats_tri[l-1].num_train      ;
+          		tab_resultats_tri[l].heure_dep = tab_resultats_tri[l-1].heure_dep      ;
+         		tab_resultats_tri[l].heure_arr = tab_resultats_tri[l-1].heure_arr      ;
+			}
+		}
+		l=k;
+		strcpy(tab_resultats_tri[l].dep_gare, tab_res[i].dep_gare) ;
+        strcpy(tab_resultats_tri[l].arr_gare, tab_res[i].arr_gare) ;
+          					// strcpy(tab_resultats[j].date    , date_rech) 			  	        ;
+    	strcpy(tab_resultats_tri[l].type    , tab_res[i].type)     ;
+        tab_resultats_tri[l].num_train = tab_res[i].num_train      ;
+        tab_resultats_tri[l].heure_dep = tab_res[i].heure_dep      ;
+        tab_resultats_tri[l].heure_arr = tab_res[i].heure_arr      ;
+  		
+  		m++;
+		tab_resultats_tri = (struct resultat *) realloc(tab_resultats_tri,sizeof(struct resultat) * (m+1));
+		decalage=0;
+	}
+	
+  	return tab_resultats_tri ;
 }
