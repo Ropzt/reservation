@@ -389,10 +389,11 @@ void lance_recherche()
 
       if(nb_res_nodate==0)
       {
-        printf("\nAucun train ne circule entre %s et %s le %s\n",garedep, garearr, date_rech) ;
+        printf("\nAucun train ne circule entre %s et %s ce jour la\n",garedep, garearr) ;
       }
       else
       {
+      	choix2=0;
         while (choix2 != 5)
         {
       		printf("\n") ;
@@ -683,137 +684,231 @@ struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int 
   // printf("passage dans date : numéro de train du 2e résultat du tableau de résultats no date %d\n", tab_res_nodate[1].num_train);     // ces 2 printf ne s'allument pas, la fonction n'arrive donc pas a s'executer
   int i=0 ; // compteur de tab_resultat_nodate										// j'ai mis en commentaire toutes les mentions de la date dans la structure resultat jusqu'a trouver comment convertir proprement
   int j=0 ; // compteur de tab_resultat
+  int doublon=0;
+  int k;
   struct resultat *tab_resultats ; // pointeur du tableau de résultats communs à retourner
   
   /* allocation de mémoire au tableau de résultats tab_resultats */
   tab_resultats = (struct resultat *) malloc(sizeof(struct resultat));
 	
 	switch(j_semaine)        // en fonction de j_semaine, on cherche dans la bonne colonne
-  {
+  	{
 		case 0: 
 			for(i=0;i<*nb_res_nodate;i++)
-      {
+     		{
 				if(tab_res_nodate[i].dimanche)
-        {
-					strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ;
-          strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
-          // strcpy(tab_resultats[j].date    , date_rech) 			  	        ;
-          strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-        	tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
-          tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
-         	tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
+        		{
+        			for(k=0;k<=j;k++)
+					{
+        				if(tab_res_nodate[i].num_train == tab_resultats[k].num_train)
+						{
+        					doublon ++;
+						}
+        				
+					}
+					
+					if(doublon==0)
+					{
+						
+						strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ;
+          				strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
+          					// strcpy(tab_resultats[j].date    , date_rech) 			  	        ;
+          				strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
+        				tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
+          				tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
+         				tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
           			
-          j++;
-          tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
+          				j++;
+          				tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
+					}
 				}
+				doublon=0;
 			}
 			break;
 		case 1:
 			for(i=0;i<*nb_res_nodate;i++)
-      {
+      		{
 				if(tab_res_nodate[i].lundi)
-        {
-					strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
-          strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
-          // strcpy(tab_resultats[j].date    , date_rech)                  ;
-          strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-        	tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
-          tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
-         	tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
+        		{	
+					for(k=0;k<=j;k++)
+					{
+        				if(tab_res_nodate[i].num_train == tab_resultats[k].num_train)
+						{
+        					doublon ++;
+						}
+        				
+					}
+					
+					if(doublon==0)
+					{
+						strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ;
+          				strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
+          					// strcpy(tab_resultats[j].date    , date_rech) 			  	        ;
+          				strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
+        				tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
+          				tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
+         				tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
           			
-          j++;
-          tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
+          				j++;
+          				tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
+					}
 				}
+				doublon=0;
 			}
 			break;
 		case 2:
 			for(i=0;i<*nb_res_nodate;i++)
-      {
+      		{
 				if(tab_res_nodate[i].mardi)
-        {
-					strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
-          strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
-          // strcpy(tab_resultats[j].date    , date_rech)                  ;
-          strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-        	tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
-          tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
-         	tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
+        		{		
+					for(k=0;k<=j;k++)
+					{
+        				if(tab_res_nodate[i].num_train == tab_resultats[k].num_train)
+						{
+        					doublon ++;
+						}
+        				
+					}
+					
+					if(doublon==0)
+					{
+						strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ;
+          				strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
+          					// strcpy(tab_resultats[j].date    , date_rech) 			  	        ;
+          				strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
+        				tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
+          				tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
+         				tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
           			
-          j++;
-          tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
+          				j++;
+          				tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
+					}
 				}
+				doublon=0;
 			}
 			break;
 		case 3:
 			for(i=0;i<*nb_res_nodate;i++)
-      {
+      		{
 				if(tab_res_nodate[i].mercredi)
-        {
-					strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
-          strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
-          // strcpy(tab_resultats[j].date    , date_rech)                  ;
-          strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-        	tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
-          tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
-         	tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
+        		{
+					for(k=0;k<=j;k++)
+					{
+        				if(tab_res_nodate[i].num_train == tab_resultats[k].num_train)
+						{
+        					doublon ++;
+						}
+        				
+					}
+					
+					if(doublon==0)
+					{
+						strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ;
+          				strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
+          					// strcpy(tab_resultats[j].date    , date_rech) 			  	        ;
+          				strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
+        				tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
+          				tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
+         				tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
           			
-          j++;
-          tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
+          				j++;
+          				tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
+					}
 				}
+				doublon=0;
 			}
 			break;
 		case 4:
 			for(i=0;i<*nb_res_nodate;i++)
-      {
+      		{
 				if(tab_res_nodate[i].jeudi)
-        {
-					strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
-          strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
-          // strcpy(tab_resultats[j].date    , date_rech)                  ;
-          strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-        	tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
-          tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
-         	tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
+        		{
+					for(k=0;k<=j;k++)
+					{
+        				if(tab_res_nodate[i].num_train == tab_resultats[k].num_train)
+						{
+        					doublon ++;
+						}
+        				
+					}
+					
+					if(doublon==0)
+					{
+						strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ;
+          				strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
+          					// strcpy(tab_resultats[j].date    , date_rech) 			  	        ;
+          				strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
+        				tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
+          				tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
+         				tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
           			
-          j++;
-          tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
+          				j++;
+          				tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
+					}
 				}
+				doublon=0;
 			}
 			break;
 		case 5:
 			for(i=0;i<*nb_res_nodate;i++)
-      {
+      		{
 				if(tab_res_nodate[i].vendredi)
-        {
-					strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
-          strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
-          // strcpy(tab_resultats[j].date    , date_rech)                  ;
-          strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-        	tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
-          tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
-         	tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
+        		{
+					for(k=0;k<=j;k++)
+					{
+        				if(tab_res_nodate[i].num_train == tab_resultats[k].num_train)
+						{
+        					doublon ++;
+						}
+        				
+					}
+					
+					if(doublon==0)
+					{
+						strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ;
+          				strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
+          					// strcpy(tab_resultats[j].date    , date_rech) 			  	        ;
+          				strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
+        				tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
+          				tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
+         				tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
           			
-          j++;
-          tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
+          				j++;
+          				tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
+					}
 				}
+				doublon=0;
 			}
 			break;
 		case 6:
 			for(i=0;i<*nb_res_nodate;i++)
-      {
+      		{
 				if(tab_res_nodate[i].samedi)
-        {
-					strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
-          strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
-          // strcpy(tab_resultats[j].date    , date_rech)                  ;
-          strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-        	tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
-          tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
-         	tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
+        		{
+						for(k=0;k<=j;k++)
+					{
+        				if(tab_res_nodate[i].num_train == tab_resultats[k].num_train)
+						{
+        					doublon ++;
+						}
+        				
+					}
+					
+					if(doublon==0)
+					{
+						strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ;
+          				strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
+          					// strcpy(tab_resultats[j].date    , date_rech) 			  	        ;
+          				strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
+        				tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
+          				tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
+         				tab_resultats[j].heure_arr = tab_res_nodate[i].heure_arr      ;
           			
-          j++;
-          tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
+          				j++;
+          				tab_resultats = (struct resultat *) realloc(tab_resultats,sizeof(struct resultat) * (j+1));
+					}
 				}
+				doublon=0;
 			}
 			break;
 	}     
