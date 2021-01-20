@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <time.h>
 #include <locale.h>
+#include <math.h>
 
 /* --- déclaration des constantes --- */
 #define MAXstrNOMGARE 100
@@ -26,6 +27,8 @@ struct horaire { /*--- Creation du type structure horaire ---*/
   int  capacite                ;
   char type[10]                ;
   char nom_gare[MAXstrNOMGARE] ;
+  float taux_rempli            ;
+//float prix				   ;
 //    struct horaire *p_prec ; // pour l'instant, pas besoin de pointeur
 //    struct horaire *p_suiv ; // pour l'instant, pas besoin de pointeur
   };
@@ -73,8 +76,10 @@ void date_sys(int *jour, int *mois, int *annee) ;
 int jour_semaine(int jour_rech, int mois_rech, int annee_rech, int jour, int mois, int annee) ;
 struct horaire * recherche_horaire(char rechgare[], int *nb_res_horaire) ;
 struct resultat_nodate * compare_nodate(struct horaire gare_dep_trouve[], int nb_gare_dep_trouve, struct horaire gare_arr_trouve[], int nb_gare_arr_trouve, int *nb_res_nodate ) ;
-struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int *nb_res_nodate, int j_semaine, int *nb_res_date  /*, char date_rech[SizeDate]*/ );
-struct resultat * tri(struct resultat tab_res[], int *nb_res_date  /*, char date_rech[SizeDate]*/ );
+struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int *nb_res_nodate, int j_semaine, int *nb_res_date   );
+struct resultat * tri(struct resultat tab_res[], int *nb_res_date   );
+void remplissage(struct horaire *tab);
+int normal_random(int moy, int max, int curseur);
 
 /* =========================== */
 /* === Programme principal === */
@@ -187,6 +192,7 @@ void chargement_horaires_alternatif()
       // ou c'est le LF ?
       tab_horaires[i].nom_gare[strlen(tab_horaires[i].nom_gare)-1] = '\0' ;
 
+		
       // printf("Fichier trips : %d lignes chargées\n",nbhoraire+1) ;
       // printf("strlen type : %d\n",strlen(tab_horaires[i].type) );      
       // printf("strlen nom_gare: %d\n",strlen(tab_horaires[i].nom_gare) );
@@ -205,7 +211,7 @@ void chargement_horaires_alternatif()
       //   tab_horaires[i].capacite,
       //   tab_horaires[i].type,
       //   tab_horaires[i].nom_gare) ;
-
+		
       i++ ;
       nbhoraire = i ;
 
@@ -233,6 +239,8 @@ void chargement_horaires()
   FILE *f1;
   char lettre;
   int  i, j, retour;
+  
+  srand(2806);
   
   /* --- Allocation de mémoire au tableau tab_horaires --- */
   tab_horaires = (struct horaire *) malloc(sizeof(struct horaire));
@@ -293,6 +301,8 @@ void chargement_horaires()
     // ou c'est le LF ?
     tab_horaires[i].nom_gare[strlen(tab_horaires[i].nom_gare)-1] = '\0' ;
     convmaj(tab_horaires[i].nom_gare) ;           // conversion en majuscule
+    
+    remplissage(&tab_horaires[i]);
 
     i++;
     nbhoraire=i ;
@@ -303,12 +313,29 @@ void chargement_horaires()
   
   /*--- Fermeture fichier ---*/
   fclose(f1);
-    
-  /*--- Test d'affichage ---
-  for(i=0;i<100;i++)
+  
+  
+  for(i=0; i<100001; i+=20000)
   {
-    printf("%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%s;%s\n", tab_horaires[i].id , tab_horaires[i].arrive , tab_horaires[i].depart , tab_horaires[i].stop_seq , tab_horaires[i].num_train , tab_horaires[i].lundi , tab_horaires[i].mardi , tab_horaires[i].mercredi , tab_horaires[i].jeudi , tab_horaires[i].vendredi , tab_horaires[i].samedi , tab_horaires[i].dimanche , tab_horaires[i].capacite , tab_horaires[i].type , tab_horaires[i].nom_gare  );
-  } */
+  	printf("%d %d %d %d %d %d %d %d %d %d %d %d %d %s %s %f\n",
+         tab_horaires[i].id, tab_horaires[i].arrive,
+         tab_horaires[i].depart,
+         tab_horaires[i].stop_seq,
+         tab_horaires[i].num_train,
+         tab_horaires[i].lundi,
+         tab_horaires[i].mardi,
+         tab_horaires[i].mercredi,
+         tab_horaires[i].jeudi,
+         tab_horaires[i].vendredi,
+         tab_horaires[i].samedi,
+         tab_horaires[i].dimanche,
+         tab_horaires[i].capacite,
+         tab_horaires[i].type,
+         tab_horaires[i].nom_gare,
+		 tab_horaires[i].taux_rempli) ;
+  }
+  
+ 
 }
 
 /* ---------------------------------------- */
@@ -365,7 +392,6 @@ void lance_recherche()
     {
   	  /* -- Date -- */
       date_sys(&jour_sys, &mois_sys, &annee_sys)       ; // récupère la date du système
-  // printf("Nous somme le %d/%d/%d\n", jour_sys, mois_sys, annee_sys) ;
       printf("Entrez une date (format JJ/MM/AAAA) : ") ; // invite de saisie
   	  scanf("%d/%d/%d",&jour, &mois, &annee)           ; // récupération saisie utilisateur date de voyage
       while ((jour_sys > jour) | (mois_sys > mois) | (annee_sys > annee))
@@ -377,16 +403,7 @@ void lance_recherche()
         scanf("%d/%d/%d",&jour, &mois, &annee)          ; // récupération saisie utilisateur date de voyage
       }
       j_semaine = jour_semaine(jour, mois, annee, jour_sys, mois_sys, annee_sys)     ; // calcul du jour de la semaine de la date de voyage
-    	/*
-      strcpy(date_rech,jour) ;
-      strcat(date_rech,'/')  ;
-      strcat(date_rech,mois) ;
-      strcat(date_rech,'/')  ;
-      strcat(date_rech,annee);
-      */
-      
-      //printf("%s\n", date_rech);
-      tab_res = compare_avecdate(tab_res_nodate, &nb_res_nodate, j_semaine, &nb_res_date /*,date_rech*/);
+      tab_res = compare_avecdate(tab_res_nodate, &nb_res_nodate, j_semaine, &nb_res_date);
       tab_res_tri = tri(tab_res, &nb_res_date);
 
       if(nb_res_date==0)
@@ -399,11 +416,19 @@ void lance_recherche()
         while (choix2 != 5)
         {
       		printf("\n") ;
+      		//affichage_resultat(tab_res_tri, *nb_res_date);
+      		
           printf("------------------------------------------------------------------------------------\n") ;
           printf(" n° | Gare de départ         | Gare d'arrivée         | numéro | hh:mm| hh:mm| Type\n") ;
           printf("------------------------------------------------------------------------------------\n") ;
         	for(i=0;i<nb_res_date;i++)
           {
+          	/*
+          		hh_dep = tab_res_tri[i].heure_dep/100 ;
+          		mm_dep = tab_res_tri[i].heure_dep%100 ;
+          		hh_arr = tab_res_tri[i].heure_arr/100 ;
+          		mm_arr = tab_res_tri[i].heure_arr%100 ;
+			*/
             printf("%3d | %-22s | %-22s | %6d | %4d | %4d | %s\n", i+1, tab_res_tri[i].dep_gare, 
 																		tab_res_tri[i].arr_gare, 
 																		tab_res_tri[i].num_train, 
@@ -413,6 +438,7 @@ void lance_recherche()
   		    }
           printf("------------------------------------------------------------------------------------\n") ;
           printf("\n") ;
+          
           printf("-1- Choisir un train circulant le %d %d/%d/%d\n",j_semaine, jour, mois, annee) ; // faire une fonction qui actualise la date (mutualiser avec jour_semaine ?)
           printf("-2- Voir les trains du jour précédent\n") ;
           printf("-3- Voir les trains du jour suivant\n") ;
@@ -423,8 +449,14 @@ void lance_recherche()
 
           switch (choix2)
           {
-            case 1: printf("choisir un train (n°) : ") ;
-            break;
+            case 1: 
+			  printf("choisir un train (n°) : ") ;
+			  /*
+			  scanf("%d", &choix_reserver);
+			  choix_reserver++;
+              reserver(tab_res_tri[choix_reserver]);
+			  */	
+              break;
             case 2:
               if (j_semaine == 0)
               {
@@ -435,7 +467,8 @@ void lance_recherche()
                 j_semaine-- ;
               }
               tab_res=compare_avecdate(tab_res_nodate, &nb_res_nodate, j_semaine, &nb_res_date) ;
-            break;
+              tab_res_tri = tri(tab_res, &nb_res_date);
+              break;
             case 3: 
               if (j_semaine == 6)
               {
@@ -446,11 +479,16 @@ void lance_recherche()
                 j_semaine++ ;
               }
               tab_res=compare_avecdate(tab_res_nodate, &nb_res_nodate, j_semaine, &nb_res_date) ;
+              tab_res_tri = tri(tab_res, &nb_res_date);
               break;
-            case 4: printf("c'est peut-être pas la peine de faire cette entrée si c'est pour demander 'voulez vous changer le départ, oui, non, voulez-vous changer l'arrivée, oui, non etc.\n") ;
-            break;
-            case 5: break;
-            default: printf("\nDésolés, nous n'avons pas compris votre choix, recommencez\n") ; break ;
+            case 4: 
+			  printf("c'est peut-être pas la peine de faire cette entrée si c'est pour demander 'voulez vous changer le départ, oui, non, voulez-vous changer l'arrivée, oui, non etc.\n") ;
+              break;
+            case 5: 
+			  break;
+            default: 
+			  printf("\nDésolés, nous n'avons pas compris votre choix, recommencez\n") ; 
+			  break ;
           }
         }
       }
@@ -684,11 +722,9 @@ int jour_semaine(int jour_rech, int mois_rech, int annee_rech, int jour, int moi
 /* Fonction de selection des resultats en fonction du jour de la semaine desire 
   (retourne un tableau des résultats, construit à partir des match) */
 // ~~~~~~~~~~~
-struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int *nb_res_nodate, int j_semaine, int *nb_res_date  /*, char date_rech[SizeDate]*/ )       //la plus belle des fonctions
+struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int *nb_res_nodate, int j_semaine, int *nb_res_date   )       //la plus belle des fonctions
 {
 	
-  // printf("passage dans date : jour de la semaine %d\n", j_semaine);
-  // printf("passage dans date : numéro de train du 2e résultat du tableau de résultats no date %d\n", tab_res_nodate[1].num_train);     // ces 2 printf ne s'allument pas, la fonction n'arrive donc pas a s'executer
   int i=0 ; // compteur de tab_resultat_nodate										// j'ai mis en commentaire toutes les mentions de la date dans la structure resultat jusqu'a trouver comment convertir proprement
   int j=0 ; // compteur de tab_resultat
   int doublon=0;
@@ -718,8 +754,7 @@ struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int 
 					{
 						
 						strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ;
-          				strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
-          					// strcpy(tab_resultats[j].date    , date_rech) 			  	        ;
+          				strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;         					
           				strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
         				tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
           				tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
@@ -750,7 +785,6 @@ struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int 
 					{
 						strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ;
           				strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
-          					// strcpy(tab_resultats[j].date    , date_rech) 			  	        ;
           				strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
         				tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
           				tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
@@ -781,7 +815,6 @@ struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int 
 					{
 						strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ;
           				strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
-          					// strcpy(tab_resultats[j].date    , date_rech) 			  	        ;
           				strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
         				tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
           				tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
@@ -812,7 +845,6 @@ struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int 
 					{
 						strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ;
           				strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
-          					// strcpy(tab_resultats[j].date    , date_rech) 			  	        ;
           				strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
         				tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
           				tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
@@ -843,7 +875,6 @@ struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int 
 					{
 						strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ;
           				strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
-          					// strcpy(tab_resultats[j].date    , date_rech) 			  	        ;
           				strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
         				tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
           				tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
@@ -874,7 +905,6 @@ struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int 
 					{
 						strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ;
           				strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
-          					// strcpy(tab_resultats[j].date    , date_rech) 			  	        ;
           				strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
         				tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
           				tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
@@ -905,7 +935,6 @@ struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int 
 					{
 						strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ;
           				strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
-          					// strcpy(tab_resultats[j].date    , date_rech) 			  	        ;
           				strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
         				tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
           				tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
@@ -923,7 +952,11 @@ struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int 
   return tab_resultats ;
 }
 
-struct resultat * tri(struct resultat tab_res[], int *nb_res_date  /*, char date_rech[SizeDate]*/ ) 
+// ~~~~~~~~~~~
+/* Fonction de tri des resultats par heure de depart 
+  (retourne un tableau des résultats) */
+// ~~~~~~~~~~~
+struct resultat * tri(struct resultat tab_res[], int *nb_res_date   ) 
 {
 	int k;	// compteur pour trouver le moment a partir duquel il faut decaler les valeurs du tableau
 	int i;  // compteur du tableau en entree
@@ -957,7 +990,6 @@ struct resultat * tri(struct resultat tab_res[], int *nb_res_date  /*, char date
 			{
 				strcpy(tab_resultats_tri[l].dep_gare, tab_resultats_tri[l-1].dep_gare) ;
           		strcpy(tab_resultats_tri[l].arr_gare, tab_resultats_tri[l-1].arr_gare) ;
-          					// strcpy(tab_resultats[j].date    , date_rech) 			  	        ;
           		strcpy(tab_resultats_tri[l].type    , tab_resultats_tri[l-1].type)     ;
         		tab_resultats_tri[l].num_train = tab_resultats_tri[l-1].num_train      ;
           		tab_resultats_tri[l].heure_dep = tab_resultats_tri[l-1].heure_dep      ;
@@ -967,7 +999,6 @@ struct resultat * tri(struct resultat tab_res[], int *nb_res_date  /*, char date
 		l=k;
 		strcpy(tab_resultats_tri[l].dep_gare, tab_res[i].dep_gare) ;
         strcpy(tab_resultats_tri[l].arr_gare, tab_res[i].arr_gare) ;
-          					// strcpy(tab_resultats[j].date    , date_rech) 			  	        ;
     	strcpy(tab_resultats_tri[l].type    , tab_res[i].type)     ;
         tab_resultats_tri[l].num_train = tab_res[i].num_train      ;
         tab_resultats_tri[l].heure_dep = tab_res[i].heure_dep      ;
@@ -980,3 +1011,363 @@ struct resultat * tri(struct resultat tab_res[], int *nb_res_date  /*, char date
 	
   	return tab_resultats_tri ;
 }
+
+/*
+
+void reserver(struct resultat tab_res[])
+{
+	struct passager
+	{
+		char nom[50];
+		char prenom[50];		//MAX_SIZE_NOM a definir et creer, ne pas oublier de changer les i qui sont dans les conditions, pour l'instant j'ai mis i<50, il faut mettre i<MAX_SIZE_NOM
+		int  age;
+		int reduc25;
+		int fenetre;
+		int wifi;	
+		int prix_tot;
+	};
+	
+	int j;
+	int i;
+	int erreur, booleen;
+	char lettre;
+	char dump;
+	char digit[3];  //MAX_AGE a creer
+	
+	FILE *f1;
+	char billet[] ;
+	
+	printf("Veuillez saisir le nombre de places que vous voulez reserver : ");
+	scanf("%d", &nbplaces);
+	 
+	struct passager passager[nbplaces];     //MAX_NBPLACES a definir et creer
+	
+	for(j=1;j<=nbplaces;j++)
+	{
+		i=0;
+		erreur = 1;
+		while(erreur==1)
+		{
+			lettre='a';
+			printf("Veuillez renseigner le nom du passager %d : ",j);
+			while(i<50 && lettre!='\n' && ( ((lettre<91) && (lettre>64)) || ((lettre<123) && (lettre>96)) || (lettre==32) || (lettre==45) ) )
+			{
+				scanf("%c", &lettre);
+				
+				if(i<50 && lettre!='\n')
+				{
+					if( ((lettre<91) && (lettre>64)) || ((lettre<123) && (lettre>96)) || (lettre==32) || (lettre==45) ) 
+					{
+						passager[j-1].nom[i]=toupper(lettre);
+						i++;
+						erreur=0;
+					}
+					else
+					{
+						erreur=1;
+						i=0;
+						while(dump!='\n')
+						{
+							scanf("%c", &dump);
+						}
+						dump='a';
+						printf("Veuillez saisir un nom valide : 50 lettres maximum, sans caracteres speciaux.\n");
+					}	
+				}
+			}
+		}
+		passager[j-1].nom[i]='\0';
+			
+			
+		i=0;
+		erreur = 1;
+		while(erreur==1)
+		{
+			lettre='a';
+			printf("Veuillez renseigner le prenom du passager %d : ",j);
+			while(i<50 && lettre!='\n' && ( ((lettre<91) && (lettre>64)) || ((lettre<123) && (lettre>96)) || (lettre==32) || (lettre==45) ) )
+			{
+				scanf("%c", &lettre);
+				
+				if(i<50 && lettre!='\n')
+				{
+					if( ((lettre<91) && (lettre>64)) || ((lettre<123) && (lettre>96)) || (lettre==32) || (lettre==45) ) 
+					{
+						passager[j-1].prenom[i]=toupper(lettre);
+						i++;
+						erreur=0;
+					}
+					else
+					{
+						erreur=1;
+						i=0;
+						while(dump!='\n')
+						{
+							scanf("%c", &dump);
+						}
+						dump='a';
+						printf("Veuillez saisir un nom valide : 50 lettres maximum, sans caracteres speciaux.\n");
+					}	
+				}
+			}
+		}
+		passager[j-1].prenom[i]='\0';
+		
+	
+		i=0;
+		erreur = 1;
+		while(erreur==1)
+		{
+			lettre=50;
+			printf("Veuillez renseigner l'age du passager %d : ",j);
+			while(i<3 && lettre!='\n' && ( (lettre<58) && (lettre>47)) )
+			{
+				scanf("%c", &lettre);
+				
+				if(i<3 && lettre!='\n')
+				{
+					if( (lettre<58) && (lettre>47) ) 
+					{
+						digit[i]=lettre;
+						i++;
+						erreur=0;
+					}
+					else
+					{
+						erreur=1;
+						i=0;
+						while(dump!='\n')
+						{
+							scanf("%c", &dump);
+						}
+						dump='a';
+						printf("Veuillez saisir un age valide.\n");
+					}	
+				}
+			}
+		}
+		passager[j-1].age=atoi(digit);
+		
+		
+			if(passager[j-1].age<26)
+			{
+				passager[j-1].reduc25 = 1;
+				
+			}
+			else
+			{
+				passager[j-1].reduc25 = 0;
+			}
+		
+	
+		erreur = 1;
+		while(erreur==1)
+		{
+			
+			lettre=50;
+			printf("Voulez vous avoir une place fenetre ? [Tapez 1 pour NON, 2 pour OUI] (pas de supplement tarifaire)  : ");
+			
+			scanf("%c", &lettre);
+			
+			if( ((lettre<51) && (lettre>48) )  && lettre!='\n'  ) 
+			{
+				booleen=lettre-49;
+				passager[j-1].fenetre = booleen;
+						
+				while(dump!='\n')
+				{
+					scanf("%c", &dump);
+				}
+				dump='a';
+				i++;
+				erreur=0;
+			}
+			else
+			{
+				erreur=1;
+				while(dump!='\n')
+				{
+					scanf("%c", &dump);
+				}
+				dump='a';
+				printf("Veuillez saisir un choix valide (1 ou 2).\n");
+			}
+			
+		}
+		
+		erreur = 1;
+		while(erreur==1)
+		{
+			lettre=50;
+			printf("Voulez vous avoir acces au WIFI ? [Tapez 1 pour NON , 2 pour OUI] (supplement tarifaire de PRIX_WIFI euros)  : ");
+			
+			scanf("%c", &lettre);
+			
+			if( ((lettre<51) && (lettre>48) )  && lettre!='\n'  ) 
+			{
+				booleen=lettre-49;
+				passager[j-1].wifi = booleen;
+						
+				while(dump!='\n')
+				{
+					scanf("%c", &dump);
+				}
+				dump='a';
+				i++;
+				erreur=0;
+			}
+			else
+			{
+				erreur=1;
+				while(dump!='\n')
+				{
+					scanf("%c", &dump);
+				}
+				dump='a';
+				printf("Veuillez saisir un choix valide (1 ou 2).\n");
+			}	
+		}
+		
+	
+		reduc = tab[i].prix *0.1;
+		passager[j-1].prix = tab[i].prix - (reduc*passager[j-1].reduc) +(PRIX_WIFI*passager[j-1].wifi);
+	
+		
+	}
+	
+	//--- paiement ---
+	reduc = tab[i].prix *0.1;
+	prix_total = tab[i].prix*nbplaces -( nbreduc*reduc )+ (PRIX_WIFI*nbwifi) ;
+	
+	
+	
+	strcpy(billet, tab_res[i].num_train);
+	strcat(billet, tab_res[i].heure_arr);
+	strcat(billet, tab_res[i].heure_dep);
+	strcat(billet, ".txt");
+	f1 =fopen(billet, w);
+	
+	fprintf(f1,"------------------------------------------------------------------------------------\n") ;
+	fprintf(f1," n° | Gare de départ         | Gare d'arrivée         | numéro | hh:mm| hh:mm| Type\n") ;
+    fprintf(f1,"------------------------------------------------------------------------------------\n") ;
+    for(i=0;i<nb_res_date;i++)
+    {
+            fprintf(f1, "%3d | %-22s | %-22s | %6d | %4d | %4d | %s\n", i+1, 
+																		tab_res[i].dep_gare, 
+																		tab_res[i].arr_gare, 
+																		tab_res[i].num_train, 
+																		tab_res[i].heure_dep, 
+																		tab_res[i].heure_arr, 
+																		tab_res[i].type) ;
+  	}
+	fclose(f1);
+	
+}
+*/
+void remplissage(struct horaire *tab)
+{
+
+	int moy;
+	int max;
+	int curseur;
+	int weekend, pointe;
+	float rempli;
+	float passage;
+	
+	if(tab->samedi == 1 || tab->dimanche == 1)
+	{
+		weekend=1;
+	}
+	
+	if( (tab->depart >750 && tab->depart < 900) || (tab->depart >1700 && tab->depart < 1900) )
+	{
+		pointe=1;
+	}
+	
+	max = tab->capacite;
+	if(pointe || weekend)
+	{
+		curseur = max*0.25 ;
+		moy = max*0.75  ;
+		rempli = normal_random(moy, max, curseur);
+		tab->taux_rempli = rempli/max;
+	}
+	else
+	{
+		curseur = max/3 ;
+		moy = max*0.5  ;
+		rempli = normal_random(moy, max, curseur);
+		passage = max ;
+		tab->taux_rempli = rempli/passage ;
+	}
+	
+	
+}
+
+/*
+void pricing(struct resultat *tab_res[],int *nb_ligne_tab)
+{
+	
+	for(i=0;i< *nb_ligne_tab; i++)
+	{
+		*tab_res[i].prix = PRIX_MIN + (*tab_res[i]taux_rempli*(PRIX_MAX-PRIX_MIN));	
+	}
+}
+*/
+
+int normal_random(int moy, int max, int curseur)
+{
+	
+	double r;
+	double s;
+	double z1;
+	double z2;
+	double pi2;
+	double log_r, log_r2, sqrt_r, pi2_s;
+	double sup, inf;
+	int z2int;
+	int cent;
+	
+	sup = moy+(sqrt(0.5)*curseur);
+	inf = moy-(sqrt(0.5)*curseur);
+
+	cent = 100;
+
+		r=rand()%cent;      // pour une seed et une MAX_VAL donnee, rand() renverra toujours les memes valeurs, dans le meme ordre
+		r=r/cent;
+		s=rand()%cent;
+		s=s/cent;
+	
+	
+	pi2=2*3.1415926;
+	
+		log_r  = log(r);
+		log_r2 = (-2)*log_r;
+		sqrt_r = sqrt(log_r2);
+		pi2_s  = pi2*s;
+		
+		z1=sqrt_r*cos(pi2_s);
+		z1*=curseur;
+		z1+=moy;
+		
+		z2=sqrt_r*sin(pi2_s);
+		z2*=curseur;
+		z2+=moy;
+	
+	z2int=z2;
+	
+	while(z2int>max)
+	{
+		z2int/=2;
+	}
+	
+	
+		
+	return z2int;
+}
+/*
+void connexion_client()    // fonctionnalite en plus : garder en m�moire le nom, prenom, age, carte de fidelite, info carte bancaire
+{
+	
+}
+*/
