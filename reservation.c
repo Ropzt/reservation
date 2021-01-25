@@ -11,6 +11,8 @@
 #define SizeDate 11
 #define PRIX_MAX 250
 #define PRIX_MIN 25
+#define MONTANT_REDUC25 0.1
+#define PRIX_WIFI 10
 
 /* --- déclaration des types globaux --- */
 struct horaire { /*--- Creation du type structure horaire ---*/
@@ -49,6 +51,7 @@ struct resultat_nodate { /*--- Creation du type structure resultat sans la préc
   int  heure_dep               ;
   int  heure_arr               ;
   char type [10]               ;
+  float prix				   ;
 //  struct resultat_nodate *p_prec      ;
 //  struct resultat_nodate *p_suiv      ;
 } ;
@@ -57,10 +60,10 @@ struct resultat { /*--- Creation du type structure resultat ---*/
   char dep_gare[MAXstrNOMGARE] ;
   char arr_gare[MAXstrNOMGARE] ;
   int  num_train               ;
-  //char date[SizeDate]          ;
   int  heure_dep               ;
   int  heure_arr               ;
   char type [10]               ;
+  float prix				   ;
 //  struct resultat *p_prec      ;
 //  struct resultat *p_suiv      ;
 
@@ -82,6 +85,7 @@ struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int 
 struct resultat * tri(struct resultat tab_res[], int *nb_res_date   );
 void remplissage(struct horaire *tab);
 int normal_random(int moy, int max, int curseur);
+void reserver(struct resultat tab_res);
 
 /* =========================== */
 /* === Programme principal === */
@@ -405,6 +409,7 @@ void lance_recherche()
   char dump, lettre, digit[25];		//securisation des saisies
   int val_choix, erreur;	//securisation des saisies
   int compteur_saisie, compteur_saisie_date;					//securisation des saisies
+  int choix_reserver;
 
   char garedep[MAXstrNOMGARE] ; // saisie utilisateur Gare de départ
   char garearr[MAXstrNOMGARE] ; // saisie utilisateur Gare d'arrivée
@@ -674,10 +679,10 @@ void lance_recherche()
       else
       {
       	choix2=0;
-        while (choix2 != 5)
+        while (choix2 != 4)
         {
       		printf("\n") ;
-      		//affichage_resultat(tab_res_tri, *nb_res_date);
+      		
       		
           printf("------------------------------------------------------------------------------------\n") ;
           printf(" n° | Gare de départ         | Gare d'arrivée         | numéro | hh:mm| hh:mm| Type\n") ;
@@ -710,12 +715,11 @@ void lance_recherche()
 				printf("-1- Choisir un train circulant le %d %d/%d/%d\n",j_semaine, jour, mois, annee) ; // faire une fonction qui actualise la date (mutualiser avec jour_semaine ?)
           		printf("-2- Voir les trains du jour précédent\n") ;
           		printf("-3- Voir les trains du jour suivant\n") ;
-          		printf("-4- Modifier la recherche\n") ;
-          		printf("-5- Retour à l'accueil\n") ;
+          		printf("-4- Retour à l'accueil\n") ;
     			printf("\nChoix : ") ;
 				scanf("%c", &lettre);
 			
-				if( ((lettre<54) && (lettre>48) )  && lettre!='\n'  )  // la saisie est-elle un chiffre entre 1 et 5 ou un LF
+				if( ((lettre<53) && (lettre>48) )  && lettre!='\n'  )  // la saisie est-elle un chiffre entre 1 et 5 ou un LF
 				{
 					val_choix=lettre-48;								//conversion de caractere en int
 					choix2 = val_choix;									//insertion du choix
@@ -739,7 +743,7 @@ void lance_recherche()
 						}
 					}
 					dump='a';
-					printf("Veuillez saisir un choix valide (1, 2, 3, 4 ou 5).\n");
+					printf("Veuillez saisir un choix valide (1, 2, 3 ou 4).\n");
 				}
 			
 			}
@@ -749,11 +753,11 @@ void lance_recherche()
           {
             case 1: 
 			  printf("choisir un train (n°) : ") ;
-			  /*
+			  
 			  scanf("%d", &choix_reserver);
-			  choix_reserver++;
+			  choix_reserver--;
               reserver(tab_res_tri[choix_reserver]);
-			  */	
+			  choix2=4;
               break;
               
             case 2:
@@ -782,11 +786,7 @@ void lance_recherche()
               tab_res_tri = tri(tab_res, &nb_res_date);
               break;
               
-            case 4: 
-			  printf("c'est peut-être pas la peine de faire cette entrée si c'est pour demander 'voulez vous changer le départ, oui, non, voulez-vous changer l'arrivée, oui, non etc.\n") ;
-              break;
-              
-            case 5: 
+            case 4:
 			  break;
 			  
             default: 
@@ -1315,7 +1315,7 @@ struct resultat * tri(struct resultat tab_res[], int *nb_res_date   )
   	return tab_resultats_tri ;
 }
 
-/*
+
 
 void reserver(struct resultat tab_res)
 {
@@ -1328,6 +1328,8 @@ void reserver(struct resultat tab_res)
 		int  fenetre   ;
 		int  wifi      ;	
 		float  prix    ;
+		int voiture	   ;
+		int siege	   ;
 	};
 	
 	int j;
@@ -1337,18 +1339,31 @@ void reserver(struct resultat tab_res)
 	char dump;
 	char digit[3];  //MAX_AGE a creer
 	int nbplaces;
+	int reduc;
+	int num_bancaire, date_bancaire, cvc_bancaire;
+	int len_num;
 	float prix_tot;
+	int test, voiture, siege;
 	
 	FILE *f1;
-	char billet[] ;
+	char billet[200] ;
+	char recu[200] ;
 	
 	printf("Veuillez saisir le nombre de places que vous voulez reserver : ");
 	scanf("%d", &nbplaces);
 	 
 	struct passager passager[nbplaces];     //MAX_NBPLACES a definir et creer
 	
+	//Initialisation voiture et siege
+	voiture = rand() % 100;
+	voiture = voiture % 10;			  //Pour que les voitures soient entre 1 et 10
+	
+	siege = rand() % 100;
+	siege = siege + (voiture*100 );   // Pour qu'en voiture 8, les sieges soient entre 800 et 899
+	
 	for(j=1;j<=nbplaces;j++)
 	{
+		//Saisie nom passager
 		i=0;
 		erreur = 1;
 		while(erreur==1)
@@ -1383,7 +1398,7 @@ void reserver(struct resultat tab_res)
 		}
 		passager[j-1].nom[i]='\0';
 			
-			
+		//Saisie prenom passager	
 		i=0;
 		erreur = 1;
 		while(erreur==1)
@@ -1418,7 +1433,7 @@ void reserver(struct resultat tab_res)
 		}
 		passager[j-1].prenom[i]='\0';
 		
-	
+		//Saisie age passager
 		i=0;
 		erreur = 1;
 		while(erreur==1)
@@ -1453,7 +1468,7 @@ void reserver(struct resultat tab_res)
 		}
 		passager[j-1].age=atoi(digit);
 		
-		
+		//Reduc
 			if(passager[j-1].age<26)
 			{
 				passager[j-1].reduc25 = 1;
@@ -1464,7 +1479,7 @@ void reserver(struct resultat tab_res)
 				passager[j-1].reduc25 = 0;
 			}
 		
-	
+		//Saisie bool fenetre
 		erreur = 1;
 		while(erreur==1)
 		{
@@ -1499,7 +1514,7 @@ void reserver(struct resultat tab_res)
 			}
 			
 		}
-		
+		//Saisie bool wifi
 		erreur = 1;
 		while(erreur==1)
 		{
@@ -1533,11 +1548,12 @@ void reserver(struct resultat tab_res)
 			}	
 		}
 		
-		passager[j-1].prix = tab_res->prix;
+		passager[j-1].prix = tab_res.prix;
 		reduc = passager[j-1].prix *MONTANT_REDUC25;
-		passager[j-1].prix = passager[j-1].prix - (reduc*passager[j-1].reduc) +(PRIX_WIFI*passager[j-1].wifi);
+		passager[j-1].prix = passager[j-1].prix - (reduc*passager[j-1].reduc25) +(PRIX_WIFI*passager[j-1].wifi);
 		printf("Montant total pour ce passager : %f euros\n", passager[j-1].prix);
-	
+		passager[j-1].voiture = voiture ;
+		passager[j-1].siege = siege++;
 		
 	}
 	
@@ -1550,7 +1566,7 @@ void reserver(struct resultat tab_res)
 	
 	
 	/*-- Carte Bancaire -- */
-	/*
+	
 	while(erreur)
 	{
 		
@@ -1560,11 +1576,11 @@ void reserver(struct resultat tab_res)
 		{
 			lettre=50;
 			printf("Veuillez saisir votre numero de carte bancaire : ");
-			while(i<13 && lettre!='\n' && ( (lettre<58) && (lettre>47)) )
+			while( lettre!='\n' && ( (lettre<58) && (lettre>47)) )    
 			{
 				scanf("%c", &lettre);
 				
-				if(i<13 && lettre!='\n')
+				if( lettre!='\n')
 				{
 					if( (lettre<58) && (lettre>47) ) 
 					{
@@ -1575,22 +1591,106 @@ void reserver(struct resultat tab_res)
 					else
 					{
 						erreur=1;
-						i=0;
+						
+					}	
+				}
+				else if (lettre=='\n')
+				{
+					if(strlen(digit)!=16)
+					{
+						erreur=1;
+					}	
+				}
+				else
+				{
+					erreur=1;
+				}
+			}
+			if(erreur)
+			{
+					i=0;
+					test=0;
+					for(i=0;i<25;i++)
+					{
+						digit[i]='\0';
+					}
+					
+					if(lettre != '\n')
+					{
 						while(dump!='\n')
 						{
 							scanf("%c", &dump);
 						}
-						dump='a';
-						printf("Veuillez saisir un numero de carte bancaire valide.\n");
-					}	
-				}
+					}
+					lettre=50;
+					dump='a';
+					printf("Veuillez saisir un numero de carte bancaire valide.\n");
 			}
 		}
 		num_bancaire=atoi(digit);
-		if(strlen(num_bancaire)==12)
+		len_num =strlen(digit);
+		if(len_num==16)
 		{
-			printf("Veuillez saisir la date d'expiration de votre carte bancaire : ");
-			scanf("%d", &date_bancaire);
+		
+			i=0;
+			erreur = 1;
+			while(erreur==1)
+			{
+				lettre=50;
+				printf("Veuillez saisir la date d'expiration de votre carte bancaire au format MMAA : ");
+				while(lettre!='\n' && ( (lettre<58) && (lettre>47)) )    
+				{
+					scanf("%c", &lettre);
+				
+					if( lettre!='\n')
+					{
+						if( (lettre<58) && (lettre>47) ) 
+						{
+							digit[i]=lettre;
+							i++;
+							erreur=0;
+						}
+						else
+						{
+							erreur=1;
+						}	
+					}
+					else if (lettre=='\n')
+					{
+						test = atoi(digit);
+						if(test>1299 || test < 121)   // expiration min pour Jan 2021 -> 01/21 -> 121 -> EXP_MIN_CARTE a creer
+						{
+							erreur=1;
+						}
+					}
+					else
+					{
+						erreur=1;
+					}
+				}
+				
+				if(erreur)
+				{
+					i=0;
+					test=0;
+					for(i=0;i<25;i++)
+					{
+						digit[i]='\0';
+					}
+					
+					if(lettre != '\n')
+					{
+						while(dump!='\n')
+						{
+							scanf("%c", &dump);
+						}
+					}
+					lettre=50;
+					dump='a';
+					printf("Veuillez saisir une date d'expiration valide.\n");
+				}
+			}
+			date_bancaire=test;
 			if(date_bancaire)
 			{
 				
@@ -1600,11 +1700,11 @@ void reserver(struct resultat tab_res)
 				{
 					lettre=50;
 					printf("Veuillez saisir le code CVC de votre carte bancaire : ");
-					while(i<13 && lettre!='\n' && ( (lettre<58) && (lettre>47)) )
+					while( lettre!='\n' && ( (lettre<58) && (lettre>47)) )
 					{
 						scanf("%c", &lettre);
 				
-						if(i<13 && lettre!='\n')
+						if(lettre!='\n')
 						{
 							if( (lettre<58) && (lettre>47) ) 
 							{
@@ -1615,18 +1715,45 @@ void reserver(struct resultat tab_res)
 							else
 							{
 								erreur=1;
-								i=0;
-								while(dump!='\n')
-								{
-									scanf("%c", &dump);
-								}
-								dump='a';
-								printf("Veuillez saisir un numero de carte bancaire valide.\n");
+								
 							}	
 						}
+						else if(lettre=='\n')
+						{
+							test=atoi(digit);
+							if(test>1000 && test<99)
+							{
+								erreur=1;
+							}
+						}
+						else
+						{
+							erreur=1;
+						}
+					}
+					
+					if(erreur)
+					{
+						i=0;
+						test=0;
+						for(i=0;i<25;i++)
+						{
+							digit[i]='\0';
+						}
+						
+						if(lettre != '\n')
+						{
+							while(dump!='\n')
+							{
+								scanf("%c", &dump);
+							}
+						}
+						lettre=50;
+						dump='a';
+						printf("Veuillez saisir un code cvc valide.\n");
 					}
 				}
-				cvc_bancaire=atoi(digit);
+				cvc_bancaire=test;
 				if(cvc_bancaire<1000 && cvc_bancaire>99)
 				{
 					erreur=0;
@@ -1650,47 +1777,89 @@ void reserver(struct resultat tab_res)
 		
 	}
 	
+	/* -- Ecriture Recu Commande -- */
 	
-	/* -- Ecriture Billet -- */
+		i=0;
+    	strcpy(recu, "recu-");
+		strcat(recu, passager[i].nom);
+		strcat(recu, ".txt");
+		f1 =fopen(recu, "w");
 	
-	/*
-	strcpy(billet, tab_res->num_train);
-	strcat(billet, tab_res->heure_arr);
-	strcat(billet, tab_res->heure_dep);
-	strcat(billet, ".txt");
-	f1 =fopen(billet, "w");
-	
-	fprintf(f1,"------------------------------------------------------------------------------------\n") ;
-	fprintf(f1," n° | Gare de départ         | Gare d'arrivée         | numéro | hh:mm| hh:mm| Type\n") ;
-    fprintf(f1,"------------------------------------------------------------------------------------\n") ;
+		fprintf(f1,"------------------------------------------------------------------------------------\n") ;
+		fprintf(f1," n° | Gare de départ         | Gare d'arrivée         | numéro | hh:mm| hh:mm| Type\n") ;
+	    fprintf(f1,"------------------------------------------------------------------------------------\n") ;
     
             fprintf(f1, "%3d | %-22s | %-22s | %6d | %4d | %4d | %s\n", i, 
-																		tab_res->dep_gare, 
-																		tab_res->arr_gare, 
-																		tab_res->num_train, 
-																		tab_res->heure_dep, 
-																		tab_res->heure_arr, 
-																		tab_res->type) ;
+																		tab_res.dep_gare, 
+																		tab_res.arr_gare, 
+																		tab_res.num_train, 
+																		tab_res.heure_dep, 
+																		tab_res.heure_arr, 
+																		tab_res.type) ;
   	
   	
   	fprintf(f1,"------------------------------------------------------------------------------------\n") ;
 	fprintf(f1," n° | Prenom        | Nom        | Reduction -25ans | Fenetre | WIFI | Numero Siege\n") ;
     fprintf(f1,"------------------------------------------------------------------------------------\n") ;
-    for(i=0;i<nb_res_date;i++)
+    for(i=0;i<nbplaces;i++)
     {
-            fprintf(f1, "%3d | %-22s | %-22s | %6d | %4d | %4d | %s\n", i+1, 
+            fprintf(f1, "%3d | %-22s | %-22s | %6d | %4d | %4d | %d | %d\n", i+1, 
 																		passager[i].prenom, 
 																		passager[i].nom, 
-																		passager[i].reduc, 
+																		passager[i].reduc25, 
 																		passager[i].fenetre, 
-																		passager[i].wifi, 
+																		passager[i].wifi,
+																		passager[i].voiture, 
 																		passager[i].siege) ;
+			fprintf(f1,"------------------------------------------------------------------------------------\n") ;
+	
 	}
-																		
 	fclose(f1);
 	
+	/* -- Ecriture Billet -- */
+	
+	for(i=0;i<nbplaces;i++)
+    {
+    	
+    	strcpy(billet, "billet-");
+		strcat(billet, passager[i].nom);
+		strcat(billet, ".txt");
+		f1 =fopen(billet, "w");
+	
+		fprintf(f1,"------------------------------------------------------------------------------------\n") ;
+		fprintf(f1," n° | Gare de départ         | Gare d'arrivée         | numéro | hh:mm| hh:mm| Type\n") ;
+	    fprintf(f1,"------------------------------------------------------------------------------------\n") ;
+    
+            fprintf(f1, "%3d | %-22s | %-22s | %6d | %4d | %4d | %s\n", i, 
+																		tab_res.dep_gare, 
+																		tab_res.arr_gare, 
+																		tab_res.num_train, 
+																		tab_res.heure_dep, 
+																		tab_res.heure_arr, 
+																		tab_res.type) ;
+  	
+  	
+  	fprintf(f1,"------------------------------------------------------------------------------------\n") ;
+	fprintf(f1," n° | Prenom        | Nom        | Reduction -25ans | Fenetre | WIFI | Numero Siege\n") ;
+    fprintf(f1,"------------------------------------------------------------------------------------\n") ;
+    
+            fprintf(f1, "%3d | %-22s | %-22s | %6d | %4d | %4d | %d | %d\n", i+1, 
+																		passager[i].prenom, 
+																		passager[i].nom, 
+																		passager[i].reduc25, 
+																		passager[i].fenetre, 
+																		passager[i].wifi,
+																		passager[i].voiture, 
+																		passager[i].siege) ;
+	
+																		
+	fclose(f1);
+	}
+	
+	printf("Le recu de votre commande ainsi que vos billets sont disponibles dans votre dossier. Merci d'avoir choisi SNCF Voyages. A bientot.\n");
 }
-*/
+
+
 void remplissage(struct horaire *tab)
 {
 
