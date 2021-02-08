@@ -70,12 +70,15 @@ int  nbhoraire=0 ; // nb de données horaires de train
 
 /* === déclarations préliminaires === */
 void convmaj(char chaine[]) ;
+void dump_buffer() ;
 void date_sys(int *jour, int *mois, int *annee, int *jhebdo_num) ;
 void interprete_jour_semaine(int jhebdo_num, char jhebdo_alpha[]) ;
 // int  calcul_jour_semaine(int jour_rech, int mois_rech, int annee_rech, int jour, int mois, int annee) ;
 int calcul_jour_semaine(int jour_rech, int mois_rech, int annee_rech, int jour, int mois, int annee, int jour_sem) ;
 // void date_suivante_precedente(int jhebdo, int jour, int mois, int annee, int *jhebdo_rech, int *jour_rech, int *mois_rech, int *annee_rech, int increment) ;
 void date_suivante_precedente(int *jhebdo_rech, int *jour_rech, int *mois_rech, int *annee_rech, int increment) ;
+int valide_date(int * jour, int * mois, int * annee) ;
+int date_anterieure(int jour, int mois, int annee, int jour_ref, int mois_ref, int annee_ref) ;
 int lecture_choix(int deb, int fin, char lettre, int * erreur) ;
 
 
@@ -86,6 +89,7 @@ void lance_recherche()     ;
 struct horaire * recherche_horaire(char rechgare[], int *nb_res_horaire) ;
 struct resultat_nodate * compare_nodate(struct horaire gare_dep_trouve[], int nb_gare_dep_trouve, struct horaire gare_arr_trouve[], int nb_gare_arr_trouve, int *nb_res_nodate ) ;
 struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int *nb_res_nodate, int jhebdo, int *nb_res_date  /*, char date_rech[SizeDate]*/ );
+void tri(struct resultat tab_res[], int * nb_res_date) ;
 
 // =========================== //
 /* === Programme principal === */
@@ -93,9 +97,9 @@ struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int 
 
 int main()
 {
-  char lettre ;    // char lu au clavier
+  char lettre   ;  // char lu au clavier
   int  choix=-1 ;  // choix utilisateur reconstitué
-  int  erreur;     // code erreur pour expressions conditionnelles
+  int  erreur   ;  // code erreur pour expressions conditionnelles
   
   printf("Chargement des données en cours... \nVeuillez patienter, le programme va bientôt démarrer\n\n");
 
@@ -104,7 +108,7 @@ int main()
 
   // Date du système
   date_sys(&jour_sys, &mois_sys, &annee_sys, &jhebdo_num_sys) ; // récupère la date du système
-  interprete_jour_semaine(jhebdo_num_sys, jhebdo_alpha_sys) ;    // interprète le jour de semaine
+  interprete_jour_semaine(jhebdo_num_sys, jhebdo_alpha_sys)   ; // interprète le jour de semaine
   printf("Nous sommes le %s %d/%d/%d\n", jhebdo_alpha_sys, jour_sys, mois_sys, annee_sys) ;
 
   if(nbhoraire) // si le nombre d'horaire chargés est différent de 0
@@ -119,14 +123,13 @@ int main()
     // affichage du menu et lecture du choix
     erreur = 1;
     while(erreur==1)
-    {      
-      printf("\n-1- Réserver\n")             ;
-      printf("-2- Consulter les horaires\n") ;
-      printf("-3- Mes réservations\n")       ;
-      printf("-0- Quitter\n")                ;
-      printf("\nChoix : ")                   ;
-      scanf("%c", &lettre)                   ;
-      
+    {
+      printf("\n-1- Réserver\n")                ;
+      printf("-2- Consulter les horaires\n")    ;
+      printf("-3- Mes réservations\n")          ;
+      printf("-0- Quitter\n")                   ;
+      printf("\nChoix : ")                      ;
+      scanf("%c", &lettre)                      ;
       choix = lecture_choix(0,3,lettre,&erreur) ; 
     }
   
@@ -336,9 +339,11 @@ void chargement_horaires()
 // ~~~~~~~~~~~
 void lance_recherche()
 {
-  char lettre ;    // char lu au clavier
-  int  choix=-1 ;  // choix utilisateur reconstitué
-  int  erreur;     // code erreur pour expressions conditionnelles
+  char lettre    ; // char lu au clavier
+  int  choix2=-1 ; // choix utilisateur reconstitué
+  int  erreur2=0 ; // code erreur pour expressions conditionnelles
+  int  erreur3=0 ; // postériorité d'une date à une date de ref (-1=égalité 0=postérieur 1=antérieur)
+  int  erreur4=0 ;
 
   int  i ;
   int  nb_res_depart=0 ;
@@ -347,7 +352,7 @@ void lance_recherche()
   int  nb_res_date=0   ;
 
   int jour, mois, annee, jhebdo ; // éléments de la date de voyage
-  char jhebdo_alpha[9]          ;
+  char jhebdo_alpha[9]          ; // élément de la date de voyage
 
   char garedep[MAXstrNOMGARE] ; // saisie utilisateur Gare de départ
   char garearr[MAXstrNOMGARE] ; // saisie utilisateur Gare d'arrivée
@@ -358,48 +363,64 @@ void lance_recherche()
   struct resultat_nodate *tab_res_nodate=NULL ; // pointeur de struct resultat_nodate pour les résultats communs
   struct resultat *tab_res=NULL ; // pointeur de struct resultat pour les résultats communs
 
-/* Départ */
-  printf("\nGare de départ                      : "); // invite de saisie
-  scanf("%s",garedep)                               ; // récupération saisie utilisateur gare de départ
-  convmaj(garedep)                                  ; // conversion en majuscule
+  /* === Départ === */
+  printf("\nGare de départ                      : ")     ; // invite de saisie
+  scanf("%s",garedep)                                    ; // récupération saisie utilisateur Gare de départ
+  convmaj(garedep)                                       ; // conversion en majuscule
   res_depart = recherche_horaire(garedep,&nb_res_depart) ; // recherche_horaire reçoit la chaine saisie, le nombre de résultats et retourne un tableau de résultats
 
   if(nb_res_depart==0) // Cas : pas de résultat au départ de la gare saisie
   {
     printf ("\nIl n'y a pas de train au départ de %s\n",garedep) ;
+    dump_buffer() ;
   }
   else // Cas : des résultats au départ de la gare saisie
   {    
-/* Arrivée */
-    printf("Gare d'arrivée                      : "); // invite de saisie
-    scanf("%s",garearr)                             ; // récupération saisie utilisateur gare d'arrivée
-    convmaj(garearr)                                ; // conversion en majuscule
+
+  /* === Arrivée ===*/
+    printf("Gare d'arrivée                      : ")       ; // invite de saisie
+    scanf("%s",garearr)                                    ; // récupération saisie utilisateur gare d'arrivée
+    convmaj(garearr)                                       ; // conversion en majuscule
     res_arrive = recherche_horaire(garearr,&nb_res_arrive) ; // recherche_horaire reçoit la chaine saisie, le nombre de résultats et retourne un tableau de résultats
     
     tab_res_nodate = compare_nodate(res_depart,nb_res_depart,res_arrive,nb_res_arrive,&nb_res_nodate);
     
     if(nb_res_nodate==0) // Cas : pas de résultat entre la gare de départ et la gare d'arrivée
-    {
+    {     
       printf ("\nIl n'y a pas de liaison entre %s et %s\n",garedep, garearr) ;
+      dump_buffer() ;
     }
     else // Cas : des résultats entre la gare de départ et la gare d'arrivée
     {
-/* Date */
-      printf("Date du voyage (format JJ/MM/AAAA)  : ") ; // invite de saisie
-      scanf("%d/%d/%d",&jour, &mois, &annee)           ; // récupération saisie utilisateur date de voyage
-      while ((jour_sys > jour) | (mois_sys > mois) | (annee_sys > annee))
+
+  /* === Date === */
+      dump_buffer() ;
+      printf("Date du voyage (JJ/MM/AAAA)         : ") ; // invite de saisie
+      erreur2 = valide_date(&jour, &mois, &annee)      ; // lecture saisie et contrôle format
+      erreur3 = date_anterieure(jour, mois, annee, jour_sys, mois_sys, annee_sys) ;
+      while (erreur2 | erreur3 == 1)
       {
-        printf("\nNous ne proposons pas de voyage dans le passé\n") ;
+        if (erreur2)
+        {
+          printf("\nDate incorrecte\n")                               ;
+          dump_buffer() ;
+        }
+        if (erreur3 == 1)
+        {
+          printf("\nNous ne proposons pas de voyage dans le passé\n") ;
+        }
         printf("\nGare de départ                      : %s\n",garedep); 
-        printf("Gare d'arrivée                      : %s\n",garearr);
-        printf("Entrez une date (format JJ/MM/AAAA) : "); // invite de saisie
-        scanf("%d/%d/%d",&jour, &mois, &annee)          ; // récupération saisie utilisateur date de voyage
+        printf("Gare d'arrivée                      : %s\n",garearr)  ;
+        printf("Date du voyage (JJ/MM/AAAA)         : ")              ;
+        erreur2 = valide_date(&jour, &mois, &annee)                   ;
+        erreur3 = date_anterieure(jour, mois, annee, jour_sys, mois_sys, annee_sys) ;
       }
       
       jhebdo = calcul_jour_semaine(jour, mois, annee, jour_sys, mois_sys, annee_sys, jhebdo_num_sys) ; // calcul du jour de semaine de la date de voyage
       interprete_jour_semaine(jhebdo, jhebdo_alpha) ;
       
       tab_res = compare_avecdate(tab_res_nodate, &nb_res_nodate, jhebdo, &nb_res_date /*,date_rech*/);
+      tri(tab_res,&nb_res_date) ;
 
       if(nb_res_nodate==0)
       {
@@ -407,49 +428,48 @@ void lance_recherche()
       }
       else
       {
-        while (choix != 0)
+        while (choix2 != 0)
         {
           printf("\n") ;
-          printf("--------------------------------------------------------------------------------------\n") ;
+          printf("---------------------------------------------------------------------------------------\n") ;
           printf(" n° | Gare de départ         | Gare d'arrivée         | numéro | hh:mm | hh:mm | Type\n") ;
-          printf("--------------------------------------------------------------------------------------\n") ;
+          printf("---------------------------------------------------------------------------------------\n") ;
           for(i=0;i<nb_res_date;i++)
           {
-            printf("%3d | %-22s | %-22s | %6d | %5d | %5d | %s\n", i+1, tab_res[i].dep_gare, tab_res[i].arr_gare, tab_res[i].num_train, tab_res[i].heure_dep, tab_res[i].heure_arr, tab_res[i].type) ;
+            printf("%3d | %-22s | %-22s | %6d | %2d:%02d | %2d:%02d | %s\n", i+1, 
+              tab_res[i].dep_gare, tab_res[i].arr_gare, tab_res[i].num_train, 
+              tab_res[i].heure_dep/100, (tab_res[i].heure_dep-tab_res[i].heure_dep/100*100), 
+              tab_res[i].heure_arr/100, (tab_res[i].heure_arr-tab_res[i].heure_arr/100*100), tab_res[i].type) ;
           }
-          printf("--------------------------------------------------------------------------------------\n") ;
+          printf("---------------------------------------------------------------------------------------\n") ;
           printf("\n") ;
           printf("-1- Choisir un train circulant le %s %d/%d/%d\n",jhebdo_alpha, jour, mois, annee) ; // faire une fonction qui actualise la date (mutualiser avec jour_semaine ?)
-          printf("-2- Voir les trains du jour précédent\n") ;
-          printf("-3- Voir les trains du jour suivant\n") ;
+          printf("-2- Afficher les trains du jour précédent\n") ;
+          printf("-3- Afficher les trains du jour suivant\n") ;
           printf("-4- Modifier la recherche\n") ;
           printf("-0- Retour à l'accueil\n") ;
           printf("\nChoix : ") ;
           scanf("%c",&lettre) ;
-          choix = lecture_choix(0,4,lettre,&erreur) ;
-          switch (choix)
+          choix2 = lecture_choix(0,4,lettre,&erreur4) ;
+          switch (choix2)
           {
-            case 1: 
-              printf("choisir un train (n°) : ") ;
-              break;
-            case 2:
-              date_suivante_precedente(&jhebdo, &jour, &mois, &annee, -1) ;
-              interprete_jour_semaine(jhebdo, jhebdo_alpha) ;
-              tab_res=compare_avecdate(tab_res_nodate, &nb_res_nodate, jhebdo, &nb_res_date) ;
-              break;
-            case 3: 
-              date_suivante_precedente(&jhebdo, &jour, &mois, &annee, 1) ;
-              interprete_jour_semaine(jhebdo, jhebdo_alpha) ;
-              tab_res=compare_avecdate(tab_res_nodate, &nb_res_nodate, jhebdo, &nb_res_date) ;
-              break;
-            case 4: 
-              printf("c'est peut-être pas la peine de faire cette entrée si c'est pour demander 'voulez vous changer le départ, oui, non, voulez-vous changer l'arrivée, oui, non etc.\n") ;
-              break;
-            case 0: 
-              break;
-            default: 
-              printf("\nDésolés, nous n'avons pas compris votre choix, recommencez\n") ; 
-              break ;
+            case 1: printf("choisir un train (n°) : ") ;
+                    break;
+            case 2: date_suivante_precedente(&jhebdo, &jour, &mois, &annee, -1) ;
+                    interprete_jour_semaine(jhebdo, jhebdo_alpha) ;
+                    tab_res=compare_avecdate(tab_res_nodate, &nb_res_nodate, jhebdo, &nb_res_date) ;
+                    tri(tab_res,&nb_res_date) ;
+                    break;
+            case 3: date_suivante_precedente(&jhebdo, &jour, &mois, &annee, 1) ;
+                    interprete_jour_semaine(jhebdo, jhebdo_alpha) ;
+                    tab_res=compare_avecdate(tab_res_nodate, &nb_res_nodate, jhebdo, &nb_res_date) ;
+                    tri(tab_res,&nb_res_date) ;
+                    break;
+            case 4: printf("c'est peut-être pas la peine de faire cette entrée si c'est pour demander 'voulez vous changer le départ, oui, non, voulez-vous changer l'arrivée, oui, non etc.\n") ;
+                    break;
+            case 0: break;
+            default:printf("\nDésolés, nous n'avons pas compris votre choix, recommencez\n") ; 
+                    break ;
           }
         }
       }
@@ -712,12 +732,34 @@ struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int 
   return tab_resultats ;
 }
 
+// ~~~~~~~~~~~
+/* Tri des resultats par heure de depart */
+// ~~~~~~~~~~~
+void tri(struct resultat tab_res[], int * nb_res_date)
+{
+  int i ; // compteur du tableau d'entrée
+  int j ; // compteur pour trouver l'indice à partir duquel décaler
+  struct resultat unresultat ;
+
+  for (i=0 ; i < *nb_res_date ; i++)
+  {
+    unresultat = tab_res[i] ;
+    j = i ;
+    while ((j>0) && (unresultat.heure_dep < tab_res[j-1].heure_dep))
+    {
+      tab_res[j]=tab_res[j-1];
+      j-- ;
+    }
+    tab_res[j] = unresultat ;
+  }
+}
+
 // ====================================== //
 /* === Fonctions et procédures outils === */
 // ====================================== //
 
 /* ------------------------------------------ */
-/* -- Procédure de conversion en majuscule -- */
+/* -- Conversion d'une chaine en majuscule -- */
 /* ------------------------------------------ */
 void convmaj(char chaine[])
 {
@@ -730,8 +772,20 @@ void convmaj(char chaine[])
 }
 
 /* ------------------------------ */
-/* -- Fonction date du système -- */
+/* -- Lecture/vidage du buffer -- */
 /* ------------------------------ */
+void dump_buffer() 
+{
+  char dump ;
+  while(dump!='\n')
+  {
+    scanf("%c", &dump);
+  }
+}
+
+/* --------------------- */
+/* -- Date du système -- */
+/* --------------------- */
 // void date_sys(int *jour, int *mois, int *annee)
 void date_sys(int *jour, int *mois, int *annee, int *jhebdo_num)
 {
@@ -752,9 +806,9 @@ void date_sys(int *jour, int *mois, int *annee, int *jhebdo_num)
   *jhebdo_num = date.tm_wday       ; // jour de semaine du système (0 à 6)
 }
 
-/* ------------------------------------------- */
-/* -- Fonction de calcul du jour de semaine -- */
-/* ------------------------------------------- */
+/* ------------------------------- */
+/* -- Calcul du jour de semaine -- */
+/* ------------------------------- */
 // incrémente les 4 variables d'une date donnéee connue 
 // (jour de semaine, jour, mois, année) jusqu'à atteindre
 // la date recherchée pour en connaitre le jour de semaine
@@ -860,6 +914,9 @@ void interprete_jour_semaine(int jhebdo_num, char jhebdo_alpha[])
   }
 }
 
+/* ---------------------------------------------- */
+/* -- Incrémentation/décrémentation d'une date -- */
+/* ---------------------------------------------- */
 void date_suivante_precedente(int *jhebdo_rech, int *jour_rech, int *mois_rech, int *annee_rech, int increment)
 {
   int i ;
@@ -1020,6 +1077,152 @@ void date_suivante_precedente(int *jhebdo_rech, int *jour_rech, int *mois_rech, 
   *mois_rech   = mois   ;
   *annee_rech  = annee  ;
 }
+
+/* ------------------------------------------------------- */
+/* -- Lecture et contrôle de validité d'une date saisie -- */
+/* ------------------------------------------------------- */
+int valide_date(int * jour, int * mois, int * annee)
+{
+  int mois_switch ;
+  int erreur = 0;
+
+  int i=0 ;
+  char lettre=50 ; // caractère lu
+  #define MAX_DIGIT 12 // taille de la chaine
+  char digit[MAX_DIGIT] ; // chaine constituée par ajout de caractère lu
+  int compteur_saisie=0, compteur_element_date=0;
+
+  // lecture saisie, controle du format
+  while(compteur_saisie < MAX_DIGIT && lettre != '\n' && ((lettre>46) && (lettre<58)) && ! erreur)
+  {
+    scanf("%c", &lettre);
+    if( lettre!='\n') // si on n'a pas rencontré LF
+    {
+      if( (lettre>47) && (lettre<58) )    // si la saisie est un chiffre
+      {
+        digit[compteur_saisie++]=lettre ; // lire la saisie   
+      }
+      else if (lettre == 47) // si la saisie est le / séparateur d'éléments de date
+      {
+        switch(compteur_element_date)
+        {
+          case 0: // conversion du jour en int
+            if(compteur_saisie > 0 && compteur_saisie < 3)
+            {
+              *jour = atoi(digit) ;
+              compteur_saisie=0 ;
+              compteur_element_date++ ;
+              digit[0]='\0' ;
+            }
+            else
+            {
+              erreur = 1;
+            }
+            break;
+          case 1: // conversion du mois en int
+            if(compteur_saisie > 0 && compteur_saisie < 3)
+              {
+                *mois = atoi(digit) ;
+                compteur_saisie=0 ;
+                compteur_element_date++ ;
+                digit[0]='\0' ;
+              }
+            else
+            {
+              erreur = 1;
+            }
+            break;
+          default: erreur=1 ; break ;
+        }
+      }
+    }
+    else if (lettre == '\n' && (compteur_saisie == 4) && compteur_element_date == 2)
+    {
+      digit[compteur_saisie] = '\0' ;
+      *annee = atoi(digit) ;
+      compteur_saisie=0 ;
+      compteur_element_date++ ;
+    }
+    else
+    {
+      erreur = 1;
+    }
+  } // fin du while lecture saisie et contrôle du format
+
+  // contrôle de cohérence de date
+  if(compteur_saisie>=MAX_DIGIT)
+  {
+    erreur=1;
+  }
+  switch(*mois)
+  {
+    case 1: case 3: case 5: case 7: case 8: case 10: case 12:
+      if( (*jour<1 || *jour>31) )
+      {
+        erreur=1;
+      }
+      break;
+    case 4: case 6: case 9: case 11:
+      if( (*jour<1 || *jour>30) )
+      {
+        erreur=1;
+      }
+      break;
+    case 2 :
+      if((*mois % 4 == 0 && *mois % 100 != 0) || *mois % 400 == 0)
+      {
+        if( (*jour<1 || *jour>29) )
+        {
+          erreur=1;
+        }
+      }
+      else
+      {
+        if( (*jour<0 || *jour>28) )
+        {
+          erreur=1;
+        }
+      }
+      break;
+    default :
+      erreur=1;
+      break ;
+  }
+  return erreur ;
+}
+
+/* ----------------------------- */
+/* -- Postériorité d'une date -- */
+/* ----------------------------- */
+int date_anterieure(int jour, int mois, int annee, int jour_ref, int mois_ref, int annee_ref)
+{
+  int erreur=0;
+
+  if (annee < annee_ref)
+  {
+    erreur=1;
+  }
+  else if (annee == annee_ref)
+  {
+    if (mois < mois_ref)
+    {
+      erreur=1;
+    }
+    else if (mois == mois_ref)
+    {
+      if (jour < jour_ref)
+      {
+        erreur=1;
+      }
+      else if (jour = jour_ref)
+      {
+        erreur = -1;
+      }
+    }
+  }
+  return erreur ;
+}
+
 /* ---------------------------------------- */
 /* -- Conversion du choix de char en int -- */
 /* ---------------------------------------- */
@@ -1028,9 +1231,8 @@ void date_suivante_precedente(int *jhebdo_rech, int *jour_rech, int *mois_rech, 
 
 int lecture_choix(int deb, int fin, char lettre, int * erreur)
 {
-  int choix  ;
-  char debalpha, finalpha ;
-  char dump  ;
+  int  choix ;              // choix reconstitué à retourner
+  char debalpha, finalpha ; // bornes des choix du menu
 
   debalpha = deb + 48 ; // conversion des bornes en char
   finalpha = fin + 48 ;
@@ -1039,27 +1241,15 @@ int lecture_choix(int deb, int fin, char lettre, int * erreur)
   if (((lettre >= debalpha) && (lettre <= finalpha)) && lettre != '\n')
   {
     choix = lettre - 48 ; // conversion du char en int
-
-    while(dump!='\n') // lecture/vidage du buffer jusqu'au LF
-    {
-      scanf("%c", &dump); // 
-    }
-    dump='a';
-    *erreur=0;
-    return choix ;
+    dump_buffer() ;
+    *erreur=0     ;
+    return choix  ;
   }
   // si saisie hors des bornes du choix
   else
   {
-    *erreur=1 ;
-    if (lettre!='\n') // lecture/vidage du buffer jusqu'au LF
-    {
-      while(dump!='\n')
-      {
-        scanf("%c", &dump);
-      }
-    }
-    dump='a';
+    dump_buffer() ;
+    *erreur=1     ;
     printf("Veuillez saisir un choix valide (%d à %d)\n", deb, fin);
   }
 }

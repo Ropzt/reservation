@@ -1,5 +1,163 @@
 # Cahier des charges
 
+<!-- DANS LE FICHIER DES SUJETS
+  logiciel de réservation de place de trains pour une compagnie  nationale (SNCF). Seuls les trajets directs intérieurs sont à envisager. La réservation de places, retire le nombre de place des places disponibles. Prévoir plusieurs catégories de places, donc plusieurs prix. Le logiciel doit permettre d'afficher les horaires, les tarifs et d'effectuer les réservations. 
+-->
+
+<!-- MES NOTES LORS DE LA PRESENTATION DES SUJETS
+  Pareil (que l'avion), y a des trains différents. Les trains sont différents, n'ont pas le même nb de wagons, le même nb de place (tgv duplex)
+  Typologie de trains. 
+  1re classe, 2e classe, selon si ça existe sur les trains. Le train fait des escales : ça multiplie les possibilités par rapport à l'avion.
+  Peut-être gérer la variation du tarif selon le remplissage. 
+-->
+
+<!-- DANS LE MAIL DE JANVIER
+  Cahier des charges (CDC) - Analyse : Document WORD, PDF ou OpenOffice de 30 pages + ou - 5 pages (25 pages min - 35 pages max) : 
+  vous devez d’abord commencer par l’analyse « métier » c’est a dire expliquer le fonctionnement métier. 
+  Par exemple pour une bibliothèque il faut expliquer tout son fonctionnement comme si je ne connaissais rien. 
+  Vous présentez votre analyse, ce que vous avez compris, vos choix en termes de modélisation des données et de traitements. 
+  Vous expliquez vos difficultés rencontrées. Et seulement à la fin vous faites le lien avec votre programme (succinctement donc c’est pas la majorité des pages!). 
+-->
+
+## Présentation générale
+
+### Contexte
+
+La SNCF est une compagnie ferroviaire ayant entre autres activités le transport de voyageurs.
+Elle souhaite disposer d'un logiciel (programme ?) de réservation de place : `reservation`.
+
+### Portée
+
+`reservation` est un programme de réservation de place dans les différents modes de transport assurés par la SNCF.
+
+Il permet xx fonctions principales : (ne pas s'arrêter aux interfaces présentées à l'utilisateur ?)
+
+- la consultation d'horaires de voyage entre deux gares données à une date donnée ;
+- la consultation des tarifs de ces voyages selon (préciser plus tard ?)
+  - la classe du wagon
+  - (le profil du voyageur : carte de réduction)
+- la réservation de places
+- (la gestion des réservations d'un client)
+
+- la gestion des places disponibles à bord d'un train
+- le calcul des tarifs de voyage
+
+
+`reservation` ne permet pas :
+
+- la réservation de voyages incluant des correspondances.
+
+### Définitions
+
+**classe** : catégorie de prestation offerte à bord d'un train. Certains trains possèdent plusieurs classes : première classe (1) et seconde classe (2).
+
+**date système**, **date/heure système**, **heure système** : informations de date, date/heure, heure de l'équipement terminal sur lequel le programme est utilisé.  
+D'un point de vue métier, il s'agit de la date/heure courante, c'est-à-dire la date/heure d'utilisation du programme, sachant que le comportement du programme dépend de cette date/heure (les voyages proposés ont une date/heure postérieure à la date courante).
+Dans le programme, ces informations sont obtenues via l'équipement terminal sur lequel le programme est exécuté. Elles s'appellent donc date, date/heure et heure système malgré la consonnance très peu « métier ».
+- **date** désigne un jour (jour de semaine, jour du mois, mois, année)
+- **heure** désigne un horaire (heures et minutes)
+- **date/heure** désigne un horaire d'un jour.
+
+**gare** : station à partir ou au départ de laquelle il est possible de faire un voyage assuré par la SNCF. 
+Il peut s'agir d'une gare de chemin de fer ou d'une gare routière. 
+Une ville peut posséder plusieurs gares.
+
+**terminal** : équipement terminal, appareil, sur lequel le programme est utilisé. Dans la version courante du programme, seul l'ordinateur est un terminal possible.
+
+**train** : tout véhicule dont la circulation est assurée par la SNCF et dont l'utilisateur peut réserver une place. 
+Les trains sont de différents types, qu'ils circulent sur voie ferrée ou routière (TGV, INOUI, TER, OUIGO, Car).
+
+**voyage** déplacement en train entre deux gares, assuré par la SNCF.
+
+...
+
+
+
+### Vue d'ensemble
+
+Dire comment est structurée la suite du document
+
+## Analyse métier
+
+La SNCF assure la circulation de différents types de trains.
+
+
+### Réservation
+
+Le processus de réservation d'une place de train suit généralement les étapes suivantes :
+
+1. Recherche
+  * choix de la gare/ville de départ
+  * choix de la gare/ville d'arrivée
+  * choix de la date
+  * choix des options de voyage : classe de wagon, tarif particulier.
+2. Consultation des résultats
+3. (optionnel) Modification des critères de recherche
+4. Choix et réservation d'un voyage parmi les résultats
+
+#### Recherche
+
+##### Choix de la gare/ville de départ
+
+Certaines villes possèdent plusieurs gares.
+C'est le cas :
+* des grandes villes et des villes possédant une gare de chemin de fer historique et une gare TGV située en dehors de la ville sur une ligne à grande vitesse.
+* des villes possédant une gare de chemin de fer et une gare routière
+
+Le voyageur peut souhaiter réserver une place pour un voyage au départ ou à l'arrivée d'une ville, indépendamment de la gare de départ ou d'arrivée dans cette ville.
+Les résultats affichés doivent inclure les différentes gares d'une même ville.
+
+Si aucun train ne circule au départ de cette ville, le processus de recherche doit s'interrompre.
+Il peut éventuellement proposer de saisir une autre ville de départ.
+
+##### Choix de la gare/ville d'arrivée
+
+La problématique gare/ville est identique pour la gare/ville d'arrivée.
+
+Si aucun train ne circule entre la ville de départ et la ville d'arrivée, le processus de recherche doit s'interrompre.
+Il peut éventuellement proposer de saisir une autre gare/ville d'arrivée en conservant la gare/ville de départ précédemment choisie. 
+
+##### Choix de la date
+
+La date de voyage ne peut pas être antérieure à la date système.
+
+Si la date saisie est antérieure, le processus de recherche doit s'interrompre.
+Il peut éventuellement proposer la saisie d'une autre date en conservant la gare/ville de départ et la gare/ville d'arrivée précédemment choisies.
+
+#### Gestion de la date/heure
+
+Concernant la date/heure, le cas de la réservation de voyage et le cas de la consultation d'horaires sont différents.  
+Dans le cas d'une réservation de voyage, le programme ne doit pas proposer de résultats de voyages partant à une date/heure antérieure à la date/heure système.
+Dans le cas d'une consultation d'horaire, le programme ne doit pas proposer de résultats de voyages arrivant à une date/heure antérieure à la date/heure système.
+
+### Train
+
+Un train est composé de 
+
+
+
+Un voyageur/agent doit pouvoir consulter les horaires de voyages en indiquant :
+
+- la ville de départ
+- la ville d'arrivée
+
+Un voyageur/agent doit pouvoir réserver des places en choisissant :
+
+- la gare de départ
+- la gare d'arrivée
+- la date du voyage
+- le nombre de places
+
+
+
+
+## Spécifications (le lien avec notre programme)
+
+
+
+------------------
+
+
 ## Fonctions
 
 - afficher les horaires
