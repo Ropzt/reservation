@@ -438,8 +438,10 @@ void lance_recherche()
           {
             printf("%3d | %-22s | %-22s | %6d | %2d:%02d | %2d:%02d | %s\n", i+1, 
               tab_res[i].dep_gare, tab_res[i].arr_gare, tab_res[i].num_train, 
-              tab_res[i].heure_dep/100, (tab_res[i].heure_dep-tab_res[i].heure_dep/100*100), 
-              tab_res[i].heure_arr/100, (tab_res[i].heure_arr-tab_res[i].heure_arr/100*100), tab_res[i].type) ;
+              // tab_res[i].heure_dep/100, (tab_res[i].heure_dep-tab_res[i].heure_dep/100*100), 
+              // tab_res[i].heure_arr/100, (tab_res[i].heure_arr-tab_res[i].heure_arr/100*100), tab_res[i].type) ;
+              tab_res[i].heure_dep/100, tab_res[i].heure_dep%100,tab_res[i].heure_arr/100, 
+              tab_res[i].heure_arr%100, tab_res[i].type) ;
           }
           printf("---------------------------------------------------------------------------------------\n") ;
           printf("\n") ;
