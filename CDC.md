@@ -92,18 +92,20 @@ Le « type » désigne des réalités mixtes, à la fois commerciales et techniq
 
 Le train au sens de « matériel roulant » est désigné par « rame ».
 Un type de train peut utiliser un ou plusieurs types de rames.
-Un train de type Car utilisera probablement une rame standard (un car) avec un nombre de places fixe, tandis qu'un train de type TGV utilise différents types de rames, selon la ligne de chemin de fer (une rame duplex sur Paris-Lyon, une rame simplex sur une autre ligne ou sur un autre service..
+Un train de type Car utilisera probablement une rame standard (un car) avec un nombre de places fixe, tandis qu'un train de type TGV utilise différents types de rames, selon la ligne de chemin de fer (une rame duplex sur Paris-Lyon, une rame simplex sur une autre ligne ou sur un autre service.
 
 Chaque type de rame a une composition propre, mais de façon commune :
 
 * une rame est constituée d'un ou plusieurs wagons
-* les wagons d'une rame peuvent être de même classe ou de classes différentes
+* les wagons d'une rame sont de même classe ou de classes différentes
 * un wagon est simplex ou duplex, il possède alors une ou deux salles (salle basse et salle haute)
 * une salle est consituée de places
 * une place a un placement. Selon le type de wagon dans laquelle elle se trouve, le placement peut être : fenêtre, couloir, isolée.
 
 L'utilisation d'un type de rame en fonction du service est assez complexe à comprendre/trouver.
-Nous utiliserons pour tous les services d'un même type de train une composition de rame identique, tout en permettant un paramètrage différent au cas où ces informations deviennent accessibles.
+L'affectation des rames aux services semble avoir une base en partie régionale, liée aux commandes de rames lors de l'ouverture d'une nouvelle ligne.
+À titre d'exemple, un TGV peut utiliser une rame TGV Sud-Est, TGV Atlantique, TGV Réseau, TGV Duplex, TGV Réseau Duplex, TGV Duplex Dasye, TGV 2N2, TGV PBA, TGV TMST, TGV POS, TGV 2N2, TGV IRIS 320, TGV M, TGV PBKA, Eurostar e320 (https://fr.wikipedia.org/wiki/Mat%C3%A9riel_moteur_de_la_SNCF#Parc_%C3%A9lectrique).
+Dans le cadre de ce prototype, nous utilisons une composition de rame identique pour tous les services d'un même type de train, tout en permettant un paramètrage différent au cas où ces informations deviennent accessibles.
 
 ### Composition des rames
 
@@ -160,6 +162,36 @@ Les trains circulent selon un calendrier
 
 
 ## Ouverture des ventes
+
+Les ventes de billets sont ouvertes avec une antécédence, par rapport au voyage, différente selon le type de train :
+
+* TGV, INOUI & Intercités : 4 mois, sauf pour les vacances d'été, de Noël et d'hiver
+* TGV Bruxelles, Italo, TGV Luxembourg-Paris, TGV Fribourg-Paris : 4 mois
+* Trajets RENFE/SNCF, ALLEO France-Allemagne, TGV Lyria (entre Lille et Genève) : 4 mois
+* TGV France-Italie : 4 mois
+* TER : en fonction des régions, entre 2 et 5 mois
+* OUIGO : entre 2 et 9 mois
+* THALYS (vers la Belgique, les Pays-Bas, l'Allemagne) : 4 mois
+* Eurostar (vers l'Angleterre) : 6 mois pour Paris, Lille et Calais vers London, Ashford, Ebbsfleet, 150 à 280 jours pour Lyon, Marseille et Avignon, vers London, Ashford, Ebbsfleet
+
+L'ouverture des ventes vacances de printemps (pour des circulations du 29 mars au 15 mai 2021) se fait le 12 janvier 2021.
+
+Lorsqu'un train est ouvert à la vente, ses places doivent être réservables.
+
+Au démarrage du système, il faut 
+
+* créer des places réservables pour les trains qui s'ouvrent à la vente :
+  * regarder la date système
+  * parser les services
+  * pour chaque service, regarder son type de train
+  * calculer la date la plus tardive (date limite) à laquelle ses places sont ouvertes à la réservation
+  * si elle n'existe pas, créer une rame pour chaque date entre la date système et la date limite, avec les caractéristiques correspondant au type de train
+* supprimer les rames des trains qui sont arrivés
+  * regarder la date/heure système
+  * parser les dates
+  * si la date est antérieure à la date système, supprimer ses rames
+
+
 
 
 ## Réservation
