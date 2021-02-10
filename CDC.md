@@ -64,6 +64,8 @@ Dans le programme, ces informations sont obtenues via l'équipement terminal sur
 Il peut s'agir d'une gare de chemin de fer ou d'une gare routière. 
 Une ville peut posséder plusieurs gares.
 
+**itinéraire** : 
+
 **place** : siège à bord d'un train, réservable par un voyageur pour un voyage.
 
 **rame** : train au sens « matériel roulant». *compléter : dire quels attributs sont propres à la rame (le nb de places, etc.) là où d'autres attributs sont propres au train ou au voyage*
@@ -72,6 +74,8 @@ Une ville peut posséder plusieurs gares.
 
 **train** : tout véhicule dont la circulation est assurée par la SNCF et dont l'utilisateur peut réserver une place. 
 Les trains sont de différents types, qu'ils circulent sur voie ferrée ou routière (TGV, INOUI, TER, OUIGO, Car).
+
+**trajet** : 
 
 **service** : ligne commerciale définie par une gare de départ, une gare d'arrivée, des gares d'arrêt, des horaires de départ et d'arrivée dans chacune des gares de départ, d'arrivée et d'arrêt, et un calendrier de circulation (circule ou ne circule pas, pour chaque jour de semaine). Le service est le numéro de train utilisé en gare et sur un billet de train pour la communication avec les voyageurs.
 
@@ -304,7 +308,7 @@ Un voyageur/agent doit pouvoir réserver des places en choisissant :
 
 ### Jeux de données
 
-Les jeux de données utilisés sont ceux de la SNCF, mis à disposition à [](https://ressources.data.sncf.com/explore/)
+Les ensembles de données utilisés sont ceux mis à disposition par la SNCF à https://ressources.data.sncf.com/explore/
 
 * Horaires
   * Horaires des TGV : https://ressources.data.sncf.com/explore/dataset/horaires-des-train-voyages-tgvinouiouigo/table/
@@ -319,114 +323,181 @@ Les jeux de données utilisés sont ceux de la SNCF, mis à disposition à [](ht
 
 #### Horaires
 
-Les jeux de données Horaires (de façon identique pour chaque jeu) sont constitués de 8 tables :
+Les ensembles de données sont disponibles au format [GTFS](https://fr.wikipedia.org/wiki/General_Transit_Feed_Specification) (*General Transit Feed Specification*), format de ficher standardisé pour les horaires de transports en commun.
 
-* `agency.txt`
-* `calendar_dates.txt`
-* `calendar.txt`
-* `routes.txt`
-* `stop_times.txt`
-* `stops.txt`
-* `transfers.txt`
-* `trips.txt`
+##### Description du format GTFS
 
-Le schéma relationnel est le suivant :
+Parmi les fichiers obligatoires et facultatifs du standard GTFS, chaque ensemble de données Horaires fourni par la SNCF est constitué de 8 fichiers :
 
-[mettre le schéma]
+* `agency.txt` : Agences de transports en commun ayant un service représenté dans cet ensemble de données.
+* `stops.txt` : Arrêts où les voyageurs peuvent monter et descendre. Définit également les stations et leurs entrées.
+* `routes.txt` : Itinéraires en transports en commun. Un itinéraire est un ensemble de trajets présentés aux voyageurs  comme relevant du même service.
+* `trips.txt` : Trajets pour chaque itinéraire. Un trajet est une série d'au moins deux arrêts desservis à des horaires précis.
+* `stop_times.txt` : Heures d'arrivée et de départ d'un train depuis des arrêts spécifiques, pour chaque trajet.
+* `calendar.txt` : Dates de service indiquées à l'aide d'un horaire hebdomadaire comportant des dates de départ et d'arrivée.
+* `calendar_dates.txt` : Exceptions pour les services définis dans le fichier `calendar.txt`.
+* `transfers.txt` : Règles de liaison aux pôles de correspondance entre des itinéraires.
 
-La table `agency.txt` décrit les **??agences??**.
-Elle comporte les champs :
 
-* `agency_id` : 
-* `agency_name` : 
-* `agency_url` :
-* `agency_timezone` :
-* `agency_lang` :
+Le schéma logique d'un ensemble de données Horairesest le suivant :
 
-La table `routes.txt` décrit les lignes de voie ferrée.
-Elle est liée à `agency.txt` par le champ `agency_id`.
-Elle comporte les champs :
+![Schéma logique des ensembles de données Horaires fournis par la SNCF](diagrammes/bdd_sncf_horaires.png "Schéma logique des ensembles de données Horaires fournis par la SNCF")
 
-* `route_id` :
-* `agency_id` :
-* `route_short_name` :
-* `route_long_name` :
-* `route_desc` :
-* `route_type` :
-* `route_url` :
-* `route_color` :
-* `route_text_color` :
+###### Fichier `agency.txt`
 
-La table `trips.txt` décrit les lignes commerciales (par exemple : ).
-Elle est liée à `routes.txt` par le champ `route_id`.
-Elle comporte les champs : 
+Le fichier `agency.txt` décrit les agences de transports en commun ayant un service représenté dans cet ensemble de données. Il s'agit de la SNCF.
+Il comporte les champs :
 
-* `route_id` : l'identifiant de route sur laquelle la ligne commerciale circule.
-* `service_id` : l'identifiant du **??service??**
-* `trip_id` : l'identifiant du **??trip??**
-* `trip_headsign` : le numéro de train tel qu'affiché en gare et sur les billets
-* `direction_id` :
-* `block_id` :
-* `shape_id` :
+* `agency_id` : indique la marque du réseau de transports en commun (souvent identique au nom de l'agence)
+* `agency_name` : nom complet de l'agence de transports en commun.
+* `agency_url` : URL de l'agence de transports en commun.
+* `agency_timezone` : fuseau horaire de la zone où se trouve l'agence de transports en commun.
+* `agency_lang` : langue principale utilisée par cette agence de transports en commun.
 
-La table `stop_times.txt` décrit les arrêts en gare pour 
-Elle comporte les champs : 
+###### Fichier `stops.txt`
 
-* `trip_id` : le **trip** concerné
-* `arrival_time` : l'heure d'arrivée en gare
-* `departure_time` : l'heure de départ de la gare
-* `stop_id` : l'identifiant de la gare d'arrêt
-* `stop_sequence` :
-* `stop_headsign` :
-* `pickup_type` :
-* `drop_off_type` :
-* `shape_dist_traveled` :
+Le fichier `stops.txt` décrit les arrêts où les voyageurs peuvent monter et descendre, c'est à dire les gares.
+Il est lié à la table `stop_times.txt` par le champ `stop_id`.
+Il comporte les champs :
 
-La table `stops.txt` décrit les lieux d'arrêt, c'est-à-dire les gares.
-Elle est liée à la table `stop_times.txt` par le champ `stop_id`.
-Elle comporte les champs :
+* `stop_id` : identifie un arrêt, une station ou une entrée de station.
+  Le terme "entrée de station" désigne à la fois les entrées et les sorties de station. Les arrêts, les stations et les entrées de station sont collectivement appelés "emplacements". Le même arrêt peut être desservi par plusieurs itinéraires.
+* `stop_name` : nom de l'emplacement.
+* `stop_desc` : description de l'emplacement. Ce champ n'est pas toujours renseigné.
+* `stop_lat` : latitude de l'emplacement.
+* `stop_lon` : longitude de l'emplacement.
+* `zone_id` : définit la zone tarifaire d'un arrêt. Ce champ n'est pas toujours renseigné.
+* `stop_url` : URL d'une page Web qui décrit l'emplacement. Ce champ n'est pas toujours renseigné.
+* `location_type` : type d'emplacement :
+  * 0 ou vide : arrêt ou quai (lieu où les usagers montent dans un véhicule de transport en commun ou en descendent). Le terme "quai" est utilisé lorsque cette valeur est définie au sein d'un champ `parent_station`.
+  * 1 : station (zone ou structure physique comprenant un ou plusieurs quais)
+  * 2 : entrée ou sortie (lieu où les usagers peuvent entrer dans une station depuis la rue ou en sortir). Si une entrée/sortie appartient à plusieurs stations, tous les chemins correspondants sont indiqués, et le fournisseur de données doit désigner une station en tant que station principale (parente).
+  * 3 : intersection générique (un emplacement dans une station qui ne correspond à aucune autre valeur `location_type`).
+  * 4 : Zone d'embarquement (un emplacement spécifique sur un quai où les usagers peuvent monter à bord d'un véhicule ou en descendre)
+* `parent_station` : spécifie la hiérarchie entre les différents emplacements définis dans le fichier `stops.txt`. Contient l'ID de l'emplacement parent, comme suit :
+  * Arrêt/quai (`location_type`=0) : le champ `parent_station` contient l'ID d'une station.
+  * Station (`location_type`=1) : ce champ doit être vide.
+  * Entrée/sortie (`location_type`=2) ou intersection générique (`location_type`=3) : le champ `parent_station` contient l'ID d'une station (`location_type`=1).
+  * zone d'embarquement (`location_type`=4) : le champ `parent_station` contient l'ID d'un quai.
 
-* `stop_id` : l'identifiant de la gare d'arrêt
-* `stop_name` : le nom de la gare d'arrêt
-* `stop_desc`
-* `stop_lat` : la latitude de la gare d'arrêt
-* `stop_lon` : la longitute de la gare d'arrêt
-* `zone_id` : 
-* `stop_url` : 
-* `location_type` : 
-* `parent_station` :
+###### Fichier `routes.txt`
 
-La table `calendar.txt` décrit les jours de service pour un service donné.
-Elle est liée à la table `trips.txt` par le champ `service_id`.
-Elle comporte les champs :
+Le fichier `routes.txt` décrit les itinéraires en transports en commun. Un itinéraire est un ensemble de trajets présentés aux voyageurs comme relevant du même service.
+Il est liée à `agency.txt` par le champ `agency_id`.
+Il comporte les champs :
 
-* `service_id` : l'identifiant du **service** concerné
-* `monday` : valeur boléenne de circulation le lundi
-* `tuesday` : valeur boléenne de circulation le mardi
-* `wednesday` : valeur boléenne de circulation le mercredi
-* `thursday` : valeur boléenne de circulation le jeudi
-* `friday` : valeur boléenne de circulation le vendredi
-* `saturday` : valeur boléenne de circulation le samedi
-* `sunday` : valeur boléenne de circulation le dimanche
+* `route_id` : définit un itinéraire.
+* `agency_id` : agence pour l'itinéraire spécifié. Fait référence à `agency.agency_id`.
+* `route_short_name` : version courte du nom d'un itinéraire. Il s'agit généralement d'un identifiant court, abstrait, comme "32", "100X" ou "vert", que les usagers utilisent pour identifier un itinéraire, sans donner d'indications sur les lieux desservis
+* `route_long_name` : le nom complet d'un itinéraire. Ce nom est généralement plus descriptif que la version courte indiquée dans le champ `route_short_name`. Il inclut souvent la destination ou le terminus de l'itinéraire. 
+* `route_desc` : description d'un itinéraire. Les informations fournies doivent être utiles et de qualité, elles ne répètent pas le nom de l'itinéraire. Ce champ n'est pas renseigné.
+* `route_type` : décrit le moyen de transport utilisé pour un itinéraire. Les options suivantes sont acceptées :
+  * `0` : tramway ou métro léger. Tout système de métro léger ou circulant sur la chaussée dans une zone métropolitaine.
+  * `1` : métro. Tout système ferroviaire souterrain circulant au sein d'une zone métropolitaine.
+  * `2` : train. Utilisé pour les trajets interurbains ou longue distance.
+  * `3` : bus. Utilisé pour les lignes de bus courte et longue distance.
+  * `4` : ferry. Utilisé pour le service de bateaux courte et longue distance.
+  * `5` : tramway à traction par câble. Utilisé pour les systèmes de tramways au niveau de la chaussée dans lesquels le câble passe sous le véhicule, comme c'est le cas à San Francisco.
+  * `6` : téléphérique. Service de transport par câble où les cabines, voitures, télécabines ou sièges sont suspendus à l'aide d'un ou de plusieurs câbles.
+  * `7` : funiculaire. Tout système ferroviaire conçu pour les pentes raides.
+  * `11` : trolleybus. Autobus électrique alimenté par des lignes aériennes de contact.
+  * `12` : monorail. Service de chemin de fer roulant sur une voie constituée d'un rail ou d'une poutre unique.
+* `route_url` : URL d'une page Web pour un itinéraire spécifique.
+* `route_color` : couleur de l'itinéraire correspondant à celle utilisée dans les supports destinés au public.
+* `route_text_color` : couleur lisible pour le texte à afficher sur la couleur d'arrière-plan `route_color`.
+
+###### Fichier `trips.txt`
+
+Le fichier `trips.txt` définit les trajets pour chaque itinéraire.
+Il est lié à `routes.txt` par le champ `route_id`.
+Il comporte les champs : 
+
+* `route_id` : définit un itinéraire. Fait référence à `routes.route_id`.
+* `service_id` : définit les dates auxquelles le service est disponible pour un ou plusieurs itinéraires. Fait référence à `calendar.service_id` ou à `calendar_dates.service_id`
+* `trip_id` : définit un trajet.
+* `trip_headsign` : texte qui apparaît sur la signalétique indiquant aux voyageurs la destination du trajet (le numéro de train tel qu'affiché en gare et sur les billets). Ce champ permet de différencier les modèles de service sur un même itinéraire.
+* `direction_id` : indique la direction du trajet. Ce champ n'est pas utilisé pour les itinéraires, mais il permet de distinguer les trajets en fonction de leur direction lors de la publication des horaires. Les options suivantes sont acceptées :
+  * `0` : trajet dans un sens (trajet aller, par exemple).
+  * `1` : trajet dans le sens opposé (trajet retour, par exemple)
+* `block_id` : identifie le bloc auquel appartient le trajet. Un bloc comprend un seul trajet ou de nombreux trajets séquentiels effectués par le même véhicule. Ce champ n'est pas renseigné.
+* `shape_id` : définit une forme géospatiale décrivant le parcours du véhicule lors d'un trajet. Ce champ n'est pas renseigné.
+
+###### Fichier `stop_times.txt`
+
+Le fichier `stop_times.txt` définit les heures d'arrivée et de départ d'un train depuis des arrêts spécifiques, pour chaque trajet.
+Il est lié à `stops.txt` par le champ `stop_id`.
+Il comporte les champs : 
+
+* `trip_id` : définit un trajet. Fait référence à `trips.trip_id`.
+* `arrival_time` : heure d'arrivée à un arrêt donné pour un trajet spécifique inclus dans un itinéraire. Si les heures d'arrivée et de départ sont identiques pour un arrêt spécifique, la même valeur est saisie pour les champs `arrival_time` et `departure_time`. Pour les heures après minuit de la journée de service, la valeur saisie est une supérieure à 24:00:00 au format HH:MM:SS dans l'heure locale du jour où commence le trajet.
+* `departure_time` : heure de départ depuis un arrêt donné pour un trajet spécifique inclus dans un itinéraire. Si les heures d'arrivée et de départ sont identiques pour un arrêt spécifique, la même valeur est saisie pour les champs `arrival_time` et `departure_time`. Pour les heures après minuit de la journée de service, la valeur saisie est supérieure à 24:00:00 au format HH:MM:SS de l'heure locale le jour où commence le trajet. 
+* `stop_id` : identifie l'arrêt desservi. Fait référence à `stops.stop_id`.
+* `stop_sequence` : ordre des arrêts desservis lors d'un trajet particulier. Les valeurs augmentent à mesure du trajet, mais ne sont pas nécessairement consécutives.
+* `stop_headsign` : texte qui apparaît sur la signalétique indiquant aux voyageurs la destination du trajet.
+* `pickup_type` : indique les possibilités de montée à bord. Les options suivantes sont acceptées :
+  * `0` ou vide : les usagers peuvent monter à bord aux horaires standards.
+  * `1` : les usagers ne peuvent pas monter à bord.
+  * `2` : les usagers doivent téléphoner à l'agence pour pouvoir monter à bord.
+  * `3` : les usagers doivent contacter le conducteur pour pouvoir monter.
+* `drop_off_type` : indique les possibilités de descente du véhicule. Les options suivantes sont acceptées :
+  * `0` ou vide : les usagers peuvent monter à bord aux horaires standards.
+  * `1` : les usagers ne peuvent pas monter à bord.
+  * `2` : les usagers doivent téléphoner à l'agence pour pouvoir monter à bord.
+  * `3` : les usagers doivent contacter le conducteur pour pouvoir monter.
+* `shape_dist_traveled` : indique la distance réelle parcourue le long du tracé donné entre le premier arrêt et l'arrêt spécifié dans cet enregistrement.
+
+###### Fichier `calendar.txt` 
+
+Le fichier `calendar.txt` définit les dates de service indiquées à l'aide d'un horaire hebdomadaire comportant des dates de départ et d'arrivée.
+Il est liée au fichier `trips.txt` par le champ `service_id`.
+Il comporte les champs :
+
+* `service_id` : définit de façon unique les dates auxquelles le service est disponible pour un ou plusieurs itinéraires. Fait référence à `trips.service_id`.
+* `monday` : indique si le service est proposé tous les lundis de la plage de dates spécifiée par les champs `start_date` et `end_date`. Les options suivantes sont acceptées :
+  * `1` : le service est disponible tous les lundis de la plage de dates.
+  * `0` : le service n'est pas disponible les lundis de la plage de dates.
+* `tuesday` : fonctionne comme le champ `monday`, mais pour les mardis
+* `wednesday` : fonctionne comme le champ `monday`, mais pour les mercredis
+* `thursday` : fonctionne comme le champ `monday`, mais pour les jeudis
+* `friday` : fonctionne comme le champ `monday`, mais pour les vendredis
+* `saturday` : fonctionne comme le champ `monday`, mais pour les samedis
+* `sunday` : fonctionne comme le champ `monday`, mais pour les dimanches
 * `start_date` : date de début de validité du service
 * `end_date` : date de fin de validité du service
 
-La table `calendar_dates.txt` décrit ??des exceptions au calendrier de circulation défini par `calendar.txt` pour un service donné et une date donnée, en précisant la nature de l'exception.
-Elle est liée à la table `trips.txt` ou `calendar.txt` par le champ `service_id`
-Elle comporte les champs : 
+###### Fichier `calendar_dates.txt`
 
-* `service_id` : l'identifiant du **service** concerné
-* `date` : la date de circulation concernée
-* `exception_type` : le type d'exception
+Le fichier `calendar_dates.txt` définit les exceptions pour les services définis dans le fichier `calendar.txt`.
+Il est liée au fichier `calendar.txt` par le champ `service_id`.
+Il comporte les champs : 
+
+* `service_id` : définit les dates auxquelles le service est exceptionnellement disponible ou indisponible pour un ou plusieurs itinéraires. Fait référence à `calendar.service_id`.
+* `date` : date à laquelle le service proposé est différent du service standard.
+* `exception_type` : indique si le service est disponible à la date spécifiée dans le champ date. Les options suivantes sont acceptées :
+  * `1` : le service a été ajouté pour la date spécifiée.
+  * `2` : le service a été supprimé pour la date spécifiée.
 
 Nous ne nous servont pas de cette table.
 
-La table `transferts.txt` décrit ??
-Elle comporte les champs :
+###### Fichier `transferts.txt`
 
-* `from_stop_id`
-* `to_stop_id`
-* `transfer_type`
-* `min_transfer_time`
+Le fichier `transferts.txt` spécifie des règles et des valeurs de remplacement supplémentaires pour les correspondances sélectionnées.
+Il comporte les champs :
 
-La table est vide pour les jeux de données TGV, TER, d'autres ?
+* `from_stop_id` : identifie l'arrêt ou la station de départ pour une liaison entre deux itinéraires. Si ce champ fait référence à une station, la règle de correspondance s'applique à tous ses arrêts enfants. Fait référence à `stops.stop_id`.
+* `to_stop_id` : identifie l'arrêt ou la station de départ pour une liaison entre deux itinéraires. Si ce champ fait référence à une station, la règle de correspondance s'applique à tous ses arrêts enfants. Fait référence à `stops.stop_id`.
+* `transfer_type` : Indique le type de correspondance pour la paire (from_stop_id, to_stop_id) spécifiée. Les options suivantes sont acceptées :
+  * `0` ou vide : point de correspondance recommandé entre deux itinéraires.
+  * `1` : point de correspondance temporisé entre deux itinéraires. Le véhicule qui part doit attendre celui qui arrive et laisser suffisamment de temps pour que les usagers puissent prendre la correspondance.
+  * `2` : correspondance nécessitant une durée minimale entre l'heure d'arrivée et l'heure de départ. Spécifiez la durée en question dans le champ `min_transfer_time`.
+  * `3` : aucune correspondance ne peut être assurée à cet emplacement.
+* `min_transfer_time` : délai (en secondes) devant être accordé pour permettre une correspondance entre deux itinéraires aux arrêts spécifiés.
+
+Le fichier est vide pour les ensembles de données utilisés. Nous ne nous servons pas de ce fichier.
+
+##### Données traitées par le programme
+
+Toutes les données fournies dans un ensemble de données Horaires ne sont pas utiles pour le programme `reservation`.
+Parmi les données des ensembles de données, seule une partie est lue par le programme.
+Parmi les données lues par le programme, seule une partie est stockée en mémoire.
+
