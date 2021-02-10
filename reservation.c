@@ -29,6 +29,13 @@ struct horaire { /*--- Structure des horaires de train ---*/
   // struct horaire *p_prec ; // pour l'instant, pas besoin de pointeur
   // struct horaire *p_suiv ; // pour l'instant, pas besoin de pointeur
   };
+  
+  struct date {
+  	int jour;
+  	int mois;
+  	int annee;
+  	char char_date[9];
+  };
 
 struct resultat_nodate { /*--- Structure de résultats sans date ---*/
   char dep_gare[MAXstrNOMGARE] ;
@@ -68,6 +75,8 @@ char jhebdo_alpha_sys[9] ;
 struct horaire *tab_horaires   ; /*--- horaires de train (type horaire) ---*/
 int  nbhoraire=0 ; // nb de données horaires de train
 
+struct date *tab_date; /*--- tableau des dates prises en charge par le programme ---*/
+
 /* === déclarations préliminaires === */
 void convmaj(char chaine[]) ;
 void dump_buffer() ;
@@ -84,6 +93,7 @@ int lecture_choix(int deb, int fin, char lettre, int * erreur) ;
 
 void chargement_horaires() ;
 void chargement_horaires_alternatif() ;
+void crea_date(int jour, int mois, int annee);
 
 void lance_recherche()     ;
 struct horaire * recherche_horaire(char rechgare[], int *nb_res_horaire) ;
@@ -110,6 +120,7 @@ int main()
   date_sys(&jour_sys, &mois_sys, &annee_sys, &jhebdo_num_sys) ; // récupère la date du système
   interprete_jour_semaine(jhebdo_num_sys, jhebdo_alpha_sys)   ; // interprète le jour de semaine
   printf("Nous sommes le %s %d/%d/%d\n", jhebdo_alpha_sys, jour_sys, mois_sys, annee_sys) ;
+  crea_date(jour_sys, mois_sys, annee_sys);
 
   if(nbhoraire) // si le nombre d'horaire chargés est différent de 0
   {
@@ -805,7 +816,7 @@ void date_sys(int *jour, int *mois, int *annee, int *jhebdo_num)
   *jour       = date.tm_mday       ; // jour du système
   *mois       = date.tm_mon  +1    ; // mois du système
   *annee      = date.tm_year +1900 ; // année du système
-  *jhebdo_num = date.tm_wday       ; // jour de semaine du système (0 à 6)
+  *jhebdo_num = date.tm_wday       ; // jour de semaine du système (0 � 6)
 }
 
 /* ------------------------------- */
@@ -1255,3 +1266,139 @@ int lecture_choix(int deb, int fin, char lettre, int * erreur)
     printf("Veuillez saisir un choix valide (%d à %d)\n", deb, fin);
   }
 }
+
+void crea_date(int jour, int mois, int annee)
+{
+	int jour_end, mois_end, annee_end;
+	int j, m, a;
+	int i, nbdate;
+	char chdate[9];
+	
+	
+	jour_end=jour;
+	mois_end=mois;
+	annee_end=annee;
+	
+	j=jour;
+	m=mois;
+	a=annee;
+	
+	for(i=0; i<4;i++)
+	{
+		mois_end++;
+		if(mois_end>12)
+		{
+			mois_end=1;
+			annee_end++;
+		}
+	}
+	
+  	switch(mois_end)
+  	{
+	    case 4: case 6: case 9: case 11:
+	      while(jour_end>30)
+	      {
+	      	jour_end--;
+		  }
+	      break;
+	    case 2 :
+	      if((mois_end % 4 == 0 && mois_end % 100 != 0) || mois_end % 400 == 0)
+	      {
+	        while(jour_end>29)
+	      	{
+	      		jour_end--;
+		  	}
+	      }
+	      else
+	      {
+	        while(jour_end>28)
+	     	{
+	      		jour_end--;
+		  	}
+	      }
+	      break;
+	    default :
+	      break ;
+ 	 }
+  
+  
+  
+  tab_date = (struct date *) malloc(sizeof(struct date));
+  
+  i=0;
+  while( (j!=jour_end) | (m!=mois_end ) | (a!=annee_end))
+  {
+  	tab_date[i].jour=j;
+  	tab_date[i].mois=m;
+  	tab_date[i].annee=a;
+  	
+  	chdate[0]=(a/1000)+48;
+  	chdate[1]=((a%1000)/100)+48;
+  	chdate[2]=((a%100)/10)+48;
+  	chdate[3]=(a%10)+48;
+  	chdate[4]=(m/10)+48;
+  	chdate[5]=(m%10)+48;
+  	chdate[6]=(j/10)+48;
+  	chdate[7]=(j%10)+48;
+  	chdate[8]='\0';
+  	
+  	
+  	
+  	strcpy(tab_date[i].char_date,chdate);
+  	
+  	printf("%s\n", tab_date[i].char_date);
+  	
+  	j++;
+  	
+  	i++;
+  	nbdate=i;
+  	tab_date = (struct date *) realloc(tab_date,sizeof(struct date) * (nbdate+1)) ;
+  	
+	  switch(m)
+	  {
+	    case 1: case 3: case 5: case 7: case 8: case 10: case 12:
+	      if( j>31)
+	      {
+	       j=1;
+	       m++;
+	      }
+	      break;
+	    case 4: case 6: case 9: case 11:
+	      if( j>30)
+	      {
+	       j=1;
+	       m++;
+	      }
+	      break;
+	    case 2 :
+	      if((m % 4 == 0 && m % 100 != 0) || m % 400 == 0)
+	      {
+		      if( j>29)
+		      {
+		       j=1;
+		       m++;
+		      }
+	      }
+	      else
+	      {
+		      if( j>28)
+		      {
+		       j=1;
+		       m++;
+		      }
+	      }
+	      break;
+	    default :
+	      break ;
+	  }
+	  
+	  if(m>12)
+	  {
+			m=1;
+			a++;
+	  }
+	  
+  }	
+}
+
+
