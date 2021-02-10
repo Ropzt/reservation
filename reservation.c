@@ -431,6 +431,10 @@ void lance_recherche()
       interprete_jour_semaine(jhebdo, jhebdo_alpha) ;
       
       tab_res = compare_avecdate(tab_res_nodate, &nb_res_nodate, jhebdo, &nb_res_date /*,date_rech*/);
+      
+      //char_date = date_to_string(jour, mois, annee);
+      //filtre_places_dispo(tab_res,&nb_res_date, char_date);
+      
       tri(tab_res,&nb_res_date) ;
 
       if(nb_res_nodate==0)
@@ -1401,4 +1405,130 @@ void crea_date(int jour, int mois, int annee)
   }	
 }
 
-
+/*
+void filtre_places_dispo(struct resultat tab_res[], int * nb_res_date, char ch_date[])
+{
+	struct place{
+	  int  wagon  ; // n° de wagon
+	  int  classe  ; // 1re classe, 2e classe
+	  int  etage ; // 1 ou 2
+	  int  siege ; // numéro de siège
+	  char position ; // fenêtre, couloir, place isolée
+	};
+	
+	struct rame {
+	  int  wagon  ; // n° de wagon
+	  int  classe  ; // 1re classe, 2e classe
+	  int  etage ; // 1 ou 2
+	  int  siege ; // numéro de siège
+	  char position ; // fenêtre, couloir, place isolée
+	  int  etat ; // à supprimer si on teste sur billet
+	  int  billet ; // numéro unique de billet
+	};
+	
+	struct seq {
+	  char type[5] ; *//* Si c'est Car, TER, TGV, ça reprend le type de trajet, mais ça permet
+	  1. d'aller chercher l'info moins loin
+	  2/ de nuancer les types de rames de TGV (un jour lointain) *//*
+	  char dep_gare[MAXstrNOMGARE] ;
+  	  char arr_gare[MAXstrNOMGARE] ;
+	  int  heure_dep               ;
+	  int  heure_arr               ;
+	  int  nbetage ; // simplex, duplex
+	  struct rame *tab_rame;
+	} ;
+	
+	struct datetrajet {
+	  char date ;
+	  struct seq *tab_seq ;
+	} ;
+	
+	struct trajet {
+	  int  id ;
+	  struct datetrajet *dates ;
+	} ;
+	
+	struct trajet *tab_places ;
+	
+	while(!itrouve && i<*nbid) 
+	{
+		if(tab_places[i].id = tab_res[z].id)
+		{
+			itrouve=i;
+			while(!jtrouve && j<*nbdate)
+			{
+				if(tab_places[i].dates[j].date = ch_date)
+				{
+					jtrouve=j;
+					while(!ktrouve && k<)
+					{
+						if(tab_places[i].dates[j].tab_seq[k].dep_gare==tab_res[z].gare_dep)
+						{
+							ktrouve=k;
+							switch(tab_places[i].dates[j].tab_seq[k].type)
+							{
+								case "": 
+									limite_places=;
+									break;
+								
+							}
+							
+							for(l=0;l<limite_places;l++)
+							{
+								if(!tab_places[i].dates[j].tab_seq[k].rame[l].billet)
+								{
+									tab_places_dispo[m].wagon    = tab_places[i].dates[j].tab_seq[k].rame[l].wagon ;
+								    tab_places_dispo[m].classe   = tab_places[i].dates[j].tab_seq[k].rame[l].classe;
+							  	    tab_places_dispo[m].etage    = tab_places[i].dates[j].tab_seq[k].rame[l].etage;
+	  								tab_places_dispo[m].siege    = tab_places[i].dates[j].tab_seq[k].rame[l].siege; 
+	  								strcpy(tab_places_dispo[m].position, tab_places[i].dates[j].tab_seq[k].rame[l].position); 
+	  								nbplace++;
+								}
+							}
+						}
+						k++;
+					}
+				}
+				j++;
+			}
+		}
+		i++;		
+	}
+	
+	temp_troncon = tab_places[itrouve].dates[jtrouve].tab_seq[ktrouve].arr_gare;
+	
+	
+		for(k=ktrouve; k<;k++)  // && !stop
+		{
+			if(tab_places[i].dates[j].tab_seq[k].arr_gare==temp_troncon)
+			{	
+				for(m=0;m<nbplace;m++)
+				{
+					for(l=0;l<limite_places;l++)
+					{
+						if(tab_places[i].dates[j].tab_seq[k].rame[l].wagon == tab_places_dispo[m].wagon)
+						{
+							if(tab_places[i].dates[j].tab_seq[k].rame[l].siege == tab_places_dispo[m].siege)
+							{
+								if(tab_places[i].dates[j].tab_seq[k].rame[l].billet)
+								{
+									tab_places_dispo[m].siege = -1;
+								}
+							}
+						}
+					}
+				}
+				if(temp_troncon==tab_res[z].gare_dep)
+				{
+					stop=1;
+				}
+				else
+				{
+					temp_troncon = tab_places[itrouve].dates[jtrouve].tab_seq[ktrouve].arr_gare;
+				}	
+			}
+		}
+		
+	//transferer dans un tab_dispo_final[] if(tab_places_dispo[m].siege != -1)
+	
+}*/
