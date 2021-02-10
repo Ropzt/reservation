@@ -64,6 +64,8 @@ Dans le programme, ces informations sont obtenues via l'équipement terminal sur
 Il peut s'agir d'une gare de chemin de fer ou d'une gare routière. 
 Une ville peut posséder plusieurs gares.
 
+**place** : siège à bord d'un train, réservable par un voyageur pour un voyage.
+
 **rame** : train au sens « matériel roulant». *compléter : dire quels attributs sont propres à la rame (le nb de places, etc.) là où d'autres attributs sont propres au train ou au voyage*
 
 **terminal** : équipement terminal, appareil, sur lequel le programme est utilisé. Dans la version courante du programme, seul l'ordinateur peut être un terminal.
@@ -73,7 +75,7 @@ Les trains sont de différents types, qu'ils circulent sur voie ferrée ou routi
 
 **service** : ligne commerciale définie par une gare de départ, une gare d'arrivée, des gares d'arrêt, des horaires de départ et d'arrivée dans chacune des gares de départ, d'arrivée et d'arrêt, et un calendrier de circulation (circule ou ne circule pas, pour chaque jour de semaine). Le service est le numéro de train utilisé en gare et sur un billet de train pour la communication avec les voyageurs.
 
-**voyage** déplacement en train entre deux gares à une date donnée.
+**voyage** : déplacement en train entre deux gares à une date donnée.
 
 ...
 
@@ -141,7 +143,7 @@ Un rang est composé au maxium de 3 sièges, dont
 * un siège situé côté couloir
 * un siège isolé
 
-Une salle de wagon de classe 2 est composée de 13 rangs de sièges.
+Une salle de wagon de classe 2 est composée au maximum de 13 rangs de sièges.
 Un rang de composé de 4 sièges, dont
 * deux sièges côté fenêtre
 * deux sièges côté couloir
@@ -153,6 +155,16 @@ Un rang de composé de 4 sièges, dont
 Un train de type OUIGO est composé de 8 wagons de passagers à 2 niveaux.
 
 Chaque wagon est composé de 
+
+#### TER
+
+#### Intercités
+
+#### Car
+
+### Place
+
+Une place est réservable lorsque le voyage auquel elle correspond est ouvert à la vente.
 
 
 ## Circulation des trains
@@ -174,24 +186,24 @@ Les ventes de billets sont ouvertes avec une antécédence, par rapport au voyag
 * THALYS (vers la Belgique, les Pays-Bas, l'Allemagne) : 4 mois
 * Eurostar (vers l'Angleterre) : 6 mois pour Paris, Lille et Calais vers London, Ashford, Ebbsfleet, 150 à 280 jours pour Lyon, Marseille et Avignon, vers London, Ashford, Ebbsfleet
 
-L'ouverture des ventes vacances de printemps (pour des circulations du 29 mars au 15 mai 2021) se fait le 12 janvier 2021.
+L'ouverture des ventes des voyages des vacances de printemps (pour des circulations du 29 mars au 15 mai 2021) se fait le 12 janvier 2021.
 
-Lorsqu'un train est ouvert à la vente, ses places doivent être réservables.
+Lorsqu'un voyage est ouvert à la vente, ses places doivent être réservables.
 
 Au démarrage du système, il faut 
 
+* charger les données de réservation
 * créer des places réservables pour les trains qui s'ouvrent à la vente :
   * regarder la date système
   * parser les services
   * pour chaque service, regarder son type de train
   * calculer la date la plus tardive (date limite) à laquelle ses places sont ouvertes à la réservation
-  * si elle n'existe pas, créer une rame pour chaque date entre la date système et la date limite, avec les caractéristiques correspondant au type de train
+  * si le type est TGV INOUI ou Intercités, si la date tombe dans une période de vacances scolaires, l'ignorer
+  * sinon, si elle n'existe pas, créer une rame pour chaque date entre la date système et la date limite, avec les caractéristiques correspondant au type de train
 * supprimer les rames des trains qui sont arrivés
   * regarder la date/heure système
   * parser les dates
   * si la date est antérieure à la date système, supprimer ses rames
-
-
 
 
 ## Réservation
