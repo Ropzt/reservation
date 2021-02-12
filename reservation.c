@@ -87,22 +87,21 @@ struct UnVoyage {
 /* version 2D */
 struct UnVoyage2 {
   char idtrajet[100] ;
-  int  date           ;
-  char type[5]        ;
-  char garedep[GARE]  ;
-  char garearr[GARE]  ;
-  int seqdep ;
-  int seqarr ;
-  char hd[9]            ;
-  char ha[9]             ;
-  int  nbsalle ; // simplex, duplex
-  int  wagon  ; // n° de wagon
-  int  classe  ; // 1re classe, 2e classe
-  int  salle ; // 1 ou 2
-  int  siege ; // numéro de siège
-  int  position ; // fenêtre, couloir, place isolée
-  int  etat ; // à supprimer si on teste sur billet
-  int  billet ; // numéro unique de billet
+  int  date          ;
+  char type[5]       ;
+  char garedep[GARE] ;
+  char garearr[GARE] ;
+  int seqdep         ;
+  int seqarr         ;
+  char hd[9]         ;
+  char ha[9]         ;
+  int  wagon    ; // n° de wagon
+  int  classe   ; // 1re classe, 2e classe
+  int  salle    ; // 0 bas, 1 haut
+  int  siege    ; // numéro de siège
+  int  position ; // 0 fenêtre, 1 couloir, 2 place isolée
+  int  etat     ; // à supprimer si on teste sur billet
+  int  billet   ; // numéro unique de billet
 } ;
 struct UnVoyage2 *tab_voyages2 ;
 
@@ -541,7 +540,6 @@ void chargement_place5() // version 1 fichier 2D - 1 structure 2D
                   // int seqarr ;
                   // char hd[9]            ;
                   // char ha[9]             ;
-                  // int  nbsalle ; // simplex, duplex
                   // int  wagon  ; // n° de wagon
                   // int  classe  ; // 1re classe, 2e classe
                   // int  salle ; // 1 ou 2
@@ -557,7 +555,7 @@ void chargement_place5() // version 1 fichier 2D - 1 structure 2D
   char dump ;
 
   char idtrajet[100], type[5], garedep[GARE], garearr[GARE], hd[9], ha[9]  ;
-  int date=0,seqdep=0,seqarr=0, nbsalle=0, wagon=0, classe=0, salle=0, siege=0, position=0, etat=0, billet=0;
+  int date=0,seqdep=0,seqarr=0, wagon=0, classe=0, salle=0, siege=0, position=0, etat=0, billet=0;
   
   /* --- Allocation de mémoire au tableau tab_horaires --- */
   tab_voyages2 = (struct UnVoyage2 *) malloc(sizeof(struct UnVoyage2));
@@ -670,9 +668,8 @@ void chargement_place5() // version 1 fichier 2D - 1 structure 2D
     }    
     strcpy(tab_voyages2[i].ha, ha) ;
 
-    retour=fscanf(f1,"%d;%d;%d;%d;%d;%d;%d;%d",
-      &nbsalle, &wagon, &classe,
-      &salle, &siege, &position, &etat, &billet) ;
+    retour=fscanf(f1,"%d;%d;%d;%d;%d;%d;%d",
+      &wagon, &classe, &salle, &siege, &position, &etat, &billet) ;
 
     // strcpy(tab_voyages2[i].idtrajet,idtrajet) ;
     // tab_voyages2[i].date = date ;
@@ -683,7 +680,7 @@ void chargement_place5() // version 1 fichier 2D - 1 structure 2D
     // tab_voyages2[i].seqarr = seqarr;
     // strcpy(tab_voyages2[i].hd, hd) ;
     // strcpy(tab_voyages2[i].ha, ha) ;
-    tab_voyages2[i].nbsalle = nbsalle ;
+    // tab_voyages2[i].nbsalle = nbsalle ;
     tab_voyages2[i].wagon = wagon ;
     tab_voyages2[i].classe = classe ;
     tab_voyages2[i].salle = salle ;
@@ -703,7 +700,6 @@ void chargement_place5() // version 1 fichier 2D - 1 structure 2D
   // printf("%d ",tab_voyages2[i].seqarr);
   // printf("%s ",tab_voyages2[i].hd);
   // printf("%s ",tab_voyages2[i].ha);
-  // printf("%d ",tab_voyages2[i].nbsalle);
   // printf("%d ",tab_voyages2[i].wagon);
   // printf("%d ",tab_voyages2[i].classe);
   // printf("%d ",tab_voyages2[i].salle);
@@ -725,13 +721,14 @@ void chargement_place5() // version 1 fichier 2D - 1 structure 2D
       tab_voyages2 = (struct UnVoyage2 *) realloc(tab_voyages2,sizeof(struct UnVoyage2) * (nbvoyage+1));
     }
     
+
   // printf de contrôle
-  // for (i=0;i<nbvoyage;i++)
-  // {
-  //   printf("nb voyages=%d;  date du voyage n°%d : %d\n",nbvoyage, i, tab_voyages2[i].date);
-  // }
+  for (i=0;i<nbvoyage;i++)
+  {
+    printf("nb voyages=%d;  date du voyage n°%d : %d\n",nbvoyage, i, tab_voyages2[i].date);
+  }
   suppression_places5() ;
-  identifie_trajet_date_a_creer() ;
+  // identifie_trajet_date_a_creer() ;
 }
 
 void suppression_places5()
@@ -771,13 +768,13 @@ void identifie_trajet_date_a_creer()
   struct IdTrajet *tab_idtrajet;
   int nbidtrajet=0;
 
-  // pour stocker les combinaisons de date + trajet qui n'ont pas encore de places ouvertes
-  struct TrajetDate {
-    char idtrajet[100];
-    int date ;
-  };
-  struct TrajetDate *tab_trajetdate;
-  int nbtrajetdate=0 ;
+  // // pour stocker les combinaisons de date + trajet qui n'ont pas encore de places ouvertes
+  // struct TrajetDate {
+  //   char idtrajet[100];
+  //   int date ;
+  // };
+  // struct TrajetDate *tab_trajetdate;
+  // int nbtrajetdate=0 ;
 
   // la liste des idtrajet
   tab_idtrajet = (struct IdTrajet *) malloc(sizeof(struct IdTrajet)) ;
@@ -826,15 +823,15 @@ void identifie_trajet_date_a_creer()
 void creation_places(char idtrajet[100], int date)
 {
   int i,j,k,l,m,n,o,p;
+  int nbstop, nbsequence ;
 
   char type[5]="TGV" ;
   // int caracteristique[]; // l'idée là c'était d'aller chercher les caractéristiques par type de transport
+  char nomfichier[50];
+  FILE *f1;
 
-  int nbsalle=2,nbwagon=8,nbclasse=2,nbposition;
-  int nbplacewagon,nbplaceparsalle,nbplaceparsalleparposition;
-  int nbplaceHF,nbplaceHC,nbplaceHI,nbplaceBF,nbplaceBC,nbplaceBI;
-  int classe,salle,position,siege;
 
+  struct UnStop tab_stops[20];
 
   /* je mets if type = TGV parce que je n'ai que les données TGV, 
     mais si on importe d'autres ensembles de données gtfs, il faudrait 
@@ -845,45 +842,37 @@ void creation_places(char idtrajet[100], int date)
     strcpy(nomfichier,"./data/place/placement_tgv_duplex.txt");
   }
 
-    for (i=0;i<nbwagon;i++)
-      {
-        if ((i>=0) && (i<3))
-        {
-          classe=1;
-          nbposition=3; // 0 fenêtre, 1 couloir, 2 place isolée
-          nbplaceparsalle=30 ;
-          nbplaceparsalleparposition=10;
-          nbplaceHF=10;
-          nbplaceHC=10;
-          nbplaceHI=10;
-          nbplaceBF=10;
-          nbplaceBC=10;
-          nbplaceBI=10;          
-        }
-        if (i==3) 
-        {
-          classe=0;
-          nbplacewagon=0;
-        }
-        if (i>3)
-        {
-          classe=2;
-          nbposition=2;
-          nbplacewagon=82;
-          nbplaceparsalle=41;
-          nbplaceparsalleparposition=41;
-          nbplaceHF=22;
-          nbplaceHC=22;
-          nbplaceBF=18;
-          nbplaceBC=
-          {
-
-          }
-        }
-      } 
+  // On prend tous les Stops de cet id
+  for (i=0;i<nbstop;i++)
+  {
+    j=0 ;
+    if (strcmp(idtrajet,stops[i].idtrajet)==0)
+    {
+      tab_stops[j++] = stops[i] ;
     }
+    nbstop=j ;
   }
 
+  nbsequence = nbstop-1;
+  for (i=0;i<nbsequence;i++)
+  {
+    // tab_sequence[i].
+  }
+
+
+  f1=fopen(nomfichier,"r") ;
+
+
+// struct UnStop {
+//   char idtrajet[100] ;
+//   char ha[9] ;
+//   char hd[9] ;
+//   char idgare[100] ;
+//   int sequence ;
+// };
+
+
+  
   // {
   //   for (j=0;j<nbdatevente;j++)
   // }
