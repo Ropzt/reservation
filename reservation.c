@@ -83,6 +83,29 @@ struct UnVoyage {
   int  id ;
   struct UneDate *date ;
 } ;
+
+/* version 2D */
+struct UnVoyage2 {
+  char idtrajet[100] ;
+  int  date           ;
+  char type[5]        ;
+  char garedep[GARE]  ;
+  char garearr[GARE]  ;
+  int seqdep ;
+  int seqarr ;
+  char hd[9]            ;
+  char ha[9]             ;
+  int  nbsalle ; // simplex, duplex
+  int  wagon  ; // n° de wagon
+  int  classe  ; // 1re classe, 2e classe
+  int  salle ; // 1 ou 2
+  int  siege ; // numéro de siège
+  int  position ; // fenêtre, couloir, place isolée
+  int  etat ; // à supprimer si on teste sur billet
+  int  billet ; // numéro unique de billet
+} ;
+struct UnVoyage2 *tab_voyages2 ;
+
 struct date {
   int jhebdo;
   int jour  ;
@@ -140,6 +163,8 @@ struct UnRes { /*--- Structure de résultats origine/destination avec date ---*/
   int numtrain;
   char ha[9] ;
   char hd[9] ;
+  int seqdep ;
+  int seqarr ;
   char idgaredep[100];
   char garedep[GARE];
   char idgarearr[100];
@@ -162,7 +187,7 @@ int nbcalendrier;
 int nbstop=0;
 int nbgare;
 //les places
-int nbvoyage;
+int nbvoyage=0;
 //les dates ouvertes à la vente
 struct date *tab_date_vente; /*--- tableau des dates prises en charge par le programme ---*/
 int    nbdatevente ; /* --- nb dates ouvertes à la réservation --- */
@@ -186,7 +211,7 @@ int calcul_jour_semaine(int jour_rech, int mois_rech, int annee_rech, int jour, 
 void date_suivante_precedente(int *jhebdo_rech, int *jour_rech, int *mois_rech, int *annee_rech, int increment) ;
 int valide_date(int * jour, int * mois, int * annee) ;
 int date_anterieure(int jour, int mois, int annee, int jour_ref, int mois_ref, int annee_ref) ;
-void crea_date(int jour, int mois, int annee);
+void crea_date_vente(int jour, int mois, int annee);
 
 int lecture_choix(int deb, int fin, char lettre, int * erreur) ;
 
@@ -195,6 +220,12 @@ void chargement_trajet() ;
 void chargement_calendrier() ;
 void chargement_stop() ;
 void chargement_gare() ;
+
+void chargement_place5() ;
+void suppression_places5() ;
+void identifie_trajet_date_a_creer() ;
+void creation_places(char idtrajet[100], int date);
+
 void lance_recherche() ;
 struct UnHoraire * recherche_horaire(char rechgare[], int *nbres) ;
 struct UnRes_nodate * compare_nodate(struct UnHoraire gare_dep_trouve[], int nb_gare_dep_trouve, struct UnHoraire gare_arr_trouve[], int nb_gare_arr_trouve, int *nb_res_nodate);
@@ -221,6 +252,8 @@ int main()
   printf("Nous sommes le %s %d/%d/%d\n", jhebdo_alpha_sys, jour_sys, mois_sys, annee_sys) ;
 
   chargement_horaires() ; // chargement des données horaires à partir des fichiers GTFS
+  crea_date_vente(jour_sys, mois_sys, annee_sys) ;
+  chargement_place5() ;
 
   // crea_date(jour_sys, mois_sys, annee_sys);
   // chargement_place5() ;
@@ -490,6 +523,390 @@ void chargement_gare()
   //   printf("%s \n",gares[i].nomgare);
   // }
   printf("nombre de gares %d\n",nbgare);
+}
+
+// ~~~~~~~~~~~
+/* --- Chargement des données places à réserver --- */
+// ~~~~~~~~~~~
+void chargement_place5() // version 1 fichier 2D - 1 structure 2D
+{
+                // /* version 2D */
+                // struct UnVoyage2 {
+                  // char idtrajet[100] ;
+                  // int  date           ;
+                  // char type[5]        ;
+                  // char garedep[GARE]  ;
+                  // char garearr[GARE]  ;
+                  // int seqdep ;
+                  // int seqarr ;
+                  // char hd[9]            ;
+                  // char ha[9]             ;
+                  // int  nbsalle ; // simplex, duplex
+                  // int  wagon  ; // n° de wagon
+                  // int  classe  ; // 1re classe, 2e classe
+                  // int  salle ; // 1 ou 2
+                  // int  siege ; // numéro de siège
+                  // int  position ; // fenêtre, couloir, place isolée
+                  // int  etat ; // à supprimer si on teste sur billet
+                  // int  billet ; // numéro unique de billet
+                // } ;
+                // struct UnVoyage2 *tab_voyages2 ;
+  FILE *f1;
+  char lettre;
+  int  i, j, retour;
+  char dump ;
+
+  char idtrajet[100], type[5], garedep[GARE], garearr[GARE], hd[9], ha[9]  ;
+  int date=0,seqdep=0,seqarr=0, nbsalle=0, wagon=0, classe=0, salle=0, siege=0, position=0, etat=0, billet=0;
+  
+  /* --- Allocation de mémoire au tableau tab_horaires --- */
+  tab_voyages2 = (struct UnVoyage2 *) malloc(sizeof(struct UnVoyage2));
+
+  /*--- Ouverture fichier places --- */
+  f1=fopen("./data/place/places.txt","r") ;
+  i=nbvoyage ;
+  while ((! feof(f1)))
+  {
+    // while(retour!=(EOF))
+    // {
+    // lecture de la 1e colonne (idtrajet)
+    j=0;
+    retour=0;
+    while((retour!=59) && (retour!=10)) // tant que different de LF et de ";"
+    {
+      fscanf(f1,"%c", &lettre) ;       // fscanf du caractere
+      retour=lettre;
+      if((retour!=59) && (retour!=10))  // si different de LF et de ";"
+      {
+        idtrajet[j++] = lettre  ;      // insertion
+      }
+      idtrajet[j] = '\0' ;             // cloture de la chaine
+    }
+    strcpy(tab_voyages2[i].idtrajet,idtrajet) ;
+
+    // lecture de la 2e colonne (date)
+    fscanf(f1,"%d;",&date);
+    tab_voyages2[i].date = date ;
+
+    // lecture de la 3e colonne (type)
+    j=0;
+    retour=0;
+    while((retour!=59) &&(retour!=10)) // tant que different de LF et de ";"
+    {
+      fscanf(f1,"%c", &lettre) ;       // fscanf du caractere
+      retour=lettre;
+      if((retour!=59) &&(retour!=10))  // si different de LF et de ";"
+      {
+        type[j++] = lettre  ;          // insertion
+      }
+      type[j] = '\0' ;                 // cloture de la chaine
+    }
+    strcpy(tab_voyages2[i].type,type);
+
+    // lecture de la 4e colonne (garedep)
+    j=0;
+    retour=0;
+    while((retour!=59) &&(retour!=10)) // tant que different de LF et de ";"
+    {
+      fscanf(f1,"%c", &lettre) ;       // fscanf du caractere
+      retour=lettre;
+      if((retour!=59) &&(retour!=10))  // si different de LF et de ";"
+      {
+        garedep[j++] = lettre  ;          // insertion
+      }
+      garedep[j] = '\0' ;                 // cloture de la chaine
+    }
+    strcpy(tab_voyages2[i].garedep,garedep);
+
+    // lecture de la 5e colonne (garearr)
+    j=0;
+    retour=0;
+    while((retour!=59) &&(retour!=10)) // tant que different de LF et de ";"
+    {
+      fscanf(f1,"%c", &lettre) ;       // fscanf du caractere
+  // printf("Ici ok 2, %c \n",lettre)  ;
+      retour=lettre;
+      if((retour!=59) &&(retour!=10))  // si different de LF et de ";"
+      {
+        garearr[j++] = lettre  ;          // insertion
+      }
+      garearr[j] = '\0' ;                 // cloture de la chaine
+    }
+    strcpy(tab_voyages2[i].garearr,garearr);
+
+    fscanf(f1,"%d;%d;",&seqdep, &seqarr) ;
+    tab_voyages2[i].seqdep = seqdep;
+    tab_voyages2[i].seqarr = seqarr;  
+
+    // lecture de la 8e colonne (hd)
+    j=0;
+    retour=0;
+    while((retour!=59) &&(retour!=10)) // tant que different de LF et de ";"
+    {
+      fscanf(f1,"%c", &lettre) ;       // fscanf du caractere
+  // printf("Ici ok 4, %c \n",lettre)  ;
+      retour=lettre;
+      if((retour!=59) &&(retour!=10))  // si different de LF et de ";"
+      {
+        hd[j++] = lettre  ;          // insertion
+      }
+      hd[j] = '\0' ;                 // cloture de la chaine
+    }
+    strcpy(tab_voyages2[i].hd, hd) ;
+    
+    // lecture de la 9e colonne (ha)
+    j=0;
+    retour=0;
+    while((retour!=59) &&(retour!=10)) // tant que different de LF et de ";"
+    {
+      fscanf(f1,"%c", &lettre) ;       // fscanf du caractere
+  // printf("Ici ok 9, %c \n",lettre)  ;
+      retour=lettre;
+      if((retour!=59) &&(retour!=10))  // si different de LF et de ";"
+      {
+        ha[j++] = lettre  ;          // insertion
+      }
+      ha[j] = '\0' ;                 // cloture de la chaine
+    }    
+    strcpy(tab_voyages2[i].ha, ha) ;
+
+    retour=fscanf(f1,"%d;%d;%d;%d;%d;%d;%d;%d",
+      &nbsalle, &wagon, &classe,
+      &salle, &siege, &position, &etat, &billet) ;
+
+    // strcpy(tab_voyages2[i].idtrajet,idtrajet) ;
+    // tab_voyages2[i].date = date ;
+    // strcpy(tab_voyages2[i].type,type);
+    // strcpy(tab_voyages2[i].garedep,garedep);
+    // strcpy(tab_voyages2[i].garearr,garearr);
+    // tab_voyages2[i].seqdep = seqdep;
+    // tab_voyages2[i].seqarr = seqarr;
+    // strcpy(tab_voyages2[i].hd, hd) ;
+    // strcpy(tab_voyages2[i].ha, ha) ;
+    tab_voyages2[i].nbsalle = nbsalle ;
+    tab_voyages2[i].wagon = wagon ;
+    tab_voyages2[i].classe = classe ;
+    tab_voyages2[i].salle = salle ;
+    tab_voyages2[i].siege = siege ;
+    tab_voyages2[i].position = position ;
+    tab_voyages2[i].etat = etat ;
+    tab_voyages2[i].billet = billet ;
+
+  //printf de contrôle
+  // printf("%d: ",i) ;
+  // printf("%s ",tab_voyages2[i].idtrajet);
+  // printf("%d ",tab_voyages2[i].date);
+  // printf("%s ",tab_voyages2[i].type);
+  // printf("%s ",tab_voyages2[i].garedep);
+  // printf("%s ",tab_voyages2[i].garearr);
+  // printf("%d ",tab_voyages2[i].seqdep);
+  // printf("%d ",tab_voyages2[i].seqarr);
+  // printf("%s ",tab_voyages2[i].hd);
+  // printf("%s ",tab_voyages2[i].ha);
+  // printf("%d ",tab_voyages2[i].nbsalle);
+  // printf("%d ",tab_voyages2[i].wagon);
+  // printf("%d ",tab_voyages2[i].classe);
+  // printf("%d ",tab_voyages2[i].salle);
+  // printf("%d ",tab_voyages2[i].idtrajet);
+  // printf("%d ",tab_voyages2[i].siege);
+  // printf("%d ",tab_voyages2[i].position);
+  // printf("%d ",tab_voyages2[i].etat);
+  // printf("|%d| ",tab_voyages2[i].billet);
+  // printf("\n") ;
+
+    while((retour!=59) &&(retour!=10)) // tant que different de LF et de ";"
+    {
+      fscanf(f1,"%c", &dump) ;       // fscanf du caractere
+      retour=dump;
+    }
+
+      i++ ;
+      nbvoyage = i ;
+      tab_voyages2 = (struct UnVoyage2 *) realloc(tab_voyages2,sizeof(struct UnVoyage2) * (nbvoyage+1));
+    }
+    
+  // printf de contrôle
+  // for (i=0;i<nbvoyage;i++)
+  // {
+  //   printf("nb voyages=%d;  date du voyage n°%d : %d\n",nbvoyage, i, tab_voyages2[i].date);
+  // }
+  suppression_places5() ;
+  identifie_trajet_date_a_creer() ;
+}
+
+void suppression_places5()
+{
+  printf("nombre lus : %d\n",nbvoyage) ;
+  int i,j,k ;
+
+  i=0;
+  while((i<nbvoyage-1)&&(tab_voyages2[i].date>=tab_date_vente[0].date))
+  {
+    i++;
+    if (tab_voyages2[i].date<tab_date_vente[0].date)
+    {
+      for(j=i;j<nbvoyage-1;j++)
+      {
+        tab_voyages2[j] = tab_voyages2[j+1] ;
+      }
+      nbvoyage--;
+      i--;
+    }
+  }
+  tab_voyages2 = (struct UnVoyage2 *) realloc(tab_voyages2,sizeof(struct UnVoyage2) * (nbvoyage));
+  //print de controle
+  // for (i=0;i<nbvoyage;i++)
+  // {
+  //   printf("gardé : %s %d\n",tab_voyages2[i].idtrajet,tab_voyages2[i].date);
+  // }
+  printf("nombre gardés : %d\n",nbvoyage) ;
+}
+
+void identifie_trajet_date_a_creer()
+{
+  int i, j, k, existe=0;
+  struct IdTrajet {
+    char idtrajet[100] ;
+  };
+  struct IdTrajet *tab_idtrajet;
+  int nbidtrajet=0;
+
+  // pour stocker les combinaisons de date + trajet qui n'ont pas encore de places ouvertes
+  struct TrajetDate {
+    char idtrajet[100];
+    int date ;
+  };
+  struct TrajetDate *tab_trajetdate;
+  int nbtrajetdate=0 ;
+
+  // la liste des idtrajet
+  tab_idtrajet = (struct IdTrajet *) malloc(sizeof(struct IdTrajet)) ;
+  for (i=0;i<nbtrajet;i++)
+  {
+    // printf("l'id de la table trajets:%s\n",trajets[i].idtrajet);
+    strcpy(tab_idtrajet[nbidtrajet].idtrajet,trajets[i].idtrajet );
+    // printf("l'id du tableau:%s le res copié:%s\n",trajets[i].idtrajet,tab_idtrajet[nbidtrajet].idtrajet) ;
+    // printf("nbidtrajet:%d\n",nbidtrajet);
+    nbidtrajet++;
+    tab_idtrajet = (struct IdTrajet *) realloc(tab_idtrajet,sizeof(struct IdTrajet) * (nbidtrajet+1));
+    // printf("Ok 3\n")  ;
+  }
+  printf("nbidtrajet:%d\n",nbidtrajet);
+
+  // pour chaque idtrajet
+  for (i=0;i<nbidtrajet;i++)
+  {
+    // pour chacune des dates ouvertes
+    for (j=0;j<nbdatevente;j++)
+    {
+      for (k=0;k<nbvoyage;k++)
+      {
+        // printf("id examiné=|%s| id voyage=|%s| ",tab_idtrajet[i].idtrajet,tab_voyages2[k].idtrajet);
+        // printf("datevente examinée=%d datevoyage=|%d]\n",tab_date_vente[j].date,tab_voyages2[k].date);
+        // printf("Le coupe date/id n'a pas été trouvé\n");
+        if ((strcmp(tab_voyages2[k].idtrajet,tab_idtrajet[i].idtrajet)==0) && (tab_voyages2[k].date==tab_date_vente[j].date))          
+        {
+          existe=1;
+        }
+        // print de contrôle
+        if(existe == 1)
+        {
+          printf("existe pour id=%s date=%d\n",tab_voyages2[k].idtrajet,tab_voyages2[k].date);
+        }
+        if (existe==0)
+        {
+          creation_places(tab_voyages2[k].idtrajet,tab_voyages2[k].date);
+        }
+        existe = 0;
+      }
+    }
+  }
+}
+
+void creation_places(char idtrajet[100], int date)
+{
+  int i,j,k,l,m,n,o,p;
+
+  char type[5]="TGV" ;
+  // int caracteristique[]; // l'idée là c'était d'aller chercher les caractéristiques par type de transport
+
+  int nbsalle=2,nbwagon=8,nbclasse=2,nbposition;
+  int nbplacewagon,nbplaceparsalle,nbplaceparsalleparposition;
+  int nbplaceHF,nbplaceHC,nbplaceHI,nbplaceBF,nbplaceBC,nbplaceBI;
+  int classe,salle,position,siege;
+
+
+  /* je mets if type = TGV parce que je n'ai que les données TGV, 
+    mais si on importe d'autres ensembles de données gtfs, il faudrait 
+    donner comme type à toutes les trajets, le type de l'ensemble de données"
+  */
+  if (strcmp(type,"TGV")==0)
+  {
+    strcpy(nomfichier,"./data/place/placement_tgv_duplex.txt");
+  }
+
+    for (i=0;i<nbwagon;i++)
+      {
+        if ((i>=0) && (i<3))
+        {
+          classe=1;
+          nbposition=3; // 0 fenêtre, 1 couloir, 2 place isolée
+          nbplaceparsalle=30 ;
+          nbplaceparsalleparposition=10;
+          nbplaceHF=10;
+          nbplaceHC=10;
+          nbplaceHI=10;
+          nbplaceBF=10;
+          nbplaceBC=10;
+          nbplaceBI=10;          
+        }
+        if (i==3) 
+        {
+          classe=0;
+          nbplacewagon=0;
+        }
+        if (i>3)
+        {
+          classe=2;
+          nbposition=2;
+          nbplacewagon=82;
+          nbplaceparsalle=41;
+          nbplaceparsalleparposition=41;
+          nbplaceHF=22;
+          nbplaceHC=22;
+          nbplaceBF=18;
+          nbplaceBC=
+          {
+
+          }
+        }
+      } 
+    }
+  }
+
+  // {
+  //   for (j=0;j<nbdatevente;j++)
+  // }
+
+          // struct UnVoyage2 {
+          //   char idtrajet[100] ;
+          //   int  date           ;
+          //   char type[5]        ;
+          //   char garedep[GARE]  ;
+          //   char garearr[GARE]  ;
+          //   int seqdep ;
+          //   int seqarr ;
+          //   char hd[9]            ;
+          //   char ha[9]             ;
+          //   int  nbsalle ; // simplex, duplex
+          //   int  wagon  ; // n° de wagon
+          //   int  classe  ; // 1re classe, 2e classe
+          //   int  salle ; // 1 ou 2
+          //   int  siege ; // numéro de siège
+          //   int  position ; // fenêtre, couloir, place isolée
+          //   int  etat ; // à supprimer si on teste sur billet
+          //   int  billet ; // numéro unique de billet
+          // } ;
 }
 
 /* ---------------------------------------- */
@@ -874,8 +1291,10 @@ struct UnRes * compare_avecdate(struct UnRes_nodate tab_res_nodate[], int *nb_re
           // strcpy(tab_resultats[j].date    , date_rech)                   ;
           // strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
           tab_resultats[j].numtrain = tab_res_nodate[i].numtrain      ;
-          strcpy(tab_resultats[j].hd, tab_res_nodate[i].hd)     ;
+          strcpy(tab_resultats[j].hd, tab_res_nodate[i].hd)      ;
           strcpy(tab_resultats[j].ha, tab_res_nodate[i].ha)      ;
+          tab_resultats[j].seqdep    = tab_res_nodate[i].seqdep  ;
+          tab_resultats[j].seqarr    = tab_res_nodate[i].seqarr  ;
                 
           j++;
           tab_resultats = (struct UnRes *) realloc(tab_resultats,sizeof(struct UnRes) * (j+1));
@@ -1080,7 +1499,7 @@ int date_anterieure(int jour, int mois, int annee, int jour_ref, int mois_ref, i
 /* --------------------------------- */
 /* -- Tableau des dates à traiter -- */
 /* --------------------------------- */
-void crea_date(int jour, int mois, int annee)
+void crea_date_vente(int jour, int mois, int annee)
 {
   int jour_end, mois_end, annee_end;
   int i, j, m, a, date;
