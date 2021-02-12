@@ -1,0 +1,1261 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <errno.h>
+/* include pour l'heure */
+#include <time.h>
+#include <locale.h>
+/* include pour stat() */
+#include <sys/types.h> 
+#include <sys/stat.h>
+/* include pour opendir() */
+#include <dirent.h>
+#include <unistd.h>
+
+/* --- déclaration des constantes --- */
+#define GARE 100
+#define DATE 11
+
+/* === déclaration des types globaux === */
+struct UnTrajet {
+  int  idservice ;
+  char idtrajet[100] ;
+  int  numtrain ;
+  int  direction ;
+};
+
+struct UnCalendrier {
+  int idservice ;
+  int lun ;
+  int mar ;
+  int mer ;
+  int jeu ;
+  int ven ;
+  int sam ;
+  int dim ;
+  int start ;
+  int end ;
+};
+
+struct UnStop {
+  char idtrajet[100] ;
+  char ha[9] ;
+  char hd[9] ;
+  char idgare[100] ;
+  int sequence ;
+};
+
+struct UneGare {
+  char idgare[100] ;
+  char nomgare[100] ;
+  char gareattache[100] ;
+};
+
+struct UneRame {
+    int wagon  ; // n° de wagon
+    int classe  ; // 1re classe, 2e classe
+    int salle ; // 1 ou 2
+    int siege ; // numéro de siège
+    int position ; // fenêtre, couloir, place isolée
+    int etat ; // à supprimer si on teste sur billet
+    int billet ; // numéro unique de billet
+  };
+  
+struct UneSeq {
+  char type[5] ; /* Si c'est Car, TER, TGV, ça reprend le type de trajet, mais ça permet
+  1. d'aller chercher l'info moins loin
+  2/ de nuancer les types de rames de TGV (un jour lointain) */
+  char gd[GARE] ;
+  char ga[GARE] ;
+  int  hd             ;
+  int  ha             ;
+  int  nbsalle ; // simplex, duplex
+  struct UneRame *rame;
+} ;
+
+struct UneDate {
+  int date ;
+  struct UneSeq *sequence ;
+} ;
+
+struct UnVoyage {
+  int  id ;
+  struct UneDate *date ;
+} ;
+struct date {
+  int jhebdo;
+  int jour  ;
+  int mois  ;
+  int annee ;
+  int date  ;
+};
+
+struct UnHoraire {
+  char idtrajet[100];
+  int idservice;
+  int numtrain;
+  int lun;
+  int mar;
+  int mer;
+  int jeu;
+  int ven;
+  int sam;
+  int dim;
+  int direction;
+  char ha[9];
+  char hd[9];
+  int sequence;
+  char idgare[100];
+  char nomgare[GARE];
+};
+
+struct UnRes_nodate { /*--- Structure de résultats origine/destination sans date ---*/
+ char idtrajet[100];
+  int idservice;
+  int numtrain;
+  int lun;
+  int mar;
+  int mer;
+  int jeu;
+  int ven;
+  int sam;
+  int dim;
+  int direction;
+  char ha[9] ;
+  char hd[9] ;
+  int seqdep ;
+  int seqarr ;
+  char idgaredep[100];
+  char garedep[GARE];
+  char idgarearr[100];
+  char garearr[GARE];
+  // struct resultat_nodate *p_prec      ;
+  // struct resultat_nodate *p_suiv      ;
+} ;
+
+/* --- déclaration des variables globales --- */
+// données sncf
+struct UnTrajet *trajets;
+struct UnCalendrier *calendriers ;
+struct UnStop *stops ;
+struct UneGare *gares ;
+// les places
+struct UnVoyage *voyages ;
+//nb données importées
+int nbtrajet;
+int nbcalendrier;
+int nbstop=0;
+int nbgare;
+//les places
+int nbvoyage;
+// éléments de date
+int  jhebdo_num_sys, jour_sys, mois_sys, annee_sys ; // éléments de la date du système
+char jhebdo_alpha_sys[9] ;
+
+// struct date *tab_date; //--- tableau des dates prises en charge par le programme ---
+// int    nbdatevente ; //--- nb dates ouvertes à la réservation --- 
+
+/* === déclarations préliminaires === */
+void convmaj(char chaine[]) ;
+char * str_replace_all(char * chaine, char * motif_a_remplacer, char * motif_de_remplacement) ;
+// void supprime_accent(char chaine[]) ;
+char * supprime_accent(char * chaine);
+void dump_buffer() ;
+void date_sys(int *jour, int *mois, int *annee, int *jhebdo_num) ;
+void interprete_jour_semaine(int jhebdo_num, char jhebdo_alpha[]) ;
+// int  calcul_jour_semaine(int jour_rech, int mois_rech, int annee_rech, int jour, int mois, int annee) ;
+int calcul_jour_semaine(int jour_rech, int mois_rech, int annee_rech, int jour, int mois, int annee, int jour_sem) ;
+// void date_suivante_precedente(int jhebdo, int jour, int mois, int annee, int *jhebdo_rech, int *jour_rech, int *mois_rech, int *annee_rech, int increment) ;
+void date_suivante_precedente(int *jhebdo_rech, int *jour_rech, int *mois_rech, int *annee_rech, int increment) ;
+int valide_date(int * jour, int * mois, int * annee) ;
+int date_anterieure(int jour, int mois, int annee, int jour_ref, int mois_ref, int annee_ref) ;
+int lecture_choix(int deb, int fin, char lettre, int * erreur) ;
+
+void chargement_horaires();
+void chargement_trajet() ;
+void chargement_calendrier() ;
+void chargement_stop() ;
+void chargement_gare() ;
+void lance_recherche() ;
+struct UnHoraire * recherche_horaire(char rechgare[], int *nbres) ;
+struct UnRes_nodate * compare_nodate(struct UnHoraire gare_dep_trouve[], int nb_gare_dep_trouve, struct UnHoraire gare_arr_trouve[], int nb_gare_arr_trouve, int *nb_res_nodate);
+// struct horaire * recherche_horaire(char rechgare[], int *nb_res_horaire) ;
+
+// =========================== //
+/* === Programme principal === */
+// =========================== //
+
+int main()
+{
+  char lettre   ;  // char lu au clavier
+  int  choix=-1 ;  // choix utilisateur reconstitué
+  int  erreur   ;  // code erreur pour expressions conditionnelles
+  
+  printf("Chargement des données en cours... \nVeuillez patienter, le programme va bientôt démarrer\n\n");
+
+  // Date du système
+  date_sys(&jour_sys, &mois_sys, &annee_sys, &jhebdo_num_sys) ; // récupère la date du système
+  interprete_jour_semaine(jhebdo_num_sys, jhebdo_alpha_sys)   ; // interprète le jour de semaine
+  printf("Nous sommes le %s %d/%d/%d\n", jhebdo_alpha_sys, jour_sys, mois_sys, annee_sys) ;
+
+  chargement_horaires() ; // chargement des données horaires à partir des fichiers GTFS
+
+  // crea_date(jour_sys, mois_sys, annee_sys);
+  // chargement_place5() ;
+
+  // if(nbhoraire) // si le nombre d'horaire chargés est différent de 0
+  if(1)
+  {
+    printf("===========================\n");
+    printf("Bienvenue chez SNCF Voyages\n");
+    printf("===========================\n");
+  }
+    
+  while (choix != 0)
+  {    
+    // affichage du menu et lecture du choix
+    erreur = 1;
+    while(erreur==1)
+    {
+      printf("\n-1- Réserver\n")                ;
+      printf("-2- Consulter les horaires\n")    ;
+      printf("-3- Mes réservations\n")          ;
+      printf("-0- Quitter\n")                   ;
+      printf("\nChoix : ")                      ;
+      scanf("%c", &lettre)                      ;
+      choix = lecture_choix(0,3,lettre,&erreur) ; 
+    }
+  
+    // traitement selon le choix
+    switch (choix)
+    {
+      case 0: printf("À bientôt sur SNCF Voyages\n") ; break ;
+      case 1: printf("à faire : réserver (=consulter (horaires + tarifs) + réserver)\n") ;
+              lance_recherche() ;
+              break ;
+      case 2: printf("à faire : consulter les horaires\n") ;
+              break ;
+      case 3: printf("à faire : mes billets\n");
+              break ;
+    } /* Fin du switch */
+  } /* Fin du while */
+} /* Fin du main */
+
+// ======================== //
+/* === Sous-programmes  === */
+// ======================== //
+
+/* -------------------------------------------- */
+/* --- Procédures de chargement des données --- */
+/* -------------------------------------------- */
+
+// ~~~~~~~~~~~
+/* --- Chargement des données horaires --- */
+// ~~~~~~~~~~~
+void chargement_horaires()
+{
+  chargement_trajet() ;
+  chargement_calendrier() ;
+  chargement_stop() ;
+  chargement_gare() ;
+}
+
+// ~~~~~~~~~~~
+/* --- Chargement des données trajets --- */
+// ~~~~~~~~~~~
+void chargement_trajet()
+{
+  FILE *f1;
+  int  i, retour;
+  char line[500] ; // pour lire ligne par ligne avec sscanf
+  char dumpchar[100] ;
+  char dumpcar;
+  int dumpint ;
+
+  /* --- Allocation de mémoire au tableau trajet --- */
+  trajets = (struct UnTrajet *) malloc(sizeof(struct UnTrajet));
+
+  /*--- Ouverture fichier horaires --- */
+  //f1=fopen("./data_sncf/sncf_full_test.txt", "r") ;
+  f1=fopen("./data/horaire/tgv/trips.txt","r") ;
+  if (f1 == NULL)
+  {
+    printf("Erreur de chargement\n") ;
+  }
+  else
+  {
+    i=0 ;
+    fgets(line, sizeof(line), f1); // lire la 1re ligne et ne rien faire (je l'enlève car il n'y a plus les entêtes dans le csv)
+    while (fgets(line,sizeof(line),f1) != NULL)
+    {     
+      retour=sscanf(line,"%101[^,],%d,%101[^,],\"%d\",%d,%101[^,],%101[^\n]",
+      // retour=sscanf(line,"%s,%d,%s,\"%d\",%d,%s,%s",
+        dumpchar,
+        &trajets[i].idservice,
+         trajets[i].idtrajet,
+        &trajets[i].numtrain,
+        &trajets[i].direction,
+        dumpchar,
+        dumpchar);
+      i++ ;
+      nbtrajet = i ;
+      trajets = (struct UnTrajet *) realloc(trajets,sizeof(struct UnTrajet) * (nbtrajet+1)) ;
+    }
+    fclose(f1) ;
+  }
+  // for (i=0;i<nbtrajet;i++)
+  // {
+  //   printf("%d \n",trajets[i].idservice);
+  //   printf("%s \n",trajets[i].idtrajet);
+  //   printf("%d \n",trajets[i].numtrain);
+  //   printf("%d \n",trajets[i].direction);
+  // }
+  printf("nombre de trajets %d\n",nbtrajet);
+}
+
+// ~~~~~~~~~~~
+/* --- Chargement des données calendrier de circulation --- */
+// ~~~~~~~~~~~
+void chargement_calendrier()
+{
+  FILE *f1;
+  int  i, retour;
+  char line[500] ; // pour lire ligne par ligne avec sscanf
+  int dumpint ;
+
+  /* --- Allocation de mémoire au tableau trajet --- */
+  calendriers = (struct UnCalendrier *) malloc(sizeof(struct UnCalendrier));
+
+  /*--- Ouverture fichier horaires --- */
+  //f1=fopen("./data_sncf/sncf_full_test.txt", "r") ;
+  f1=fopen("./data/horaire/tgv/calendar.txt","r") ;
+  if (f1 == NULL)
+  {
+    printf("Erreur de chargement\n") ;
+  }
+  else
+  {
+    i=0 ;
+    fgets(line, sizeof(line), f1); // lire la 1re ligne et ne rien faire (je l'enlève car il n'y a plus les entêtes dans le csv)
+    while (fgets(line,sizeof(line),f1) != NULL)
+    {     
+      retour=sscanf(line,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+      // retour=sscanf(line,"%s,%d,%s,\"%d\",%d,%s,%s",
+        &calendriers[i].idservice,
+        &calendriers[i].lun,
+        &calendriers[i].mar,
+        &calendriers[i].mer,
+        &calendriers[i].jeu,
+        &calendriers[i].ven,
+        &calendriers[i].sam,
+        &calendriers[i].dim,
+        &dumpint,
+        &dumpint);
+      i++ ;
+      nbcalendrier = i ;
+      calendriers = (struct UnCalendrier *) realloc(calendriers,sizeof(struct UnCalendrier) * (nbcalendrier+1)) ;
+    }
+    fclose(f1) ;
+  }
+  // for (i=0;i<nbcalendrier;i++)
+  // {
+  //   printf("%d \n",calendriers[i].idservice);
+  //   printf("%d \n",calendriers[i].lun);
+  // }
+  printf("nombre de calendriers %d\n",nbcalendrier);
+}
+
+// ~~~~~~~~~~~
+/* --- Chargement des données stop en gare --- */
+// ~~~~~~~~~~~
+void chargement_stop()
+{
+  FILE *f1;
+  int  i, retour;
+  char line[500] ; // pour lire ligne par ligne avec sscanf
+  int dumpint ;
+  char dumpchar ;
+
+  /* --- Allocation de mémoire au tableau trajet --- */
+  stops = (struct UnStop *) malloc(sizeof(struct UnStop));
+
+  /*--- Ouverture fichier horaires --- */
+  //f1=fopen("./data_sncf/sncf_full_test.txt", "r") ;
+  f1=fopen("./data/horaire/tgv/stop_times.txt","r") ;
+  if (f1 == NULL)
+  {
+    printf("Erreur de chargement\n") ;
+  }
+  else
+  {
+    i=0 ;
+    fgets(line, sizeof(line), f1); // lire la 1re ligne et ne rien faire (je l'enlève car il n'y a plus les entêtes dans le csv)
+    while (fgets(line,sizeof(line),f1) != NULL)
+    {     
+      retour=sscanf(line,"%101[^,],%10[^,],%10[^,],%101[^,],%d,%101[^,],%d,%d,%d",
+      // retour=sscanf(line,"%s,%d,%s,\"%d\",%d,%s,%s",
+        stops[i].idtrajet,
+        stops[i].ha,
+        stops[i].hd,
+        stops[i].idgare,
+        &stops[i].sequence,
+        dumpchar,
+        &dumpint,
+        &dumpint,
+        &dumpint);
+      i++ ;
+      nbstop = i ;
+      stops = (struct UnStop *) realloc(stops,sizeof(struct UnStop) * (nbstop+1)) ;
+    }
+    fclose(f1) ;
+  }
+  // for (i=0;i<nbstop;i++)
+  // {
+  //   printf("%s \n",stops[i].idgare);
+  //   printf("%d \n",stops[i].arrive);
+  // }
+  printf("nombre de stops %d\n",nbstop);
+}
+
+// ~~~~~~~~~~~
+/* --- Chargement des données gares --- */
+// ~~~~~~~~~~~
+void chargement_gare()
+{
+  FILE *f1;
+  int  i, retour;
+  char line[500] ; // pour lire ligne par ligne avec sscanf
+  int  dumpint ;
+  char dumpchar ;
+
+  /* --- Allocation de mémoire au tableau trajet --- */
+  gares = (struct UneGare *) malloc(sizeof(struct UneGare));
+
+  /*--- Ouverture fichier horaires --- */
+  //f1=fopen("./data_sncf/sncf_full_test.txt", "r") ;
+  f1=fopen("./data/horaire/tgv/stops.txt","r") ;
+  if (f1 == NULL)
+  {
+    printf("Erreur de chargement\n") ;
+  }
+  else
+  {
+    i=0 ;
+    fgets(line, sizeof(line), f1); // lire la 1re ligne et ne rien faire (je l'enlève car il n'y a plus les entêtes dans le csv)
+    while (fgets(line,sizeof(line),f1) != NULL)
+    {     
+      retour=sscanf(line,"%101[^,],\"%101[^\"],%101[^,],%101[^,],%101[^,],%101[^,],%d,%101[^\n]",
+      // retour=sscanf(line,"%s,%d,%s,\"%d\",%d,%s,%s",
+        gares[i].idgare,
+        gares[i].nomgare,
+        dumpchar,
+        dumpchar,
+        dumpchar,
+        dumpchar,
+        &dumpint,
+        dumpchar);
+      // supprime_accent(gares[i].nomgare);
+      convmaj(gares[i].nomgare);
+      i++ ;
+      nbgare = i ;
+      gares = (struct UneGare *) realloc(gares,sizeof(struct UneGare) * (nbgare+1)) ;
+    }
+    fclose(f1) ;
+  }
+  // for (i=0;i<nbgare;i++)
+  // {
+  //   printf("%s \n",gares[i].idgare);
+  //   printf("%s \n",gares[i].nomgare);
+  // }
+  printf("nombre de gares %d\n",nbgare);
+}
+
+/* ---------------------------------------- */
+/* --- Fonctions de recherche de voyage --- */
+/* ---------------------------------------- */
+void lance_recherche()
+{
+  char lettre    ; // char lu au clavier
+  int  choix2=-1 ; // choix utilisateur reconstitué
+  int  erreur2=0 ; // code erreur pour expressions conditionnelles
+  int  erreur3=0 ; // postériorité d'une date à une date de ref (-1=égalité 0=postérieur 1=antérieur)
+  int  erreur4=0 ;
+
+  int  i ;
+  int  nb_res_depart=0 ;
+  int  nb_res_arrive=0 ;
+  int  nb_res_nodate=0 ;
+  int  nb_res_date=0   ;
+
+  int jour, mois, annee, jhebdo ; // éléments de la date de voyage
+  char jhebdo_alpha[9]          ; // élément de la date de voyage
+
+  char garedep[GARE] ; // saisie utilisateur Gare de départ
+  char garearr[GARE] ; // saisie utilisateur Gare d'arrivée
+  char date_rech[DATE]    ; // saisie utilisateur Date de voyage
+
+  struct UnHoraire *tab_res_depart=NULL ; // pointeur de struct horaire pour les résultats au départ d'une gare
+  struct UnHoraire *tab_res_arrive=NULL ; // pointeur de struct horaire pour les résultats à l'arrivée d'une gare
+  struct UnRes_nodate *tab_res_nodate=NULL ; // pointeur de struct resultat_nodate pour les résultats communs
+  struct resultat *tab_res=NULL ; // pointeur de struct resultat pour les résultats communs
+
+  // struct stopdep {
+  //   char id_gare[100];
+  //   char nomgare[GARE];
+  //   char idtrajet[100];
+  //   int sequence ;
+  // } stopsdep ;
+
+  /* === Départ === */
+  printf("\nGare de départ                      : ")     ; // invite de saisie
+  scanf("%s",garedep)                                    ; // récupération saisie utilisateur Gare de départ
+  convmaj(garedep)                                       ; // conversion en majuscule
+  tab_res_depart=recherche_horaire(garedep,&nb_res_depart) ;
+  if(nb_res_depart==0) // Cas : pas de résultat au départ de la gare saisie
+  {
+    printf ("\nIl n'y a pas de train au départ de %s\n",garedep) ;
+    dump_buffer() ;
+  }
+  else // Cas : des résultats au départ de la gare saisie
+  {    
+
+  /* === Arrivée ===*/
+    printf("Gare d'arrivée                      : ")       ; // invite de saisie
+    scanf("%s",garearr)                                    ; // récupération saisie utilisateur gare d'arrivée
+    convmaj(garearr)                                       ; // conversion en majuscule
+    tab_res_arrive = recherche_horaire(garearr,&nb_res_arrive) ; // recherche_horaire reçoit la chaine saisie, le nombre de résultats et retourne un tableau de résultats
+printf("Ici ça va\n");    
+    
+    // tab_res_nodate = compare_nodate(res_depart,nb_res_depart,res_arrive,nb_res_arrive,&nb_res_nodate);
+    tab_res_nodate = compare_nodate(tab_res_depart,nb_res_depart,tab_res_arrive,nb_res_arrive,&nb_res_nodate);
+    if(nb_res_nodate==0) // Cas : pas de résultat entre la gare de départ et la gare d'arrivée
+    {     
+      printf ("\nIl n'y a pas de liaison entre %s et %s\n",garedep, garearr) ;
+      dump_buffer() ;
+    // }
+    // else // Cas : des résultats entre la gare de départ et la gare d'arrivée
+    // {
+
+    //   /* === Date === */
+    //   dump_buffer() ;
+    //   printf("Date du voyage (JJ/MM/AAAA)         : ") ; // invite de saisie
+    //   erreur2 = valide_date(&jour, &mois, &annee)      ; // lecture saisie et contrôle format
+    //   erreur3 = date_anterieure(jour, mois, annee, jour_sys, mois_sys, annee_sys) ;
+    //   while (erreur2 | erreur3 == 1)
+    //   {
+    //     if (erreur2)
+    //     {
+    //       printf("\nDate incorrecte\n")                               ;
+    //       dump_buffer() ;
+    //     }
+    //     if (erreur3 == 1)
+    //     {
+    //       printf("\nNous ne proposons pas de voyage dans le passé\n") ;
+    //     }
+    //     printf("\nGare de départ                      : %s\n",garedep); 
+    //     printf("Gare d'arrivée                      : %s\n",garearr)  ;
+    //     printf("Date du voyage (JJ/MM/AAAA)         : ")              ;
+    //     erreur2 = valide_date(&jour, &mois, &annee)                   ;
+    //     erreur3 = date_anterieure(jour, mois, annee, jour_sys, mois_sys, annee_sys) ;
+    //   }
+      
+  //     jhebdo = calcul_jour_semaine(jour, mois, annee, jour_sys, mois_sys, annee_sys, jhebdo_num_sys) ; // calcul du jour de semaine de la date de voyage
+  //     interprete_jour_semaine(jhebdo, jhebdo_alpha) ;
+      
+  //     tab_res = compare_avecdate(tab_res_nodate, &nb_res_nodate, jhebdo, &nb_res_date /*,date_rech*/);
+  //     tri(tab_res,&nb_res_date) ;
+    }
+  }
+
+
+
+  // /* === Arrivée ===*/
+  //   printf("Gare d'arrivée                      : ")       ; // invite de saisie
+  //   scanf("%s",garearr)                                    ; // récupération saisie utilisateur gare d'arrivée
+  //   convmaj(garearr)                                       ; // conversion en majuscule
+  //   res_arrive = recherche_horaire(garearr,&nb_res_arrive) ; // recherche_horaire reçoit la chaine saisie, le nombre de résultats et retourne un tableau de résultats
+    
+  //   tab_res_nodate = compare_nodate(res_depart,nb_res_depart,res_arrive,nb_res_arrive,&nb_res_nodate);
+    
+  //   if(nb_res_nodate==0) // Cas : pas de résultat entre la gare de départ et la gare d'arrivée
+  //   {     
+  //     printf ("\nIl n'y a pas de liaison entre %s et %s\n",garedep, garearr) ;
+  //     dump_buffer() ;
+  //   }
+  //   else // Cas : des résultats entre la gare de départ et la gare d'arrivée
+  //   {
+
+  // /* === Date === */
+  //     dump_buffer() ;
+  //     printf("Date du voyage (JJ/MM/AAAA)         : ") ; // invite de saisie
+  //     erreur2 = valide_date(&jour, &mois, &annee)      ; // lecture saisie et contrôle format
+  //     erreur3 = date_anterieure(jour, mois, annee, jour_sys, mois_sys, annee_sys) ;
+  //     while (erreur2 | erreur3 == 1)
+  //     {
+  //       if (erreur2)
+  //       {
+  //         printf("\nDate incorrecte\n")                               ;
+  //         dump_buffer() ;
+  //       }
+  //       if (erreur3 == 1)
+  //       {
+  //         printf("\nNous ne proposons pas de voyage dans le passé\n") ;
+  //       }
+  //       printf("\nGare de départ                      : %s\n",garedep); 
+  //       printf("Gare d'arrivée                      : %s\n",garearr)  ;
+  //       printf("Date du voyage (JJ/MM/AAAA)         : ")              ;
+  //       erreur2 = valide_date(&jour, &mois, &annee)                   ;
+  //       erreur3 = date_anterieure(jour, mois, annee, jour_sys, mois_sys, annee_sys) ;
+  //     }
+      
+  //     jhebdo = calcul_jour_semaine(jour, mois, annee, jour_sys, mois_sys, annee_sys, jhebdo_num_sys) ; // calcul du jour de semaine de la date de voyage
+  //     interprete_jour_semaine(jhebdo, jhebdo_alpha) ;
+      
+  //     tab_res = compare_avecdate(tab_res_nodate, &nb_res_nodate, jhebdo, &nb_res_date /*,date_rech*/);
+  //     tri(tab_res,&nb_res_date) ;
+
+  //     if(nb_res_nodate==0)
+  //     {
+  //       printf("\nAucun train ne circule entre %s et %s le %s %d/%d/%d\n",garedep, garearr, jhebdo_alpha, jour, mois, annee) ;
+  //     }
+  //     else
+  //     {
+  //       while (choix2 != 0)
+  //       {
+  //         printf("\n") ;
+  //         printf("---------------------------------------------------------------------------------------\n") ;
+  //         printf(" n° | Gare de départ         | Gare d'arrivée         | numéro | hh:mm | hh:mm | Type\n") ;
+  //         printf("---------------------------------------------------------------------------------------\n") ;
+  //         for(i=0;i<nb_res_date;i++)
+  //         {
+  //           printf("%3d | %-22s | %-22s | %6d | %2d:%02d | %2d:%02d | %s\n", i+1, 
+  //             tab_res[i].dep_gare, tab_res[i].arr_gare, tab_res[i].num_train, 
+  //             // tab_res[i].heure_dep/100, (tab_res[i].heure_dep-tab_res[i].heure_dep/100*100), 
+  //             // tab_res[i].heure_arr/100, (tab_res[i].heure_arr-tab_res[i].heure_arr/100*100), tab_res[i].type) ;
+  //             tab_res[i].heure_dep/100, tab_res[i].heure_dep%100,tab_res[i].heure_arr/100, 
+  //             tab_res[i].heure_arr%100, tab_res[i].type) ;
+  //         }
+  //         printf("---------------------------------------------------------------------------------------\n") ;
+  //         printf("\n") ;
+  //         printf("-1- Choisir un train circulant le %s %d/%d/%d\n",jhebdo_alpha, jour, mois, annee) ; // faire une fonction qui actualise la date (mutualiser avec jour_semaine ?)
+  //         printf("-2- Afficher les trains du jour précédent\n") ;
+  //         printf("-3- Afficher les trains du jour suivant\n") ;
+  //         printf("-4- Modifier la recherche\n") ;
+  //         printf("-0- Retour à l'accueil\n") ;
+  //         printf("\nChoix : ") ;
+  //         scanf("%c",&lettre) ;
+  //         choix2 = lecture_choix(0,4,lettre,&erreur4) ;
+  //         switch (choix2)
+  //         {
+  //           case 1: printf("choisir un train (n°) : ") ;
+  //                   break;
+  //           case 2: date_suivante_precedente(&jhebdo, &jour, &mois, &annee, -1) ;
+  //                   interprete_jour_semaine(jhebdo, jhebdo_alpha) ;
+  //                   tab_res=compare_avecdate(tab_res_nodate, &nb_res_nodate, jhebdo, &nb_res_date) ;
+  //                   tri(tab_res,&nb_res_date) ;
+  //                   break;
+  //           case 3: date_suivante_precedente(&jhebdo, &jour, &mois, &annee, 1) ;
+  //                   interprete_jour_semaine(jhebdo, jhebdo_alpha) ;
+  //                   tab_res=compare_avecdate(tab_res_nodate, &nb_res_nodate, jhebdo, &nb_res_date) ;
+  //                   tri(tab_res,&nb_res_date) ;
+  //                   break;
+  //           case 4: printf("c'est peut-être pas la peine de faire cette entrée si c'est pour demander 'voulez vous changer le départ, oui, non, voulez-vous changer l'arrivée, oui, non etc.\n") ;
+  //                   break;
+  //           case 0: break;
+  //           default:printf("\nDésolés, nous n'avons pas compris votre choix, recommencez\n") ; 
+  //                   break ;
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+
+}
+
+// ~~~~~~~~~~~
+/* Fonction de recherche d'horaires selon la gare saisie
+ (retourne un tableau d'horaires qui matchent la gare saisie) */
+// ~~~~~~~~~~~
+struct UnHoraire * recherche_horaire(char rechgare[], int *nbres)
+{
+  struct idnomgare {
+    char idgare[100];
+    char nomgare[GARE];
+  } ;
+  struct idnomgare listgares[20] ;
+  int nblistgares ;
+        // struct UnHoraire {
+          char idtrajet[100];
+          int idservice;
+          int numtrain;
+          int lun;
+          int mar;
+          int mer;
+          int jeu;
+          int ven;
+          int sam;
+          int dim;
+          int direction;
+          char ha;
+          char hd;
+          int sequence;
+          char idgare[100];
+          char nomgare[GARE];
+        // };
+  int i, j, k, l, m ;
+  // int i        ; // compteur des gares
+  // int j        ; // compteur caractère chaine
+  // int k        ; // compteur caractère sous-chaine
+  // int l=0      ; // compteur xième gare correspondante trouvée
+  int position ; // compteur de la position où le 1er caractère commun est trouvé
+  struct UnHoraire unhoraire ;    // variable locale de type struct horaire
+  struct UnHoraire *res_horaire ; // pointeur du tableau de résultats à retourner
+
+  res_horaire = (struct UnHoraire *) malloc(sizeof(struct UnHoraire)) ;
+
+  for (i=0;i<nbgare;i++)                          // pour chaque ligne de gares
+  {
+    for (j=0;gares[i].nomgare[j]!='\0';j++)         // pour le caractère du nom de la gare, tant qu'il est différent de \O
+    {
+      k=0;                                        // et du premier caractère de la saisie (sous-chaine)
+      if(gares[i].nomgare[j] == rechgare[k])        // si le caractère du nom de la gare est égal au caractère de la saisie
+      {
+        position = j+1 ;                          // on mémorise la position de recherche.
+        while (gares[i].nomgare[j] == rechgare[k])  // tant que les deux caractères sont égaux...
+        {
+          j++ ;                                   // ... on passe au caractère suivant pour le nom de la gare
+          k++ ;                                   // ... et pour la saisie
+        }
+        if(rechgare[k]=='\0')                     // si la saisie (sous-chaine) arrive à la fin (= toute la sous-chaine a été trouvée dans la chaine)
+        {
+                                                      // realloc de mémoire au tableau res_horaire
+          strcpy(listgares[l].nomgare,gares[i].nomgare) ;
+          strcpy(listgares[l++].idgare, gares[i].idgare) ;
+          nblistgares = l ;
+    printf("gare trouvée %d : %s %s\n",i, nomgare,idgare);
+        }
+        else                                          // sinon (les caractères comparés de la chaine et de la sous-chaine sont différents)
+        {
+          j=position ;                                // on passe au caractère suivant dans la chaine (retour à la position retenue)
+          position=0 ;                                // la position est réinitialisée
+        }
+      } /* fin du if caractère chaine = caractère sous-chaine (on passe au caractère de la chaine suivant en repartant du 1er caractère de la sous-chaine) */
+    } /* fin du for chaque caractère de la chaine */
+  } /* fin du for chaque ligne de tab_horaire */
+  
+  // on va chercher les autres infos
+  l=0;
+  for (i=0;i<nblistgares;i++) // pour chaque gare trouvée
+  {
+    for (j=0;j<nbstop;j++) // pour chaque ligne de stops
+    {
+      if (strcmp(listgares[i].idgare,stops[j].idgare)==0)
+      {
+        strcpy(res_horaire[k].idtrajet,stops[j].idtrajet);
+        strcpy(res_horaire[k].ha, stops[j].ha) ;
+        strcpy(res_horaire[k].hd,stops[j].hd) ;
+        strcpy(res_horaire[k].idgare,stops[j].idgare);
+        strcpy(res_horaire[k].nomgare,listgares[i].nomgare);
+        res_horaire[k].sequence = stops[j].sequence ;
+
+        for(l=0;l<nbtrajet;l++)
+        {
+          if (strcmp(trajets[l].idtrajet,res_horaire[k].idtrajet)==0)
+          {
+            res_horaire[k].idservice = trajets[l].idservice;
+            res_horaire[k].numtrain = trajets[l].numtrain ;
+            for (m=0;m<nbcalendrier;m++)
+            {
+              if (trajets[l].idservice == calendriers[m].idservice)
+              {
+                res_horaire[k].lun = calendriers[m].lun;
+                res_horaire[k].mar = calendriers[m].mar;
+                res_horaire[k].mer = calendriers[m].mer;
+                res_horaire[k].jeu = calendriers[m].jeu;
+                res_horaire[k].ven = calendriers[m].ven;
+                res_horaire[k].sam = calendriers[m].sam;
+                res_horaire[k].dim = calendriers[m].dim;
+              }
+            }
+          }
+        }
+        k++;
+        *nbres=k;
+        res_horaire = (struct UnHoraire *) realloc(res_horaire,sizeof(struct UnHoraire) * (*nbres+1));
+      }
+    }
+  }
+  for (k=0; k<*nbres;k++)
+  {
+    printf("%s ",res_horaire[k].idtrajet);
+    printf("%d ",res_horaire[k].idservice);
+    printf("%d ",res_horaire[k].numtrain);
+    printf("%d ",res_horaire[k].lun);
+    printf("%d ",res_horaire[k].mar);
+    printf("%d ",res_horaire[k].mer);
+    printf("%d ",res_horaire[k].jeu);
+    printf("%d ",res_horaire[k].ven);
+    printf("%d ",res_horaire[k].sam);
+    printf("%d ",res_horaire[k].dim);
+    printf("%d ",res_horaire[k].direction);
+    printf("%s ",res_horaire[k].ha);
+    printf("%s ",res_horaire[k].hd);
+    printf("%d ",res_horaire[k].sequence);
+    printf("%s ",res_horaire[k].idgare);
+    printf("%s ",res_horaire[k].nomgare);
+    printf("\n");
+  }
+}
+
+// ~~~~~~~~~~~
+/* Fonction de comparaison des résultats départ/arrivée 
+  (retourne un tableau des résultats, construit à partir des match) */
+struct UnRes_nodate * compare_nodate(struct UnHoraire gare_dep_trouve[], int nb_gare_dep_trouve, struct UnHoraire gare_arr_trouve[], int nb_gare_arr_trouve, int *nb_res_nodate)
+{
+printf("jusqu'ici ça va");
+  int i=0 ; // compteur résultats à l'arrivée
+  int j=0 ; // compteur résultats au départ
+  int k=0 ; // compteur match arrivée/départ
+  struct UnRes_nodate *tab_resultats_nodate ; // pointeur du tableau de résultats communs à retourner
+  
+  /* allocation de mémoire au tableau de résultats tab_resultats_nodate */
+  tab_resultats_nodate = (struct UnRes_nodate *) malloc(sizeof(struct UnRes_nodate));
+
+  for(i=0 ; i<nb_gare_arr_trouve ; i++)                                          // pour chaque arrivee
+  {                                     
+  printf("L'id de trajet arrivée %s",gare_arr_trouve[i].idtrajet);              
+    for (j=0 ; j<nb_gare_dep_trouve ; j++)
+        printf("L'id de trajet depart %s",gare_dep_trouve[i].idtrajet);
+    {                                                                           // pour chaque départ
+      if( strcmp(gare_dep_trouve[j].idtrajet, gare_arr_trouve[i].idtrajet)==0)  // condition id départ = id arrivée
+      {
+// printf("OUf, un match pour idtrajet=%s",gare_dep_trouve[j].idtrajet)       ; 
+        if( gare_dep_trouve[j].sequence < gare_arr_trouve[i].sequence)           // condition depart avant arrivee
+        {
+          strcpy(tab_resultats_nodate[k].idtrajet,gare_dep_trouve[j].idtrajet); // copie des infos dans la structure UnRes_nodate
+          tab_resultats_nodate[k].idservice = gare_dep_trouve[j].idservice ;
+          tab_resultats_nodate[k].numtrain  = gare_dep_trouve[j].numtrain  ;
+          tab_resultats_nodate[k].lun       = gare_dep_trouve[j].lun       ;
+          tab_resultats_nodate[k].mar       = gare_dep_trouve[j].mar       ;
+          tab_resultats_nodate[k].mer       = gare_dep_trouve[j].mer       ;
+          tab_resultats_nodate[k].jeu       = gare_dep_trouve[j].jeu       ;
+          tab_resultats_nodate[k].ven       = gare_dep_trouve[j].ven       ;
+          tab_resultats_nodate[k].sam       = gare_dep_trouve[j].sam       ;
+          tab_resultats_nodate[k].dim       = gare_dep_trouve[j].dim       ;
+          tab_resultats_nodate[k].direction = gare_dep_trouve[j].direction ;
+          strcpy(tab_resultats_nodate[k].hd,  gare_dep_trouve[j].hd)       ;
+          strcpy(tab_resultats_nodate[k].ha,  gare_arr_trouve[i].ha)       ;
+          tab_resultats_nodate[k].seqdep    = gare_dep_trouve[j].sequence  ;
+          tab_resultats_nodate[k].seqarr    = gare_arr_trouve[i].sequence  ;
+          strcpy(tab_resultats_nodate[k].idgaredep, gare_dep_trouve[j].idgare) ;
+          strcpy(tab_resultats_nodate[k].idgarearr, gare_arr_trouve[i].idgare) ;
+          strcpy(tab_resultats_nodate[k].garedep,   gare_dep_trouve[j].nomgare) ;
+          strcpy(tab_resultats_nodate[k].garedep,   gare_arr_trouve[i].nomgare) ;
+  // printf de contrôle à supprimer
+  // printf("dépar:%s | arrivée:%s | num_train:%d | hdep:%d | harr:%d | type:%s\n",
+  //  tab_resultats_nodate[k].dep_gare, 
+  //  tab_resultats_nodate[k].arr_gare, 
+  //  tab_resultats_nodate[k].num_train, 
+  //  tab_resultats_nodate[k].heure_dep, 
+  //  tab_resultats_nodate[k].heure_arr,
+  //  tab_resultats_nodate[k].type
+  // );
+          k++;
+          tab_resultats_nodate = (struct UnRes_nodate *) realloc(tab_resultats_nodate,sizeof(struct UnRes_nodate) * (k+1));          
+        } // fin du if sur l'idtrajet
+      } // fin du if sur les stop_sequence
+    } // fin du for Gare de départ
+  } // fin du for Gare d'arrivée     
+  *nb_res_nodate = k ;
+  return tab_resultats_nodate ;
+}
+
+
+
+// ====================================== //
+/* === Fonctions et procédures outils === */
+// ====================================== //
+/* ------------------------------------------ */
+/* -- Conversion d'une chaine en majuscule -- */
+/* ------------------------------------------ */
+void convmaj(char chaine[])
+{
+  int i ;
+
+  for (i=0 ; i < strlen(chaine) ; i++)
+  {
+    chaine[i] = toupper(chaine[i]) ;
+  }
+}
+
+/* ------------------------------------------------------------------------------ */
+/* Remplace toutes les occurrences de motif_a_remplacer par motif_de_remplacement */
+/* ------------------------------------------------------------------------------ */
+char * str_replace_all(char * chaine, char * motif_a_remplacer, char * motif_de_remplacement)
+{
+  char * pt_motif_a_remplacer = strstr(chaine, motif_a_remplacer), * chaine_retour = NULL;
+  int taille_pt_motif_a_remplacer, taille_motif_a_remplacer, taille_motif_de_remplacement ;
+  while (pt_motif_a_remplacer != NULL)
+  {
+    taille_pt_motif_a_remplacer = strlen(pt_motif_a_remplacer) ;
+    taille_motif_a_remplacer = strlen(motif_a_remplacer) ;
+    taille_motif_de_remplacement = strlen(motif_de_remplacement) ;
+    if (taille_motif_a_remplacer != taille_motif_de_remplacement)
+    {
+      /* Ajuster la taille pour pouvoir placer motif_de_remplacement */
+      memmove(pt_motif_a_remplacer + taille_motif_de_remplacement,
+      pt_motif_a_remplacer + taille_motif_a_remplacer, taille_pt_motif_a_remplacer);
+    }
+    /* Remplacer par motif_de_remplacement */
+    strncpy(pt_motif_a_remplacer, motif_de_remplacement,
+    taille_motif_de_remplacement);
+    /* On prépare pour la prochaine itération */
+    pt_motif_a_remplacer = strstr(chaine, motif_a_remplacer);
+    /* On met a jour la chaine de retour */
+    chaine_retour = chaine;
+  }
+  return chaine_retour;
+}
+
+//* ------------------------------------------------ */
+// --- fonction outil de suppression des accents --- */
+/* ------------------------------------------------- */
+char * supprime_accent(char * chaine)
+// void supprime_accent(char chaine[])
+{
+  char * chaine_retour = chaine, *motif_a_remplacer, *motif_de_remplacement ;
+  size_t nb_elements ;
+  int i ;
+  /* tableau de tous les caractères accentués à remplacer */
+  const char * tab_caracteres_a_remplacer[]
+   = {"À", "Á", "Â", "Ã", "Ä", "Å",
+  "Æ", "Ç", "È", "É", "Ê", "Ë", "Ì", "Í", "Î", "Ï", "Ð", "Ñ", "Ò", "Ó", "Ô", "Õ",
+  "Ö", "Ø", "Ù", "Ú", "Û", "Ü", "Ý", "ß", "à", "á", "â", "ã", "ä", "å", "æ", "ç",
+  "è", "é", "ê", "ë", "ì", "í", "î", "ï", "ñ", "ò", "ó", "ô", "õ", "ö", "ø", "ù",
+  "ú", "û", "ü", "ý", "ÿ", "Ā", "ā", "Ă", "ă", "Ą", "ą", "Ć", "ć", "Ĉ", "ĉ", "Ċ",
+  "ċ", "Č", "č", "Ď", "ď", "Đ", "đ", "Ẽ", "ẽ", "Ē", "ē", "Ĕ", "ĕ", "Ė", "ė", "Ę",
+  "ę", "Ě", "ě", "Ĝ", "ĝ", "Ğ", "ğ", "Ġ", "ġ", "Ģ", "ģ", "Ĥ", "ĥ", "Ħ", "ħ", "Ĩ",
+  "ĩ", "Ī", "ī", "Ĭ", "ĭ", "Į", "į", "İ", "ı", "IJ", "ij", "Ĵ", "ĵ", "Ķ", "ķ", "Ĺ",
+  "ĺ", "Ļ", "ļ", "Ľ", "ľ", "L·", "l·", "Ł", "ł", "Ń", "ń", "Ņ", "ņ", "Ň", "ň", "ʼn",
+  "Ō", "ō", "Ŏ", "ŏ", "Ő", "ő", "Œ", "œ", "Ŕ", "ŕ", "Ŗ", "ŗ", "Ř", "ř", "Ś", "ś",
+  "Ŝ", "ŝ", "Ş", "ş", "Š", "š", "Ţ", "ţ", "Ť", "ť", "Ŧ", "ŧ", "Ũ", "ũ", "Ū", "ū",
+  "Ŭ", "ŭ", "Ů", "ů", "Ű", "ű", "Ų", "ų", "Ŵ", "ŵ", "Ŷ", "ŷ", "Ÿ", "ÿ", "Ź", "ź",
+  "Ż", "ż", "Ž", "ž", "s", "ƒ", "Ơ", "ơ", "Ư", "ư", "Ǎ", "ǎ", "Ǐ", "ǐ", "Ǒ", "ǒ",
+  "Ǔ", "ǔ", "Ǖ", "ǖ", "Ǘ", "ǘ", "Ǚ", "ǚ", "Ǜ", "ǜ", "Ǻ", "ǻ", "Ǽ", "ǽ", "Ǿ", "ǿ"};
+  /* tableau de tous les caractères sans accent de remplacement */
+  const char * tab_caracteres_de_remplacement[] = {"A", "A", "A", "A", "A", "A",
+  "AE", "C", "E", "E", "E", "E", "I", "I", "I", "I", "D", "N", "O", "O", "O", "O",
+  "O", "O", "U", "U", "U", "U", "Y", "s", "a", "a", "a", "a", "a", "a", "ae", "c",
+  "e", "e", "e", "e", "i", "i", "i", "i", "n", "o", "o", "o", "o", "o", "o", "u",
+  "u", "u", "u", "y", "y", "A", "a", "A", "a", "A", "a", "C", "c", "C", "c", "C",
+  "c", "C", "c", "D", "d", "D", "d", "E", "e", "E", "e", "E", "e", "E", "e", "E",
+  "e", "E", "e", "G", "g", "G", "g", "G", "g", "G", "g", "H", "h", "H", "h", "I",
+  "i", "I", "i", "I", "i", "I", "i", "I", "i", "IJ", "ij", "J", "j", "K", "k",
+  "L", "l", "L", "l", "L", "l", "L", "l", "l", "l", "N", "n", "N", "n", "N", "n",
+  "n", "O", "o", "O", "o", "O", "o", "OE", "oe", "R", "r", "R", "r", "R", "r",
+  "S", "s", "S", "s", "S", "s", "S", "s", "T", "t", "T", "t", "T", "t", "U", "u",
+  "U", "u", "U", "u", "U", "u", "U", "u", "U", "u", "W", "w", "Y", "y", "Y", "y",
+  "Z", "z", "Z", "z", "Z", "z", "s", "f", "O", "o", "U", "u", "A", "a", "I", "i",
+  "O", "o", "U", "u", "U", "u", "U", "u", "U", "u", "U", "u", "A", "a", "AE",
+  "ae", "O", "o"};
+  nb_elements = sizeof(tab_caracteres_de_remplacement) / sizeof(*tab_caracteres_de_remplacement) ;
+  /* boucle de traitement de tous les caractères */
+  for (i = 0 ; i < nb_elements ; i++)
+  {
+    motif_a_remplacer = (char * ) tab_caracteres_a_remplacer[i] ;
+    motif_de_remplacement= (char * ) tab_caracteres_de_remplacement[i] ;
+    chaine_retour = str_replace_all(chaine, motif_a_remplacer,
+    motif_de_remplacement) ;
+    if (chaine_retour != NULL)
+    {
+      chaine = chaine_retour;
+    }
+  }
+  return chaine;
+}
+
+/* --------------------- */
+/* -- Date du système -- */
+/* --------------------- */
+// void date_sys(int *jour, int *mois, int *annee)
+void date_sys(int *jour, int *mois, int *annee, int *jhebdo_num)
+{
+  time_t nb_sec_1970, temps ;
+  struct tm date ;
+
+  /* -- met la date en francais -- */
+  setlocale(LC_ALL,"");
+
+  /*-- Récupère la date système -- */
+  nb_sec_1970 = time(&temps);      // Secondes depuis 01/01/1970
+  date = *localtime(&nb_sec_1970); // Conversion en date
+
+  /* Éléments intelligibles de la date du système */
+  *jour       = date.tm_mday       ; // jour du système
+  *mois       = date.tm_mon  +1    ; // mois du système
+  *annee      = date.tm_year +1900 ; // année du système
+  *jhebdo_num = date.tm_wday       ; // jour de semaine du système (0 à 6)
+}
+
+/* ------------------------------ */
+/* -- Lecture/vidage du buffer -- */
+/* ------------------------------ */
+void dump_buffer() 
+{
+  char dump ;
+  while(dump!='\n')
+  {
+    scanf("%c", &dump);
+  }
+}
+
+/* ---------------------------------------- */
+/* -- Conversion du choix de char en int -- */
+/* ---------------------------------------- */
+// La lecture en char permet de mettre des contrôles
+// sur la validité de la saisie
+int lecture_choix(int deb, int fin, char lettre, int * erreur)
+{
+  int  choix ;              // choix reconstitué à retourner
+  char debalpha, finalpha ; // bornes des choix du menu
+
+  debalpha = deb + 48 ; // conversion des bornes en char
+  finalpha = fin + 48 ;
+
+  // si saisie dans les bornes du choix
+  if (((lettre >= debalpha) && (lettre <= finalpha)) && lettre != '\n')
+  {
+    choix = lettre - 48 ; // conversion du char en int
+    dump_buffer() ;
+    *erreur=0     ;
+    return choix  ;
+  }
+  // si saisie hors des bornes du choix
+  else
+  {
+    dump_buffer() ;
+    *erreur=1     ;
+    printf("Veuillez saisir un choix valide (%d à %d)\n", deb, fin);
+  }
+}
+
+/* ------------------------------- */
+/* -- Calcul du jour de semaine -- */
+/* ------------------------------- */
+// incrémente les 4 variables d'une date donnéee connue 
+// (jour de semaine, jour, mois, année) jusqu'à atteindre
+// la date recherchée pour en connaitre le jour de semaine
+int calcul_jour_semaine(int jour_rech, int mois_rech, int annee_rech, int jour, int mois, int annee, int jhebdo)
+{
+  int jhebdo_rech=jhebdo ; // jour de semaine à retourner (commence au jour de semaine fourni)
+  int i, j=0 ;
+  int annee_bi[10];        // tableau d'années bissextiles
+
+  /* -- Construction du tableau des prochaines annees bissextiles -- */
+  for(i=annee; i<=annee_rech;i++)  /* Est-ce qu'on a vraiment besoin de ça ? 
+  On n'a qu'à juste utiliser le if qui dit si annee_rech est bissextile*/
+  {                              
+    if((i % 4 == 0 && i % 100 != 0) || i % 400 == 0)
+    {
+      annee_bi[j++]=i;
+    }
+  }
+  j=0;
+
+  /* -- Incrementation des jours -- */
+  while((jour != jour_rech) | (mois != mois_rech) | (annee != annee_rech)) // tant qu'on n'atteint pas la date recherchée
+  {                                                                        // on incrémente les 4 variables de date
+    switch(mois)                                                           // (jour et mois selon le nombre de jours du mois)
+    {
+      case 1 : case 3 : case 5 : case 7 : case 8 : case 10 : case 12 : // les mois de 31 jours
+        if(jour<31)            // si le jour n'est pas le 31
+        {
+          jour++;              // incrémentation du jour
+        }
+        else                   // si le jour est le 31 (dernier du mois)
+        {
+          jour=1;              // le prochain jour est le 1er
+          mois++;              // du mois suivant
+        }
+        break;
+      case 2 :                 // en février
+        if(annee==annee_bi[j]) // si l'année est bissextile
+        {
+          if(jour<29)          // si le jour n'est pas 29 (dernier du mois)
+          {
+            jour++;            // incrémentation du jour
+          }
+          else                 // sinon (le jour est le dernier du mois)
+          {
+            jour=1;            // le prochain jour est le 01/03
+            mois++;
+            // j++;
+          }
+        }
+        else                   // si l'année n'est pas bissextile
+        {
+          if(jour<28)          // si le jour n'est pas 28 (dernier du mois)
+          {         
+            jour++;            // incrémentation du jour
+          }
+          else                 // sinon (le jour est le dernier du mois)
+          {
+            jour=1;            // le prochain jour est le 01/03
+            mois++;
+          }
+        }
+        break;
+      default :                // pour tous les autres mois (ceux de 30 jours)
+        if(jour<30)            // si le jour n'est pas le 30 (dernier du mois)
+        {
+          jour++;              // incrémentation du jour
+        }
+        else                   // sinon (le jour est le dernier du mois)
+        {
+          jour=1;              // le prochain jour est le 1er
+          mois++;              // du mois suivant
+        }
+        break;
+    } // fin du switch (selon le nombre de jours du mois)
+    if(mois==13)                                                          // (année si on a changé d'année dans le switch)
+    {
+      mois=1;
+      annee++;
+    }
+    jhebdo_rech++;                                                        // (jour de semaine)
+    if (jhebdo_rech==7)
+      jhebdo_rech=0;                                                      // remise à 0 si jour de la semaine 7 (convention : 0 à 6)          
+  } /* fin du while d'incrémentation d'un jour hebdo */
+  return jhebdo_rech; // renvoie un int (0 à 6)
+}
+
+/* --------------------------------------- */
+/* -- Interprétation du jour de semaine -- */
+/* --------------------------------------- */
+void interprete_jour_semaine(int jhebdo_num, char jhebdo_alpha[])
+{
+  switch(jhebdo_num)
+  {
+    case 0: strcpy(jhebdo_alpha,"dimanche") ; break ;
+    case 1: strcpy(jhebdo_alpha,"lundi")    ; break ;
+    case 2: strcpy(jhebdo_alpha,"mardi")    ; break ;
+    case 3: strcpy(jhebdo_alpha,"mercredi") ; break ;
+    case 4: strcpy(jhebdo_alpha,"jeudi")    ; break ;
+    case 5: strcpy(jhebdo_alpha,"vendredi") ; break ;
+    case 6: strcpy(jhebdo_alpha,"samedi")   ; break ;
+  }
+}
+
+/* ------------------------------------------------------- */
+/* -- Lecture et contrôle de validité d'une date saisie -- */
+/* ------------------------------------------------------- */
+int valide_date(int * jour, int * mois, int * annee)
+{
+  int mois_switch ;
+  int erreur = 0;
+
+  int i=0 ;
+  char lettre=50 ; // caractère lu
+  #define MAX_DIGIT 12 // taille de la chaine
+  char digit[MAX_DIGIT] ; // chaine constituée par ajout de caractère lu
+  int compteur_saisie=0, compteur_element_date=0;
+
+  // lecture saisie, controle du format
+  while(compteur_saisie < MAX_DIGIT && lettre != '\n' && ((lettre>46) && (lettre<58)) && ! erreur)
+  {
+    scanf("%c", &lettre);
+    if( lettre!='\n') // si on n'a pas rencontré LF
+    {
+      if( (lettre>47) && (lettre<58) )    // si la saisie est un chiffre
+      {
+        digit[compteur_saisie++]=lettre ; // lire la saisie   
+      }
+      else if (lettre == 47) // si la saisie est le / séparateur d'éléments de date
+      {
+        switch(compteur_element_date)
+        {
+          case 0: // conversion du jour en int
+            if(compteur_saisie > 0 && compteur_saisie < 3)
+            {
+              *jour = atoi(digit) ;
+              compteur_saisie=0 ;
+              compteur_element_date++ ;
+              digit[0]='\0' ;
+            }
+            else
+            {
+              erreur = 1;
+            }
+            break;
+          case 1: // conversion du mois en int
+            if(compteur_saisie > 0 && compteur_saisie < 3)
+              {
+                *mois = atoi(digit) ;
+                compteur_saisie=0 ;
+                compteur_element_date++ ;
+                digit[0]='\0' ;
+              }
+            else
+            {
+              erreur = 1;
+            }
+            break;
+          default: erreur=1 ; break ;
+        }
+      }
+    }
+    else if (lettre == '\n' && (compteur_saisie == 4) && compteur_element_date == 2)
+    {
+      digit[compteur_saisie] = '\0' ;
+      *annee = atoi(digit) ;
+      compteur_saisie=0 ;
+      compteur_element_date++ ;
+    }
+    else
+    {
+      erreur = 1;
+    }
+  } // fin du while lecture saisie et contrôle du format
+
+  // contrôle de cohérence de date
+  if(compteur_saisie>=MAX_DIGIT)
+  {
+    erreur=1;
+  }
+  switch(*mois)
+  {
+    case 1: case 3: case 5: case 7: case 8: case 10: case 12:
+      if( (*jour<1 || *jour>31) )
+      {
+        erreur=1;
+      }
+      break;
+    case 4: case 6: case 9: case 11:
+      if( (*jour<1 || *jour>30) )
+      {
+        erreur=1;
+      }
+      break;
+    case 2 :
+      if((*mois % 4 == 0 && *mois % 100 != 0) || *mois % 400 == 0)
+      {
+        if( (*jour<1 || *jour>29) )
+        {
+          erreur=1;
+        }
+      }
+      else
+      {
+        if( (*jour<0 || *jour>28) )
+        {
+          erreur=1;
+        }
+      }
+      break;
+    default :
+      erreur=1;
+      break ;
+  }
+  return erreur ;
+}

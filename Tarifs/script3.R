@@ -1,0 +1,48 @@
+tarif_ter <- read.csv("C:/Users/pariz/Documents/Github/reservation/Tarifs/tarifs-ter-par-od.csv", header=TRUE,sep=";", fileEncoding = "UTF-8")
+
+tarif_ter$Origine <- str_replace_all(tarif_ter$Origine, pattern = "[éèêë]", "e")
+tarif_ter$Origine <- str_replace_all(tarif_ter$Origine, pattern = "[ÊËÈÉ]", "E")
+tarif_ter$Origine <- str_replace_all(tarif_ter$Origine, pattern = "[àâäáã]", "a")
+tarif_ter$Origine <- str_replace_all(tarif_ter$Origine, pattern = "[ÄÂÀÁÃ]", "A")
+tarif_ter$Origine <- str_replace_all(tarif_ter$Origine, pattern = "[ÏÎÌÍ]", "I")
+tarif_ter$Origine <- str_replace_all(tarif_ter$Origine, pattern = "[ôöòó]", "o")
+tarif_ter$Origine <- str_replace_all(tarif_ter$Origine, pattern = "[ÖÔÒÓ]", "O")
+tarif_ter$Origine <- str_replace_all(tarif_ter$Origine, pattern = "[ùûüú]", "u")
+tarif_ter$Origine <- str_replace_all(tarif_ter$Origine, pattern = "[ÜÛÚÙ]", "U")
+tarif_ter$Origine <- str_replace_all(tarif_ter$Origine, pattern = "[ÿý]", "y")
+tarif_ter$Origine <- str_replace_all(tarif_ter$Origine, pattern = "ç", "c")
+tarif_ter$Origine <- str_replace_all(tarif_ter$Origine, pattern = "Ý", "Y")
+tarif_ter$Origine <- str_replace_all(tarif_ter$Origine, pattern = "Ç", "C")
+
+tarif_ter$Destination <- str_replace_all(tarif_ter$Destination, pattern = "[éèêë]", "e")
+tarif_ter$Destination <- str_replace_all(tarif_ter$Destination, pattern = "[ÊËÈÉ]", "E")
+tarif_ter$Destination <- str_replace_all(tarif_ter$Destination, pattern = "[àâäáã]", "a")
+tarif_ter$Destination <- str_replace_all(tarif_ter$Destination, pattern = "[ÄÂÀÁÃ]", "A")
+tarif_ter$Destination <- str_replace_all(tarif_ter$Destination, pattern = "[ÏÎÌÍ]", "I")
+tarif_ter$Destination <- str_replace_all(tarif_ter$Destination, pattern = "[ôöòó]", "o")
+tarif_ter$Destination <- str_replace_all(tarif_ter$Destination, pattern = "[ÖÔÒÓ]", "O")
+tarif_ter$Destination <- str_replace_all(tarif_ter$Destination, pattern = "[ùûüú]", "u")
+tarif_ter$Destination <- str_replace_all(tarif_ter$Destination, pattern = "[ÜÛÚÙ]", "U")
+tarif_ter$Destination <- str_replace_all(tarif_ter$Destination, pattern = "[ÿý]", "y")
+tarif_ter$Destination <- str_replace_all(tarif_ter$Destination, pattern = "ç", "c")
+tarif_ter$Destination <- str_replace_all(tarif_ter$Destination, pattern = "Ý", "Y")
+tarif_ter$Destination <- str_replace_all(tarif_ter$Destination, pattern = "Ç", "C")
+
+tarif_ter$Origine <- str_replace_all(tarif_ter$Origine, pattern = " ", "_")
+tarif_ter$Origine <- str_replace_all(tarif_ter$Origine, pattern = "-", "_")
+tarif_ter$Origine <- str_replace_all(tarif_ter$Origine, pattern = "[:digit:]", "_")
+
+tarif_ter$Destination <- str_replace_all(tarif_ter$Destination, pattern = " ", "_")
+tarif_ter$Destination <- str_replace_all(tarif_ter$Destination, pattern = "-", "_")
+tarif_ter$Destination <- str_replace_all(tarif_ter$Destination, pattern = "[:digit:]", "_")
+
+tarif_ter$Origine <- str_remove_all(tarif_ter$Origine, pattern = "_")
+tarif_ter$Destination <- str_remove_all(tarif_ter$Destination, pattern = "_")
+
+
+ter_d1 <- tarif_ter%>%distinct(Origine)
+ter_d2 <- tarif_ter%>%distinct(Destination)
+
+g3$stop_name  <- str_replace_all(full_table$stop_name , pattern = " ", "_")
+g3$stop_name  <- str_replace_all(full_table$stop_name , pattern = "-", "_")
+g3$stop_name  <- str_replace_all(full_table$stop_name , pattern = "[:digit:]", "_")

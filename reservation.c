@@ -38,8 +38,11 @@ struct horaire { /*--- Structure des horaires de train ---*/
   };
 
 struct resultat_nodate { /*--- Structure de résultats sans date ---*/
+  int id;
   char dep_gare[MAXstrNOMGARE] ;
+  //int stop_seq_dep;
   char arr_gare[MAXstrNOMGARE] ;
+  //int stop_seq_arr;
   int  num_train               ;
   int  lundi                   ;
   int  mardi                   ;
@@ -56,13 +59,15 @@ struct resultat_nodate { /*--- Structure de résultats sans date ---*/
 } ;
 
 struct resultat { /*--- Structure de résultats avec date et comparés (départ/arrivée) ---*/
+  int  id;
   char dep_gare[MAXstrNOMGARE] ;
   char arr_gare[MAXstrNOMGARE] ;
   int  num_train               ;
-  // char date[SizeDate]          ;
+  char date[SizeDate]          ;
   int  heure_dep               ;
   int  heure_arr               ;
   char type [10]               ;
+  int  dispo;
   // struct resultat *p_prec      ;
   // struct resultat *p_suiv      ;
 
@@ -89,7 +94,9 @@ void date_suivante_precedente(int *jhebdo_rech, int *jour_rech, int *mois_rech, 
 int valide_date(int * jour, int * mois, int * annee) ;
 int date_anterieure(int jour, int mois, int annee, int jour_ref, int mois_ref, int annee_ref) ;
 int lecture_choix(int deb, int fin, char lettre, int * erreur) ;
-
+void saisie_text(char invite[], char sortie[]);
+void saisie_int(char invite[],int max, int *mon_int);
+void date_to_char(int j, int m, int a, char chdate[]);
 
 void chargement_horaires() ;
 void chargement_horaires_alternatif() ;
@@ -98,7 +105,7 @@ void crea_date(int jour, int mois, int annee);
 void lance_recherche()     ;
 struct horaire * recherche_horaire(char rechgare[], int *nb_res_horaire) ;
 struct resultat_nodate * compare_nodate(struct horaire gare_dep_trouve[], int nb_gare_dep_trouve, struct horaire gare_arr_trouve[], int nb_gare_arr_trouve, int *nb_res_nodate ) ;
-struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int *nb_res_nodate, int jhebdo, int *nb_res_date  /*, char date_rech[SizeDate]*/ );
+struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int *nb_res_nodate, int jhebdo, int *nb_res_date , char chdate[] /*, char date_rech[SizeDate]*/ );
 void tri(struct resultat tab_res[], int * nb_res_date) ;
 
 // =========================== //
@@ -127,36 +134,41 @@ int main()
     printf("===========================\n");
     printf("Bienvenue chez SNCF Voyages\n");
     printf("===========================\n");
-  }
-    
-  while (choix != 0)
-  {    
-    // affichage du menu et lecture du choix
-    erreur = 1;
-    while(erreur==1)
-    {
-      printf("\n-1- Réserver\n")                ;
-      printf("-2- Consulter les horaires\n")    ;
-      printf("-3- Mes réservations\n")          ;
-      printf("-0- Quitter\n")                   ;
-      printf("\nChoix : ")                      ;
-      scanf("%c", &lettre)                      ;
-      choix = lecture_choix(0,3,lettre,&erreur) ; 
-    }
   
-    // traitement selon le choix
-    switch (choix)
-    {
-      case 0: printf("À bientôt sur SNCF Voyages\n") ; break ;
-      case 1: printf("à faire : réserver (=consulter (horaires + tarifs) + réserver)\n") ;
-              break ;
-      case 2: printf("à faire : consulter les horaires\n") ;
-              lance_recherche() ;
-              break ;
-      case 3: printf("à faire : mes billets\n");
-              break ;
-    } /* Fin du switch */
-  } /* Fin du while */
+    
+	  while (choix != 0)
+	  {    
+	    // affichage du menu et lecture du choix
+	    erreur = 1;
+	    while(erreur==1)
+	    {
+	      printf("\n-1- Réserver\n")                ;
+	      printf("-2- Consulter les horaires\n")    ;
+	      printf("-3- Mes réservations\n")          ;
+	      printf("-0- Quitter\n")                   ;
+	      printf("\nChoix : ")                      ;
+	      scanf("%c", &lettre)                      ;
+	      choix = lecture_choix(0,3,lettre,&erreur) ; 
+	    }
+	  
+	    // traitement selon le choix
+	    switch (choix)
+	    {
+	      case 0: printf("À bientôt sur SNCF Voyages\n") ; break ;
+	      case 1: printf("à faire : réserver (=consulter (horaires + tarifs) + réserver)\n") ;
+	              break ;
+	      case 2: printf("à faire : consulter les horaires\n") ;
+	              lance_recherche() ;
+	              break ;
+	      case 3: printf("à faire : mes billets\n");
+	              break ;
+	    } /* Fin du switch */
+	  } /* Fin du while */
+	}
+	else
+	{
+		printf("Erreur dans le chargement des donn�es\n");
+	}/* Fin du If premier du nom */
 } /* Fin du main */
 
 // ======================== //
@@ -355,7 +367,8 @@ void lance_recherche()
   int  erreur2=0 ; // code erreur pour expressions conditionnelles
   int  erreur3=0 ; // postériorité d'une date à une date de ref (-1=égalité 0=postérieur 1=antérieur)
   int  erreur4=0 ;
-
+	
+	char chdate[SizeDate];
   int  i ;
   int  nb_res_depart=0 ;
   int  nb_res_arrive=0 ;
@@ -375,8 +388,7 @@ void lance_recherche()
   struct resultat *tab_res=NULL ; // pointeur de struct resultat pour les résultats communs
 
   /* === Départ === */
-  printf("\nGare de départ                      : ")     ; // invite de saisie
-  scanf("%s",garedep)                                    ; // récupération saisie utilisateur Gare de départ
+  saisie_text("Gare de départ", garedep);// récupération saisie utilisateur Gare de départ
   convmaj(garedep)                                       ; // conversion en majuscule
   res_depart = recherche_horaire(garedep,&nb_res_depart) ; // recherche_horaire reçoit la chaine saisie, le nombre de résultats et retourne un tableau de résultats
 
@@ -389,8 +401,7 @@ void lance_recherche()
   {    
 
   /* === Arrivée ===*/
-    printf("Gare d'arrivée                      : ")       ; // invite de saisie
-    scanf("%s",garearr)                                    ; // récupération saisie utilisateur gare d'arrivée
+    saisie_text("Gare d'arrivée", garearr);// récupération saisie utilisateur Gare de départ
     convmaj(garearr)                                       ; // conversion en majuscule
     res_arrive = recherche_horaire(garearr,&nb_res_arrive) ; // recherche_horaire reçoit la chaine saisie, le nombre de résultats et retourne un tableau de résultats
     
@@ -430,7 +441,9 @@ void lance_recherche()
       jhebdo = calcul_jour_semaine(jour, mois, annee, jour_sys, mois_sys, annee_sys, jhebdo_num_sys) ; // calcul du jour de semaine de la date de voyage
       interprete_jour_semaine(jhebdo, jhebdo_alpha) ;
       
-      tab_res = compare_avecdate(tab_res_nodate, &nb_res_nodate, jhebdo, &nb_res_date /*,date_rech*/);
+      date_to_char(jour,mois,annee,chdate);
+      
+      tab_res = compare_avecdate(tab_res_nodate, &nb_res_nodate, jhebdo, &nb_res_date, chdate /*,date_rech*/);
       
       //char_date = date_to_string(jour, mois, annee);
       //filtre_places_dispo(tab_res,&nb_res_date, char_date);
@@ -470,16 +483,19 @@ void lance_recherche()
           choix2 = lecture_choix(0,4,lettre,&erreur4) ;
           switch (choix2)
           {
-            case 1: printf("choisir un train (n°) : ") ;
+            case 1: printf("Choisir un train (n°) : ") ;
+            		int choix_train;
+            		saisie_int("Choisir un train (n°) : ", nb_res_date, &choix_train );
+            		//reservation(tab_res[choix_train],tab_dispo_final);
                     break;
             case 2: date_suivante_precedente(&jhebdo, &jour, &mois, &annee, -1) ;
                     interprete_jour_semaine(jhebdo, jhebdo_alpha) ;
-                    tab_res=compare_avecdate(tab_res_nodate, &nb_res_nodate, jhebdo, &nb_res_date) ;
+                    tab_res=compare_avecdate(tab_res_nodate, &nb_res_nodate, jhebdo, &nb_res_date, chdate) ;
                     tri(tab_res,&nb_res_date) ;
                     break;
             case 3: date_suivante_precedente(&jhebdo, &jour, &mois, &annee, 1) ;
                     interprete_jour_semaine(jhebdo, jhebdo_alpha) ;
-                    tab_res=compare_avecdate(tab_res_nodate, &nb_res_nodate, jhebdo, &nb_res_date) ;
+                    tab_res=compare_avecdate(tab_res_nodate, &nb_res_nodate, jhebdo, &nb_res_date, chdate) ;
                     tri(tab_res,&nb_res_date) ;
                     break;
             case 4: printf("c'est peut-être pas la peine de faire cette entrée si c'est pour demander 'voulez vous changer le départ, oui, non, voulez-vous changer l'arrivée, oui, non etc.\n") ;
@@ -567,6 +583,7 @@ struct resultat_nodate * compare_nodate(struct horaire gare_dep_trouve[], int nb
       {
         if(gare_dep_trouve[j].stop_seq < gare_arr_trouve[i].stop_seq)             // condition depart avant arrivee
         {
+          tab_resultats_nodate[k].id = gare_dep_trouve[j].id ;
           strcpy(tab_resultats_nodate[k].dep_gare, gare_dep_trouve[j].nom_gare) ; // copie des infos dans la structure resultat_nodate
           strcpy(tab_resultats_nodate[k].arr_gare, gare_arr_trouve[i].nom_gare) ;
           tab_resultats_nodate[k].num_train = gare_dep_trouve[j].num_train ;
@@ -604,7 +621,7 @@ struct resultat_nodate * compare_nodate(struct horaire gare_dep_trouve[], int nb
 /* Fonction de selection des resultats en fonction du jour de la semaine desire 
   (retourne un tableau des résultats, construit à partir des match) */
 // ~~~~~~~~~~~
-struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int *nb_res_nodate, int jhebdo, int *nb_res_date  /*, char date_rech[SizeDate]*/ )       //la plus belle des fonctions
+struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int *nb_res_nodate, int jhebdo, int *nb_res_date, char chdate[]  /*, char date_rech[SizeDate]*/ )       //la plus belle des fonctions
 {
   
   // printf("passage dans date : jour de la semaine %d\n", jhebdo);
@@ -623,9 +640,11 @@ struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int 
       {
         if(tab_res_nodate[i].dimanche)
         {
+          tab_resultats[j].id = tab_res_nodate[i].id                    ;
+          strcpy(tab_resultats[j].date, chdate) ;
           strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ;
           strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
-          // strcpy(tab_resultats[j].date    , date_rech)                   ;
+          // strcpy(tab_resultats[j].date    , date_rech)               ;
           strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
           tab_resultats[j].num_train = tab_res_nodate[i].num_train      ;
           tab_resultats[j].heure_dep = tab_res_nodate[i].heure_dep      ;
@@ -641,6 +660,8 @@ struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int 
       {
         if(tab_res_nodate[i].lundi)
         {
+        	tab_resultats[j].id = tab_res_nodate[i].id                    ;
+        	strcpy(tab_resultats[j].date, chdate) ;
           strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
           strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
           // strcpy(tab_resultats[j].date    , date_rech)                  ;
@@ -659,6 +680,8 @@ struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int 
       {
         if(tab_res_nodate[i].mardi)
         {
+        	tab_resultats[j].id = tab_res_nodate[i].id                    ;
+        	strcpy(tab_resultats[j].date, chdate) ;
           strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
           strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
           // strcpy(tab_resultats[j].date    , date_rech)                  ;
@@ -677,6 +700,8 @@ struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int 
       {
         if(tab_res_nodate[i].mercredi)
         {
+        	tab_resultats[j].id = tab_res_nodate[i].id                    ;
+        	strcpy(tab_resultats[j].date, chdate) ;
           strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
           strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
           // strcpy(tab_resultats[j].date    , date_rech)                  ;
@@ -695,6 +720,8 @@ struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int 
       {
         if(tab_res_nodate[i].jeudi)
         {
+        	tab_resultats[j].id = tab_res_nodate[i].id                    ;
+        	strcpy(tab_resultats[j].date, chdate) ;
           strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
           strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
           // strcpy(tab_resultats[j].date    , date_rech)                  ;
@@ -713,6 +740,8 @@ struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int 
       {
         if(tab_res_nodate[i].vendredi)
         {
+        	tab_resultats[j].id = tab_res_nodate[i].id                    ;
+        	strcpy(tab_resultats[j].date, chdate) ;
           strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
           strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
           // strcpy(tab_resultats[j].date    , date_rech)                  ;
@@ -731,6 +760,8 @@ struct resultat * compare_avecdate(struct resultat_nodate tab_res_nodate[], int 
       {
         if(tab_res_nodate[i].samedi)
         {
+        	tab_resultats[j].id = tab_res_nodate[i].id                    ;
+        	strcpy(tab_resultats[j].date, chdate) ;
           strcpy(tab_resultats[j].dep_gare, tab_res_nodate[i].dep_gare) ; 
           strcpy(tab_resultats[j].arr_gare, tab_res_nodate[i].arr_gare) ;
           // strcpy(tab_resultats[j].date    , date_rech)                  ;
@@ -770,6 +801,365 @@ void tri(struct resultat tab_res[], int * nb_res_date)
     tab_res[j] = unresultat ;
   }
 }
+
+void crea_date(int jour, int mois, int annee)
+{
+	int jour_end, mois_end, annee_end;
+	int j, m, a;
+	int i, nbdate;
+	char chdate[9];
+	
+	
+	jour_end=jour;
+	mois_end=mois;
+	annee_end=annee;
+	
+	j=jour;
+	m=mois;
+	a=annee;
+	
+	for(i=0; i<4;i++)
+	{
+		mois_end++;
+		if(mois_end>12)
+		{
+			mois_end=1;
+			annee_end++;
+		}
+	}
+	
+  	switch(mois_end)
+  	{
+	    case 4: case 6: case 9: case 11:
+	      while(jour_end>30)
+	      {
+	      	jour_end--;
+		  }
+	      break;
+	    case 2 :
+	      if((mois_end % 4 == 0 && mois_end % 100 != 0) || mois_end % 400 == 0)
+	      {
+	        while(jour_end>29)
+	      	{
+	      		jour_end--;
+		  	}
+	      }
+	      else
+	      {
+	        while(jour_end>28)
+	     	{
+	      		jour_end--;
+		  	}
+	      }
+	      break;
+	    default :
+	      break ;
+ 	 }
+  
+  
+  
+  tab_date = (struct date *) malloc(sizeof(struct date));
+  
+  i=0;
+  while( (j!=jour_end) | (m!=mois_end ) | (a!=annee_end))
+  {
+  	tab_date[i].jour=j;
+  	tab_date[i].mois=m;
+  	tab_date[i].annee=a;
+  	
+  	date_to_char(j,m,a, chdate);
+  	
+  	strcpy(tab_date[i].char_date,chdate);
+  	
+  	printf("%s\n", tab_date[i].char_date);
+  	
+  	j++;
+  	
+  	i++;
+  	nbdate=i;
+  	tab_date = (struct date *) realloc(tab_date,sizeof(struct date) * (nbdate+1)) ;
+  	
+	  switch(m)
+	  {
+	    case 1: case 3: case 5: case 7: case 8: case 10: case 12:
+	      if( j>31)
+	      {
+	       j=1;
+	       m++;
+	      }
+	      break;
+	    case 4: case 6: case 9: case 11:
+	      if( j>30)
+	      {
+	       j=1;
+	       m++;
+	      }
+	      break;
+	    case 2 :
+	      if((m % 4 == 0 && m % 100 != 0) || m % 400 == 0)
+	      {
+		      if( j>29)
+		      {
+		       j=1;
+		       m++;
+		      }
+	      }
+	      else
+	      {
+		      if( j>28)
+		      {
+		       j=1;
+		       m++;
+		      }
+	      }
+	      break;
+	    default :
+	      break ;
+	  }
+	  
+	  if(m>12)
+	  {
+			m=1;
+			a++;
+	  }
+	  
+  }	
+}
+/*
+void filtre_places_dispo(struct resultat tab_res[], int * nb_res_date, char ch_date[])
+{
+	struct place{
+	  int  id;
+	  char date;
+	  int  wagon  ; // n� de wagon
+	  int  classe  ; // 1re classe, 2e classe
+	  int  etage ; // 1 ou 2
+	  int  siege ; // num�ro de si�ge
+	  char position ; // fen�tre, couloir, place isol�e
+	};
+	
+	struct rame {
+	  int  wagon  ; // n� de wagon
+	  int  classe  ; // 1re classe, 2e classe
+	  int  etage ; // 1 ou 2
+	  int  siege ; // num�ro de si�ge
+	  char position ; // fen�tre, couloir, place isol�e
+	  int  etat ; // � supprimer si on teste sur billet
+	  int  billet ; // num�ro unique de billet
+	};
+	
+	struct seq {
+	  char type[5] ; 
+	  char dep_gare[MAXstrNOMGARE] ;
+  	  char arr_gare[MAXstrNOMGARE] ;
+	  int  heure_dep               ;
+	  int  heure_arr               ;
+	  int  nbetage ; // simplex, duplex
+	  struct rame *tab_rame;
+	} ;
+	
+	struct datetrajet {
+	  char date ;
+	  struct seq *tab_seq ;
+	} ;
+	
+	struct trajet {
+	  int  id ;
+	  struct datetrajet *dates ;
+	} ;
+	
+	struct trajet *tab_places ;
+	
+	while(!itrouve && i<*nbid) 
+	{
+		if(tab_places[i].id == tab_res[z].id)
+		{
+			itrouve=i;
+			while(!jtrouve && j<*nbdate)
+			{
+				if(tab_places[i].dates[j].date == tab_res[z].date)
+				{
+					jtrouve=j;
+					while(!ktrouve && k<)
+					{
+						if(tab_places[i].dates[j].tab_seq[k].dep_gare==tab_res[z].gare_dep)
+						{
+							ktrouve=k;
+							
+							limite_places = type_to_capacity(tab_places[i].dates[j].tab_seq[k].type); //conversion type -> capacite
+									
+										for(l=0;l<limite_places;l++)
+										{
+											if(!tab_places[i].dates[j].tab_seq[k].tab_rame[l].billet)
+											{
+												tab_places_dispo[m].id       = tab_places[i].id;
+												tab_places_dispo[m].date     = tab_places[i].dates[j].date;
+												tab_places_dispo[m].wagon    = tab_places[i].dates[j].tab_seq[k].tab_rame[l].wagon ;
+											    tab_places_dispo[m].classe   = tab_places[i].dates[j].tab_seq[k].tab_rame[l].classe;
+							  				    tab_places_dispo[m].etage    = tab_places[i].dates[j].tab_seq[k].tab_rame[l].etage;
+	  											tab_places_dispo[m].siege    = tab_places[i].dates[j].tab_seq[k].tab_rame[l].siege; 
+	  											strcpy(tab_places_dispo[m].position, tab_places[i].dates[j].tab_seq[k].tab_rame[l].position); 
+	  											nbplace++;
+											}
+										}	
+									
+							*//*
+							while(!arrtrouve && n<)
+							{
+								if(tab_places[i].dates[j].tab_seq[k].arr_gare==tab_res[z].gare_arr)
+								{
+									arrtrouve=n;
+									limite_places = type_to_capacity(tab_places[i].dates[j].tab_seq[k].type); //conversion type -> capacite
+									for(p=k;p<=n;p++)
+									{
+										
+										for(l=0;l<limite_places;l++)
+										{
+											if(!tab_places[i].dates[j].tab_seq[p].tab_rame[0].billet[l])
+											{
+												tab_places_dispo[m].id       = tab_places[i].id;
+												tab_places_dispo[m].date     = tab_places[i].dates[j].date;
+												tab_places_dispo[m].wagon    = tab_places[i].dates[j].tab_seq[p].tab_rame[0].wagon ;
+											    tab_places_dispo[m].classe   = tab_places[i].dates[j].tab_seq[p].tab_rame[0].classe;
+							  				    tab_places_dispo[m].etage    = tab_places[i].dates[j].tab_seq[p].tab_rame[0].etage;
+	  											tab_places_dispo[m].siege    = tab_places[i].dates[j].tab_seq[p].tab_rame[0].siege; 
+	  											strcpy(tab_places_dispo[m].position, tab_places[i].dates[j].tab_seq[p].tab_rame[0].position); 
+	  											nbplace++;
+											}
+										}	
+									}	
+								}*//*
+							
+						}
+						k++;
+					}
+				}
+				j++;
+			}
+		
+		}
+		i++;
+	}
+	
+	temp_troncon = tab_places[itrouve].dates[jtrouve].tab_seq[ktrouve].arr_gare;
+	
+	
+		for(k=ktrouve; k<;k++)  // && !stop
+		{
+			if(tab_places[i].dates[j].tab_seq[k].arr_gare==temp_troncon)
+			{	
+				for(m=0;m<nbplace;m++)
+				{
+					for(l=0;l<limite_places;l++)
+					{
+						if(tab_places[i].dates[j].tab_seq[k].rame[l].wagon == tab_places_dispo[m].wagon)
+						{
+							if(tab_places[i].dates[j].tab_seq[k].rame[l].siege == tab_places_dispo[m].siege)
+							{
+								if(tab_places[i].dates[j].tab_seq[k].rame[l].billet)
+								{
+									tab_places_dispo[m].siege = -1;
+								}
+							}
+						}
+					}
+				}
+				if(temp_troncon==tab_res[z].gare_dep)
+				{
+					stop=1;
+				}
+				else
+				{
+					temp_troncon = tab_places[itrouve].dates[jtrouve].tab_seq[ktrouve].arr_gare;
+				}	
+			}
+		}
+		
+		g=0;
+		nbplacesfinal=0;
+		for(h=0;h<nbplaces;h++)
+		{
+			if(tab_places_dispo[h].siege != -1)
+			{
+					tab_dispo_final[g].id     = tab_places_dispo[h].id     ;
+					tab_dispo_final[g].date   =	tab_places_dispo[h].date   ;
+					tab_dispo_final[g].wagon  =	tab_places_dispo[h].wagon  ;
+					tab_dispo_final[g].classe = tab_places_dispo[h].classe ;
+					tab_dispo_final[g].etage  = tab_places_dispo[h].etage  ;
+	  				tab_dispo_final[g].siege  =	tab_places_dispo[h].siege  ; 
+	  				strcpy(tab_dispo_final[g].position,tab_places_dispo[h].position ); 
+	  				g++;
+	  				nbplacefinal++;
+			}
+		}
+		
+		for(i=0;i<nbres;i++)
+		{
+			for(j=0;j<nbplacefinal;j++)
+			{
+				if(tab_res[i].id==tab_dispo_final[j].id)
+				{
+					tab_res[i].dispo=1;
+				}
+			}
+		}
+}
+
+void reservation(struct resultat tab_res, struct final tab_dispo_final[]){ //envoi la ligne de tab_res correspondant au choix utilisateur
+	
+	int i;
+	int nbmax_passagers=0;
+	
+	// calcul du nombre max de places dispo sur ce trajet
+	for(i=0;i<*nbplacefinal;i++)
+	{
+		if(tab_res.id==tab_dispo_final[i].id)
+		{
+			nbmax_passagers++;
+		}
+	}
+	
+	int nbplaces;
+	saisie_int("Veuillez saisir le nombre de places que vous voulez reserver : ",nbmax_passagers,&nbplaces);
+	
+	
+	if(nbplaces>nbmax_passagers)
+	{
+		printf("Desole, il n'y a pas assez de places disponibles dans ce train\n");
+	}
+	else
+	{
+		printf("Numero | Classe | Wagon | Etage | Siege | Position | Prix \n");
+		for()
+		{
+			printf("%d | %d | %d | %d | %d | %s | %f \n", i,
+													 tab_dispo_final[i].classe,
+													 tab_dispo_final[i].wagon,
+													 tab_dispo_final[i].etage,
+													 tab_dispo_final[i].siege,
+													 tab_dispo_final[i].position,
+													 tab_dispo_final[i].prix);
+		}
+		for(j<=nbplaces)
+		{
+			
+			saisie_int("Veuillez selectionner un numero pour le passager numero %d (Appuyez sur 0 pour revenir aux resultats de votre recherche):",nbmax_passagers,&nbplaces);
+			
+			saisie_text("Veuillez saisir un nom", passager[j].nom);
+			
+			saisie_text("Veuillez saisir un prenom", passager[j].prenom);
+			
+			int age;
+			saisie_int("Veuillez un age :", 180, &age);
+			
+			printf("Tarif finale :");
+		}
+	}
+	
+	
+	
+}*/
+
 
 // ====================================== //
 /* === Fonctions et procédures outils === */
@@ -1240,6 +1630,7 @@ int date_anterieure(int jour, int mois, int annee, int jour_ref, int mois_ref, i
   return erreur ;
 }
 
+
 /* ---------------------------------------- */
 /* -- Conversion du choix de char en int -- */
 /* ---------------------------------------- */
@@ -1265,78 +1656,23 @@ int lecture_choix(int deb, int fin, char lettre, int * erreur)
   // si saisie hors des bornes du choix
   else
   {
-    dump_buffer() ;
+  	if(lettre!='\n')
+  	{
+  		dump_buffer() ;
+	}
+    
     *erreur=1     ;
     printf("Veuillez saisir un choix valide (%d à %d)\n", deb, fin);
   }
 }
 
-void crea_date(int jour, int mois, int annee)
+
+
+void date_to_char(int j, int m, int a, char chdate[]) // conversion d'une date faite de 3 int en une string au format AAAAMMJJ
 {
-	int jour_end, mois_end, annee_end;
-	int j, m, a;
-	int i, nbdate;
-	char chdate[9];
 	
 	
-	jour_end=jour;
-	mois_end=mois;
-	annee_end=annee;
-	
-	j=jour;
-	m=mois;
-	a=annee;
-	
-	for(i=0; i<4;i++)
-	{
-		mois_end++;
-		if(mois_end>12)
-		{
-			mois_end=1;
-			annee_end++;
-		}
-	}
-	
-  	switch(mois_end)
-  	{
-	    case 4: case 6: case 9: case 11:
-	      while(jour_end>30)
-	      {
-	      	jour_end--;
-		  }
-	      break;
-	    case 2 :
-	      if((mois_end % 4 == 0 && mois_end % 100 != 0) || mois_end % 400 == 0)
-	      {
-	        while(jour_end>29)
-	      	{
-	      		jour_end--;
-		  	}
-	      }
-	      else
-	      {
-	        while(jour_end>28)
-	     	{
-	      		jour_end--;
-		  	}
-	      }
-	      break;
-	    default :
-	      break ;
- 	 }
-  
-  
-  
-  tab_date = (struct date *) malloc(sizeof(struct date));
-  
-  i=0;
-  while( (j!=jour_end) | (m!=mois_end ) | (a!=annee_end))
-  {
-  	tab_date[i].jour=j;
-  	tab_date[i].mois=m;
-  	tab_date[i].annee=a;
-  	
-  	chdate[0]=(a/1000)+48;
+	chdate[0]=(a/1000)+48;
   	chdate[1]=((a%1000)/100)+48;
   	chdate[2]=((a%100)/10)+48;
   	chdate[3]=(a%10)+48;
@@ -1347,188 +1683,174 @@ void crea_date(int jour, int mois, int annee)
   	chdate[8]='\0';
   	
   	
-  	
-  	strcpy(tab_date[i].char_date,chdate);
-  	
-  	printf("%s\n", tab_date[i].char_date);
-  	
-  	j++;
-  	
-  	i++;
-  	nbdate=i;
-  	tab_date = (struct date *) realloc(tab_date,sizeof(struct date) * (nbdate+1)) ;
-  	
-	  switch(m)
-	  {
-	    case 1: case 3: case 5: case 7: case 8: case 10: case 12:
-	      if( j>31)
-	      {
-	       j=1;
-	       m++;
-	      }
-	      break;
-	    case 4: case 6: case 9: case 11:
-	      if( j>30)
-	      {
-	       j=1;
-	       m++;
-	      }
-	      break;
-	    case 2 :
-	      if((m % 4 == 0 && m % 100 != 0) || m % 400 == 0)
-	      {
-		      if( j>29)
-		      {
-		       j=1;
-		       m++;
-		      }
-	      }
-	      else
-	      {
-		      if( j>28)
-		      {
-		       j=1;
-		       m++;
-		      }
-	      }
-	      break;
-	    default :
-	      break ;
-	  }
-	  
-	  if(m>12)
-	  {
-			m=1;
-			a++;
-	  }
-	  
-  }	
 }
 
+
 /*
-void filtre_places_dispo(struct resultat tab_res[], int * nb_res_date, char ch_date[])
-{
-	struct place{
-	  int  wagon  ; // n� de wagon
-	  int  classe  ; // 1re classe, 2e classe
-	  int  etage ; // 1 ou 2
-	  int  siege ; // num�ro de si�ge
-	  char position ; // fen�tre, couloir, place isol�e
-	};
+int type_to_capacity(char type[]){
 	
-	struct rame {
-	  int  wagon  ; // n� de wagon
-	  int  classe  ; // 1re classe, 2e classe
-	  int  etage ; // 1 ou 2
-	  int  siege ; // num�ro de si�ge
-	  char position ; // fen�tre, couloir, place isol�e
-	  int  etat ; // � supprimer si on teste sur billet
-	  int  billet ; // num�ro unique de billet
-	};
+	int cap;
 	
-	struct seq {
-	  char type[5] ; *//* Si c'est Car, TER, TGV, �a reprend le type de trajet, mais �a permet
-	  1. d'aller chercher l'info moins loin
-	  2/ de nuancer les types de rames de TGV (un jour lointain) *//*
-	  char dep_gare[MAXstrNOMGARE] ;
-  	  char arr_gare[MAXstrNOMGARE] ;
-	  int  heure_dep               ;
-	  int  heure_arr               ;
-	  int  nbetage ; // simplex, duplex
-	  struct rame *tab_rame;
-	} ;
-	
-	struct datetrajet {
-	  char date ;
-	  struct seq *tab_seq ;
-	} ;
-	
-	struct trajet {
-	  int  id ;
-	  struct datetrajet *dates ;
-	} ;
-	
-	struct trajet *tab_places ;
-	
-	while(!itrouve && i<*nbid) 
-	{
-		if(tab_places[i].id = tab_res[z].id)
-		{
-			itrouve=i;
-			while(!jtrouve && j<*nbdate)
-			{
-				if(tab_places[i].dates[j].date = ch_date)
-				{
-					jtrouve=j;
-					while(!ktrouve && k<)
-					{
-						if(tab_places[i].dates[j].tab_seq[k].dep_gare==tab_res[z].gare_dep)
-						{
-							ktrouve=k;
-							switch(tab_places[i].dates[j].tab_seq[k].type)
-							{
-								case "": 
-									limite_places=;
-									break;
-								
-							}
-							
-							for(l=0;l<limite_places;l++)
-							{
-								if(!tab_places[i].dates[j].tab_seq[k].rame[l].billet)
-								{
-									tab_places_dispo[m].wagon    = tab_places[i].dates[j].tab_seq[k].rame[l].wagon ;
-								    tab_places_dispo[m].classe   = tab_places[i].dates[j].tab_seq[k].rame[l].classe;
-							  	    tab_places_dispo[m].etage    = tab_places[i].dates[j].tab_seq[k].rame[l].etage;
-	  								tab_places_dispo[m].siege    = tab_places[i].dates[j].tab_seq[k].rame[l].siege; 
-	  								strcpy(tab_places_dispo[m].position, tab_places[i].dates[j].tab_seq[k].rame[l].position); 
-	  								nbplace++;
-								}
-							}
-						}
-						k++;
-					}
-				}
-				j++;
-			}
-		}
-		i++;		
+	switch(type){
+		case "Car":
+			cap=;
+			break;
 	}
 	
-	temp_troncon = tab_places[itrouve].dates[jtrouve].tab_seq[ktrouve].arr_gare;
+	return cap;
+}
+
+int date_to_timespan(  int jour , int mois, int annee){
+	i=0;
+	while((tab_date[i].jour!=jour)&&(tab_date[i].mois!=mois)&&(tab_date[i].annee!=annee))
+	{
+		i++;
+	}
 	
-	
-		for(k=ktrouve; k<;k++)  // && !stop
+	return i;
+}
+
+*/
+
+
+void saisie_text(char invite[], char sortie[]){
+		
+	 int i;
+	  char dump, lettre;									//securisation des saisies
+	  int val_choix, erreur;										//securisation des saisies
+	  int compteur_saisie, compteur_saisie_date;					//securisation des saisies
+	  int choix_reserver, date_prob;
+	  int jour_prec, mois_prec, annee_prec;
+  
+  
+		compteur_saisie=0;
+		erreur = 1;
+		while(erreur==1)
 		{
-			if(tab_places[i].dates[j].tab_seq[k].arr_gare==temp_troncon)
-			{	
-				for(m=0;m<nbplace;m++)
+			erreur=0;
+			lettre='a';
+			printf("\n%s                      : ", invite); 		// invite de saisie
+			while(!erreur && compteur_saisie<MAXstrNOMGARE && lettre!='\n' && ( ((lettre<91) && (lettre>64)) || ((lettre<123) && (lettre>96)) || (lettre==32) || (lettre==45) ) )
+			{															// si la saisie n'est pas une lettre maj ou min, un LF, un espace ou un -, ou qu'elle est trop grande, erreur
+				scanf("%c", &lettre);
+				
+				if(compteur_saisie<MAXstrNOMGARE && lettre!='\n')  				// si la saisie est trop grande ou un LF, sortir, si il n'y avait pas d'erreur avant, fin de la saisie avec success
 				{
-					for(l=0;l<limite_places;l++)
-					{
-						if(tab_places[i].dates[j].tab_seq[k].rame[l].wagon == tab_places_dispo[m].wagon)
-						{
-							if(tab_places[i].dates[j].tab_seq[k].rame[l].siege == tab_places_dispo[m].siege)
-							{
-								if(tab_places[i].dates[j].tab_seq[k].rame[l].billet)
-								{
-									tab_places_dispo[m].siege = -1;
-								}
-							}
-						}
+					if( ((lettre<91) && (lettre>64)) || ((lettre<123) && (lettre>96)) || (lettre==32) || (lettre==45) ) 
+					{													// si la saisie n'est pas une lettre maj ou min, un espace ou un -
+						sortie[compteur_saisie]=lettre;    	//insertion du caract�re
+						compteur_saisie++;
+						erreur=0;										//pas d'erreur pour l'instant
 					}
-				}
-				if(temp_troncon==tab_res[z].gare_dep)
-				{
-					stop=1;
+					else												//erreur
+					{
+						erreur=1;
+					}	
 				}
 				else
 				{
-					temp_troncon = tab_places[itrouve].dates[jtrouve].tab_seq[ktrouve].arr_gare;
-				}	
+					if(compteur_saisie<1)
+					{
+						erreur=1;
+					}
+				}
+			}
+			if(compteur_saisie==MAXstrNOMGARE)
+			{
+				printf("Saisie superieure a 100 caracteres. La saisie a ete tronquee.\n");
+				compteur_saisie--;
+			}
+			
+			if(erreur)
+			{
+				compteur_saisie=0;
+						
+				for(i=0;i<MAXstrNOMGARE;i++)
+				{
+					sortie[i]='\0';
+				}
+						
+				if(lettre!='\n')
+				{
+					while(dump!='\n')
+					{
+						scanf("%c", &dump);
+					}
+				}
+				dump='a';
+				printf("Veuillez saisir un nom valide : 100 lettres maximum, sans caracteres speciaux autres que '-'.\n");
 			}
 		}
-		
-	//transferer dans un tab_dispo_final[] if(tab_places_dispo[m].siege != -1)
+		sortie[compteur_saisie]='\0';									//fermeture de la chaine de caract�re
+	}
+
+void saisie_int(char invite[],int max, int *mon_int){
 	
-}*/
+	char digit[MAX_DIGIT];
+	int test;
+	char dump;
+	
+	int i=0;
+	int erreur = 1;
+	while(erreur==1)
+	{
+		i=0;
+		erreur=0;
+		char lettre=50;
+		printf("%s",invite);
+		while(!erreur && i<MAX_DIGIT && lettre!='\n' && ( (lettre<58) && (lettre>47)) )
+		{
+			scanf("%c", &lettre);
+			
+				
+			if( lettre!='\n')
+			{
+				if( (lettre<58) && (lettre>47) ) 
+				{
+					digit[i]=lettre;
+					i++;
+				}
+				else
+				{
+					erreur=1;
+				}	
+			}
+			else
+			{
+				test = atoi(digit);
+				if(test<1 || test > max)
+				{
+					erreur=1;
+				}
+			}
+		}
+		if(i>=MAX_DIGIT)
+		{
+			erreur=1;
+			printf("Saisie superieure a 25 caracteres. ");
+		}
+		if(erreur)
+		{
+			test=0;
+			i=0;
+			for(i=0;i<MAX_DIGIT; i++)
+			{
+				digit[i]='\0';
+			}
+			if(lettre!='\n')
+			{
+				while(dump!='\n')
+				{
+					scanf("%c", &dump);
+				}
+			}		
+			dump='a';
+			printf("Veuillez saisir un nombre valide.\n");
+		}
+	}
+	*mon_int=test;
+	for(i=0;i<MAX_DIGIT; i++)
+	{
+		digit[i]='\0';
+	}
+}
