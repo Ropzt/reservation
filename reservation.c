@@ -58,7 +58,7 @@ struct UneGare {
       int salle ; // 1 ou 2
       int siege ; // numéro de siège
       int position ; // fenêtre, couloir, place isolée
-      int etat ; // à supprimer si on teste sur billet
+      // int etat ; // à supprimer si on teste sur billet
       int billet ; // numéro unique de billet
     };
   
@@ -70,7 +70,6 @@ struct UneGare {
 //   char ga[GARE] ;
 //   int  hd             ;
 //   int  ha             ;
-//   int  nbsalle ; // simplex, duplex
 //   struct UneRame *rame;
 // } ;
 
@@ -231,7 +230,8 @@ struct UnRes_nodate * compare_nodate(struct UnHoraire gare_dep_trouve[], int nb_
 // struct UnRes_nodate * compare_nodate2(struct UnHoraire gare_dep_trouve[], int nb_gare_dep_trouve, struct UnHoraire gare_arr_trouve[], int nb_gare_arr_trouve, int *nb_res_nodate);
 struct UnRes * compare_avecdate(struct UnRes_nodate tab_res_nodate[], int *nb_res_nodate, int jhebdo, int *nb_res_date  /*, char date_rech[SizeDate]*/ );
 void tri(struct UnRes tab_res[], int * nb_res_date);
-int circule(char idtrajet[100], int date);
+int circule_date(char idtrajet[100], int date);
+int circule_jhebdo(char idtrajet[100], int jhebdo);
 
 void test();
 
@@ -242,10 +242,23 @@ void test();
 void test()
 {
   int jour, mois, annee ;
-  int date=20210612;
+  int date=20210615;
+  char id[100]="OCESN008913F57057~TGF91142";
+  int retour ;
 
-  decoupe_date(date, &jour, &mois, &annee);
-  printf("jour=%d mois=%d annee=%d\n",jour, mois, annee);
+  retour = circule_date(id,date);
+  if (retour==1)
+  {
+    printf("Ça circule\n");
+  } 
+  else
+  {
+    printf("Ça circule pas\n");
+  }
+
+  // decoupe_date(date, &jour, &mois, &annee);
+  // printf("jour=%d mois=%d annee=%d\n",jour, mois, annee);
+
 }
 
 int main()
@@ -263,6 +276,8 @@ int main()
 
   chargement_horaires() ; // chargement des données horaires à partir des fichiers GTFS
   crea_date_vente(jour_sys, mois_sys, annee_sys) ;
+  printf("nbdatevente=%d\n",nbdatevente);
+
   chargement_places() ;
 
   // test();
@@ -711,10 +726,10 @@ void chargement_places() // version 1 fichier 2D - 1 structure 2D
     }
     
   // printf de contrôle
-  for (i=0;i<nbvoyage;i++)
-  {
-    printf("nb voyages=%d;  date du voyage n°%d : %d\n",nbvoyage, i, tab_voyages[i].date);
-  }
+  // for (i=0;i<nbvoyage;i++)
+  // {
+  //   printf("nb voyages=%d;  date du voyage n°%d : %d\n",nbvoyage, i, tab_voyages[i].date);
+  // }
   suppression_places() ;
   identifie_trajet_date_a_creer() ;
 }
@@ -788,8 +803,9 @@ void identifie_trajet_date_a_creer()
     // pour chacune des dates ouvertes
     for (j=0;j<nbdatevente;j++)
     {
-      if (circule(trajets[i].idtrajet,tab_date_vente[j].date))
-      {        
+  // printf("Pour : %s %d \n",trajets[i].idtrajet,tab_date_vente[j].date);
+      if (circule_date(trajets[i].idtrajet,tab_date_vente[j].date))
+      {
         for (k=0;k<nbvoyage;k++)
         {
           // s'il existe au moins une place de ce trajet de cet id
@@ -807,10 +823,12 @@ void identifie_trajet_date_a_creer()
           // }
         }
         // s'il n'y a pas de places pour ce trajet pour cet id, on les crée
-        // if (existe==0)
-        // {
-        //   creation_places(trajets[i].idtrajet,tab_date_vente[j].date);
-        // }
+  //       if (existe==0)
+  //       {
+  // printf("Ça va\n");
+  //         creation_places(trajets[i].idtrajet,tab_date_vente[j].date);
+  // printf("C'est créé\n");
+  //       }
         existe = 0;
       }
     }
@@ -843,7 +861,6 @@ void creation_places(char idtrajet[100], int date)
   char type[5]="TGV" ;
   char nomfichier[50];
   FILE *f1;
-
   // On s'occupe du type de train
   /* je mets if type = TGV parce que je n'ai que les données TGV, 
     mais si on importe d'autres ensembles de données gtfs, il faudrait 
@@ -882,14 +899,11 @@ void creation_places(char idtrajet[100], int date)
 
   // On s'occupe de l'idtrajet pour reconsituer ses étapes
   // On prend tous les Stops pour l'idtrajet donné en paramètre
-  // j=0 ;
+  j=0 ;
   for (i=0;i<nbstop;i++)
   {
     if (strcmp(idtrajet,stops[i].idtrajet)==0)
     {
-      // for (j= )
-
-
       tab_stops[j++] = stops[i] ;
     }
     nbarret=j ;
@@ -1536,7 +1550,7 @@ void tri(struct UnRes tab_res[], int * nb_res_date)
 // ~~~~~~~~~~~
 /* Calcule si un train circule pour un trajet et une date */
 // ~~~~~~~~~~~
-int circule(char idtrajet[100], int date)
+int circule_date(char idtrajet[100], int date)
 {
   int i,j;
   int circule=0;
@@ -1544,6 +1558,17 @@ int circule(char idtrajet[100], int date)
 
   decoupe_date(date, &jour, &mois, &annee) ;
   jhebdo = calcul_jour_semaine(jour, mois, annee, jour_sys, mois_sys, annee_sys, jhebdo_num_sys);
+  circule=circule_jhebdo(idtrajet,jhebdo) ;
+  return circule ;
+}
+
+// ~~~~~~~~~~~
+/* Calcule si un train circule pour un trajet et un jour de semaine */
+// ~~~~~~~~~~~
+int circule_jhebdo(char idtrajet[100], int jhebdo)
+{
+  int i,j;
+  int circule=0;
 
   for (i=0;i<nbtrajet;i++)
   {
@@ -1681,7 +1706,7 @@ void crea_date_vente(int jour, int mois, int annee)
   m=mois;
   a=annee;
   
-  for(i=0; i<4;i++)
+  for(i=0; i<1;i++)
   {
     mois_end++;
     if(mois_end>12)
@@ -1794,7 +1819,7 @@ void crea_date_vente(int jour, int mois, int annee)
       m=1;
       a++;
     }
-  } 
+  }
 }
 
 /* ------------------------------- */
