@@ -52,25 +52,27 @@ struct UneGare {
   char gareattache[100] ;
 };
 
-  struct UnePlace {
-      int wagon  ; // n° de wagon
-      int classe  ; // 1re classe, 2e classe
-      int salle ; // 1 ou 2
-      int siege ; // numéro de siège
-      int position ; // fenêtre, couloir, place isolée
-      // int etat ; // à supprimer si on teste sur billet
-      int billet ; // numéro unique de billet
-    };
+// struct UnePlace {
+//     int wagon  ; // n° de wagon
+//     int classe  ; // 1re classe, 2e classe
+//     int salle ; // 1 ou 2
+//     int siege ; // numéro de siège
+//     int position ; // fenêtre, couloir, place isolée
+//     // int etat ; // à supprimer si on teste sur billet
+//     int billet ; // numéro unique de billet
+//   };
   
 // struct UneSeq {
-//   char type[5] ; /* Si c'est Car, TER, TGV, ça reprend le type de trajet, mais ça permet
+//   char type[5] ;  Si c'est Car, TER, TGV, ça reprend le type de trajet, mais ça permet
 //   1. d'aller chercher l'info moins loin
-//   2/ de nuancer les types de rames de TGV (un jour lointain) */
+//   2/ de nuancer les types de rames de TGV (un jour lointain) 
 //   char gd[GARE] ;
 //   char ga[GARE] ;
-//   int  hd             ;
-//   int  ha             ;
-//   struct UneRame *rame;
+//   int  seqdep   ;
+//   int  seqarr   ;
+//   char hd       ;
+//   char ha       ;
+//   struct UnePlace *place;
 // } ;
 
 // struct UneDate {
