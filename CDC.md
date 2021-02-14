@@ -503,3 +503,18 @@ Toutes les données fournies dans un ensemble de données Horaires ne sont pas u
 Parmi les données des ensembles de données, seule une partie est lue par le programme.
 Parmi les données lues par le programme, seule une partie est stockée en mémoire.
 
+
+### Origine / destination
+
+| |Paris|Marseille|Lyon|Valence|Nîmes|Nice|Toulouse|Bordeaux|Montpellier
+|Paris|
+|Marseille
+|Lyon
+|Valence
+|Nîmes
+|Nice
+|Toulouse
+|Bordeaux
+|Montpellier
+|
+|
