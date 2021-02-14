@@ -61,6 +61,14 @@ struct UneGare {
   char gareattache[100] ;
 };
 
+struct UnTarif {
+  char garedep[100] ;
+  char garearr[100] ;
+  int  prix0 ;
+  int  prix2 ;
+  int  prix1 ;
+};
+
 struct UnePlace {
     int wagon  ; // n° de wagon
     int classe  ; // 1re classe, 2e classe
@@ -176,10 +184,12 @@ struct UnTrajet *trajets;
 struct UnCalendrier *calendriers ;
 struct UnStop *stops ;
 struct UneGare *gares ;
+struct UnTarif *tarifs ;
 int    nbtrajet;
 int    nbcalendrier;
 int    nbstop=0;
 int    nbgare;
+int    nbtarif;
 // les places
 struct UnVoyage *tab_places ;
 //les dates ouvertes à la vente
@@ -196,6 +206,7 @@ char   jhebdo_alpha_sys[9] ;
 /* === déclarations préliminaires === */
 void convmaj(char chaine[]) ;
 void tiret_to_space(char chaine[]) ;
+void separe_au_tiret(char chaine[], char * sschaine1, char * sschaine2);
 char * str_replace_all(char * chaine, char * motif_a_remplacer, char * motif_de_remplacement) ;
 // void supprime_accent(char chaine[]) ;
 char * supprime_accent(char * chaine);
@@ -218,13 +229,12 @@ void chargement_trajet() ;
 void chargement_calendrier() ;
 void chargement_stop() ;
 void chargement_gare() ;
+void chargement_places() ;
+void chargement_tarifs() ;
+void sauvegarde();
+void quitter() ;
 
-void chargement_places2() ;
-int sequence(char idtrajet[MAX_ID], struct UneSeq tab_sequence[]);
 void supprime_repertoire(char nomrep[]) ;
-// void sauvegarde();
-void sauvegarde2();
-
 void AfficheObjetInfo(char NomObjetInfo[]);
 // void ListerRep(char NomRep[], char **ListObjet);
 // void ListerRep(char NomRep[], char *ListObjet[]);
@@ -238,6 +248,7 @@ struct UnRes_nodate * compare_nodate(struct UnHoraire gare_dep_trouve[], int nb_
 // struct horaire * recherche_horaire(char rechgare[], int *nb_res_horaire) ;
 // struct UnRes_nodate * compare_nodate2(struct UnHoraire gare_dep_trouve[], int nb_gare_dep_trouve, struct UnHoraire gare_arr_trouve[], int nb_gare_arr_trouve, int *nb_res_nodate);
 struct UnRes * compare_avecdate(struct UnRes_nodate tab_res_nodate[], int *nb_res_nodate, int jhebdo, int *nb_res_date  /*, char date_rech[SizeDate]*/ );
+int sequence(char idtrajet[MAX_ID], struct UneSeq tab_sequence[]);
 void tri(struct UnRes tab_res[], int * nb_res_date);
 int circule_date(char idtrajet[100], int date);
 int circule_jhebdo(char idtrajet[100], int jhebdo);
@@ -255,15 +266,23 @@ void test()
   char id[100]="OCESN008913F57057~TGF91142";
   int retour ;
 
-  retour = circule_date(id,date);
-  if (retour==1)
-  {
-    printf("Ça circule\n");
-  } 
-  else
-  {
-    printf("Ça circule pas\n");
-  }
+  // retour = circule_date(id,date);
+  // if (retour==1)
+  // {
+  //   printf("Ça circule\n");
+  // } 
+  // else
+  // {
+  //   printf("Ça circule pas\n");
+  // }
+
+  char chaine[100];
+  char sschaine1[100];
+  char sschaine2[100];
+
+  strcpy(chaine,"CHAMBERY CHALLES LES EAUX-VENDOME VILLIERS SUR LOIR");
+  separe_au_tiret(chaine,sschaine1,sschaine2);
+  printf("%s\n%s\n%s\n",chaine, sschaine1, sschaine2);
 
   // decoupe_date(date, &jour, &mois, &annee);
   // printf("jour=%d mois=%d annee=%d\n",jour, mois, annee);
@@ -286,7 +305,8 @@ int main()
   chargement_horaires() ; // chargement des données horaires à partir des fichiers GTFS
   crea_date_vente(jour_sys, mois_sys, annee_sys) ;
   printf("nbdatevente=%d\n",nbdatevente);
-  chargement_places2() ;
+  chargement_places() ;
+  chargement_tarifs() ;
 
   // test();
 
@@ -316,8 +336,7 @@ int main()
     // traitement selon le choix
     switch (choix)
     {
-      case 0: sauvegarde2();
-              printf("À bientôt sur SNCF Voyages\n") ; 
+      case 0: quitter();
               break ;
       case 1: printf("à faire : ajouter les tarifs et les fonctions de reservation)\n") ;
               lance_recherche() ;
@@ -563,7 +582,7 @@ void chargement_gare()
 // ~~~~~~~~~~~
 /* --- Chargement des données places à réserver --- */
 // ~~~~~~~~~~~
-void chargement_places2() // version des dossiers - 1 struct à 4 niveaux
+void chargement_places() // version des dossiers - 1 struct à 4 niveaux
 {
   int i ; // compteur trajets
   int j ; // compteur date
@@ -894,11 +913,11 @@ void chargement_places2() // version des dossiers - 1 struct à 4 niveaux
                 tab_places[i].date[j].sequence[k].place[l].billet = billet ;
 
                 l++ ;
-// printf("Ça va i=%d=%s j=%d=%s k=%d=%d nbsequence=%d l=%d %d;%d;%d;%d;%d\n",i,rep_idtrajet[i],j,rep_date[j],k,tab_sequence[k].seqdep,nbsequence,l,wagon,classe,salle,siege,position) ;
+  // printf("Ça va i=%d=%s j=%d=%s k=%d=%d nbsequence=%d l=%d %d;%d;%d;%d;%d\n",i,rep_idtrajet[i],j,rep_date[j],k,tab_sequence[k].seqdep,nbsequence,l,wagon,classe,salle,siege,position) ;
               }
             }
             nbplaces+=l ;
-// printf("nbplaces=%d\n",nbplaces);
+  // printf("nbplaces=%d\n",nbplaces);
             fclose(f1) ;
           }
         }
@@ -911,146 +930,76 @@ void chargement_places2() // version des dossiers - 1 struct à 4 niveaux
 }
 
 // ~~~~~~~~~~~
-/* --- Suppression des dossiers de dates passées --- */
+/* --- Chargement des données de tarifs --- */
 // ~~~~~~~~~~~
-void supprime_repertoire(char nomrep[])
+void chargement_tarifs()
 {
-  // adapté du web et un peu du polycopié
+  FILE *f1;
+  int  i, retour;
+  char line[500] ; // pour lire ligne par ligne avec sscanf
+  char od[200] ; // =origine-destination
+  char dumpchar[MAX_NOM];
 
-  DIR *d1; /* descripteur du répertoire */
-  struct dirent *objet ; /* une entrée dans le répertoire */
-  struct stat stat_rep, stat_objet;
-  char nomobjet[50],nomcomplet[50];
+  /* --- Allocation de mémoire au tableau trajet --- */
+  tarifs = (struct UnTarif *) malloc(sizeof(struct UnTarif));
 
-  // stat for the path
-  stat(nomrep, &stat_rep);
-
-  // on scanne les objets du dossier
-  d1=opendir(nomrep) ;
-  if(d1==NULL)
+  /*--- Ouverture fichier horaires --- */
+  //f1=fopen("./data_sncf/sncf_full_test.txt", "r") ;
+  f1=fopen("./data/tarif/tarifs-tgv-par-od.csv","r") ;
+  if (f1 == NULL)
   {
-    fprintf(stderr, "Erreur d'accès à '%s':%s\n",nomrep,strerror(errno));
-    exit(EXIT_FAILURE);
+    printf("Erreur de chargement\n") ;
   }
   else
   {
-    do
-    {
-      objet=readdir(d1) ;
-
-      if (objet!=NULL)
-      {
-        if ((strcmp(objet->d_name,".")!=0)&&(strcmp(objet->d_name,"..")!=0))
-        {
-          // On récupère le nom de l'objet
-          strcpy(nomobjet,objet->d_name) ;
-          // On construit une chaine du path complet
-          strcpy(nomcomplet,nomrep);
-          strcat(nomcomplet,"/");            
-          strcat(nomcomplet,nomobjet);
-
-          // stat for the entry
-          stat(nomcomplet, &stat_objet);
-
-          // recursively remove a nested directory
-          if (S_ISDIR(stat_objet.st_mode) != 0)
-          {
-            supprime_repertoire(nomcomplet);
-            continue;
-          }
-
-          // remove a file object
-          unlink(nomcomplet) ;
-          // if (unlink(nomcomplet) == 0)
-          //   printf("Removed a file: %s\n", nomcomplet);
-          // else
-          //   printf("Can`t remove a file: %s\n", nomcomplet);
-          // // free(nomcomplet);
-        }
-        rmdir (nomrep) ;
-        // if (rmdir(nomrep) == 0)
-        // {        
-        //   printf("Répertoire supprimé : %s\n", nomrep);
-        // }
-        // else
-        // {
-        //   printf("Impossible de supprimer le répertoire : %s\n", nomrep);
-        // }
-      }
+    i=0 ;
+    fgets(line, sizeof(line), f1); // lire la 1re ligne et ne rien faire (je l'enlève car il n'y a plus les entêtes dans le csv)
+    while (fgets(line,sizeof(line),f1) != NULL)
+    {     
+      retour=sscanf(line,"%202[^;];%d;%d,%d;%101[^\n]",
+        od,
+        &tarifs[i].prix0,
+        &tarifs[i].prix1,
+        &tarifs[i].prix2,
+        dumpchar);
+      separe_au_tiret(od,tarifs[i].garedep,tarifs[i].garearr);
+      convmaj(tarifs[i].garedep);
+      convmaj(tarifs[i].garedep);
+      // supprime_accent(tarifs[i].garedep);
+      // supprime_accent(tarifs[i].garearr);
+      i++ ;
+      nbtarif = i ;
+      tarifs = (struct UnTarif *) realloc(tarifs,sizeof(struct UnTarif) * (nbtarif+1)) ;
     }
-    while(objet!=NULL);
+    fclose(f1) ;
   }
-  closedir(d1);
-  // on supprime le répertoire qui est maintenant vide
-  remove(nomrep);
+  printf("nombre de tarifs %d\n",nbtarif);
 }
 
+/* ---------------------------- */
+/* --- Quitter le programme --- */
+/* ---------------------------- */
+void quitter()
+{
+  int a_sauvegarder=1 ;
+
+  if (a_sauvegarder)
+    sauvegarde();
+
+  printf("À bientôt sur SNCF Voyages\n") ; 
+} 
+
 /* ------------------------------------------- */
-/* --- Procédure de sauvegarde des données --- */
+/* --- Sauvegarder les données de réservation --- */
 /* ------------------------------------------- */
-// void sauvegarde()
-// {
-//   int i ;
-//   FILE *f1 ;
-//   struct UnVoyage voyage ;
-//   char nomfichier[30]="./data/place/places.txt" ;
-
-//   f1=fopen(nomfichier,"w") ;
-//   if(f1 == NULL)
-//   {
-//     printf("\nImpossible d'écrire le fichier %s\n",nomfichier);
-//   }
-//   else
-//   {
-//     for (i=0 ; i < nbvoyage ; i++)
-//     {
-//       voyage = tab_voyages[i];
-//       fprintf(f1,"%s;%d;%s;%s;%s;%d;%d;%s;%s;%d;%d;%d;%d;%d;%d;%d",
-//         voyage.idtrajet,voyage.date,voyage.type,voyage.garedep,
-//         voyage.garearr,voyage.seqdep,voyage.seqarr,voyage.hd,
-//         voyage.ha,voyage.wagon,voyage.classe,voyage.salle,
-//         voyage.siege,voyage.position,voyage.etat,voyage.billet);
-//       //       struct UnVoyage {
-//       //   char idtrajet[100] ;
-//       //   int  date          ;
-//       //   char type[5]       ;
-//       //   char garedep[GARE] ;
-//       //   char garearr[GARE] ;
-//       //   int seqdep         ;
-//       //   int seqarr         ;
-//       //   char hd[9]         ;
-//       //   char ha[9]         ;
-//       //   int  wagon    ; // n° de wagon
-//       //   int  classe   ; // 1re classe, 2e classe
-//       //   int  salle    ; // 0 bas, 1 haut
-//       //   int  siege    ; // numéro de siège
-//       //   int  position ; // 0 fenêtre, 1 couloir, 2 place isolée
-//       //   int  etat     ; // à supprimer si on teste sur billet
-//       //   int  billet   ; // numéro unique de billet
-//       // } ;
-//       if (i<nbvoyage-1)
-//       {
-//         fprintf(f1,"\n");
-//       }
-//     }
-//     fclose(f1) ;
-//   }
-// }
-
-// struct Stockage { // Structure des compteurs de tab_places
-//     char idtrajet[MAX_ID];
-//     int  max_date;
-//     int  max_seq;
-// };
-
-void sauvegarde2()
+void sauvegarde()
 {
   int i, j, k, l;
   FILE *f1 ;
   struct UnVoyage places;
 
   // chemin des répertoires
-  char nomrep[MAX_ID] = "./data/place/";
+  char nomrep[MAX_ID] = "./data/place";
   char fichierplace[MAX_ID] ;
   // int en chaine
   char datechar[9] ;
@@ -1084,27 +1033,28 @@ void sauvegarde2()
         {
           for (l=0;l<stockage_nb_rep[i].max_place;l++)
           {
-          //  fprintf(f1,"%d;%d;%d;%d;%d;%d",
-          //    tab_places[i].date[j].sequence[k].place[l].wagon,
-          //    tab_places[i].date[j].sequence[k].place[l].classe,
-          //    tab_places[i].date[j].sequence[k].place[l].salle,
-          //    tab_places[i].date[j].sequence[k].place[l].siege,
-          //    tab_places[i].date[j].sequence[k].place[l].position,
-          //    tab_places[i].date[j].sequence[k].place[l].billet);
-            if (i<nbplacestrain-1)
-            {
-              fprintf(f1,"\n");
-            }
-    printf("i stock %d=%s i tab_places %d=%s j %d=%d k %d=%d l %d/%d : ",
-      i,stockage_nb_rep[i].idtrajet,i,tab_places[i].idtrajet,j,tab_places[i].date[j].date,
-      k,tab_places[i].date[j].sequence[k].seqdep,l,stockage_nb_rep[i].max_place);
-    printf("%d;%d;%d;%d;%d;%d\n",
-          tab_places[i].date[j].sequence[k].place[l].wagon,
-          tab_places[i].date[j].sequence[k].place[l].classe,
-          tab_places[i].date[j].sequence[k].place[l].salle,
-          tab_places[i].date[j].sequence[k].place[l].siege,
-          tab_places[i].date[j].sequence[k].place[l].position,
-          tab_places[i].date[j].sequence[k].place[l].billet);
+           // fprintf(f1,"%d;%d;%d;%d;%d;%d",
+           //   tab_places[i].date[j].sequence[k].place[l].wagon,
+           //   tab_places[i].date[j].sequence[k].place[l].classe,
+           //   tab_places[i].date[j].sequence[k].place[l].salle,
+           //   tab_places[i].date[j].sequence[k].place[l].siege,
+           //   tab_places[i].date[j].sequence[k].place[l].position,
+           //   tab_places[i].date[j].sequence[k].place[l].billet);
+            // if (i<nbplacestrain-1)
+            // {
+            //   fprintf(f1,"\n");
+            // }
+    // printf("fichier= %s\ni stock %d=%s i tab_places %d=%s j %d=%d k %d=%d l %d/%d : ",
+    //   fichierplace,
+    //   i,stockage_nb_rep[i].idtrajet,i,tab_places[i].idtrajet,j,tab_places[i].date[j].date,
+    //   k,tab_places[i].date[j].sequence[k].seqdep,l,stockage_nb_rep[i].max_place);
+    // printf("%d;%d;%d;%d;%d;%d\n",
+    //       tab_places[i].date[j].sequence[k].place[l].wagon,
+    //       tab_places[i].date[j].sequence[k].place[l].classe,
+    //       tab_places[i].date[j].sequence[k].place[l].salle,
+    //       tab_places[i].date[j].sequence[k].place[l].siege,
+    //       tab_places[i].date[j].sequence[k].place[l].position,
+    //       tab_places[i].date[j].sequence[k].place[l].billet);
           }
           fclose(f1) ;
         }
@@ -1791,7 +1741,6 @@ int sequence(char idtrajet[MAX_ID], struct UneSeq tab_sequence[])
 /* --------------------- */
 /* -- Date du système -- */
 /* --------------------- */
-// void date_sys(int *jour, int *mois, int *annee)
 void date_sys(int *jour, int *mois, int *annee, int *jhebdo_num)
 {
   time_t nb_sec_1970, temps ;
@@ -2405,9 +2354,9 @@ void convmaj(char chaine[])
     chaine[i] = toupper(chaine[i]) ;
   }
 }
-/* ----------------------------------------- */
-/* -- Remplacer les tiret par des espaces -- */
-/* ----------------------------------------- */
+/* ------------------------------------------ */
+/* -- Remplacer les tirets par des espaces -- */
+/* ------------------------------------------ */
 void tiret_to_space(char chaine[])
 {    
   int i,max;
@@ -2420,6 +2369,24 @@ void tiret_to_space(char chaine[])
       chaine[i]=32;
     }
   }
+}
+
+void separe_au_tiret(char chaine[], char sschaine1[], char sschaine2[])
+{
+  int i=0,j=0,k=0,max;
+  max = strlen(chaine);
+
+  while ((i<max) && (chaine[i]!=45))
+  {
+    sschaine1[j++] = chaine[i++] ;
+  }
+  i++;
+  sschaine1[j]='\0';
+  while (i<max)
+  {
+    sschaine2[k++] = chaine[i++] ;
+  }
+  sschaine2[k]='\0';
 }
 
 /* ------------------------------------------------------------------------------ */
@@ -2551,8 +2518,6 @@ int lecture_choix(int deb, int fin, char lettre, int * erreur)
   }
 }
 
-
-
 /* ------------------------------------- */
 void AfficheObjetInfo(char NomObjetInfo[])
 /* ------------------------------------- */
@@ -2639,4 +2604,80 @@ int ListerRep(char NomRep[], char ListObjet[4000][100])
     closedir(Rep);
   }
   return i;
+}
+
+
+// ~~~~~~~~~~~
+/* --- Suppression des dossiers de dates passées --- */
+// ~~~~~~~~~~~
+void supprime_repertoire(char nomrep[])
+{
+  // adapté du web et un peu du polycopié
+
+  DIR *d1; /* descripteur du répertoire */
+  struct dirent *objet ; /* une entrée dans le répertoire */
+  struct stat stat_rep, stat_objet;
+  char nomobjet[50],nomcomplet[50];
+
+  // stat for the path
+  stat(nomrep, &stat_rep);
+
+  // on scanne les objets du dossier
+  d1=opendir(nomrep) ;
+  if(d1==NULL)
+  {
+    fprintf(stderr, "Erreur d'accès à '%s':%s\n",nomrep,strerror(errno));
+    exit(EXIT_FAILURE);
+  }
+  else
+  {
+    do
+    {
+      objet=readdir(d1) ;
+
+      if (objet!=NULL)
+      {
+        if ((strcmp(objet->d_name,".")!=0)&&(strcmp(objet->d_name,"..")!=0))
+        {
+          // On récupère le nom de l'objet
+          strcpy(nomobjet,objet->d_name) ;
+          // On construit une chaine du path complet
+          strcpy(nomcomplet,nomrep);
+          strcat(nomcomplet,"/");            
+          strcat(nomcomplet,nomobjet);
+
+          // stat for the entry
+          stat(nomcomplet, &stat_objet);
+
+          // recursively remove a nested directory
+          if (S_ISDIR(stat_objet.st_mode) != 0)
+          {
+            supprime_repertoire(nomcomplet);
+            continue;
+          }
+
+          // remove a file object
+          unlink(nomcomplet) ;
+          // if (unlink(nomcomplet) == 0)
+          //   printf("Removed a file: %s\n", nomcomplet);
+          // else
+          //   printf("Can`t remove a file: %s\n", nomcomplet);
+          // // free(nomcomplet);
+        }
+        rmdir (nomrep) ;
+        // if (rmdir(nomrep) == 0)
+        // {        
+        //   printf("Répertoire supprimé : %s\n", nomrep);
+        // }
+        // else
+        // {
+        //   printf("Impossible de supprimer le répertoire : %s\n", nomrep);
+        // }
+      }
+    }
+    while(objet!=NULL);
+  }
+  closedir(d1);
+  // on supprime le répertoire qui est maintenant vide
+  remove(nomrep);
 }
