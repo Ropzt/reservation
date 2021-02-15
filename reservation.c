@@ -178,45 +178,45 @@ struct Stockage { // Structure des compteurs de tab_places
 };
 
 struct UnBillet{
-		int  place; // n dans le tableau des places de : tab_places_dispo.tab_dispo[n] 
-		char nom[MAX_NOM];
-		char prenom[MAX_NOM];
-		int  age;
-		int  billet; // code billet (date*10)+i
-	};
-	
-	struct UnBilletRegistre{
-		int  date; 
-		char idtrajet[MAX_ID]; 
-		char garedep[GARE];
-		char garearr[GARE];
-		char nom[MAX_NOM];
-		char prenom[MAX_NOM];
-		int  age;
-		int  classe;
-		int wagon;
-		int salle;
-		int siege;
-		int position;
-		float prix;
-		int  billet; // code billet (date*10)+i
-	};
-	
-	struct position { // quantité de places dispo pour chaque position, par etage, par classe
-		int fenetre;
-		int couloir;
-		int isole  ;
-		int salle  ;
-	};
-	
-	struct caract { 
-		struct position position[2]; // 2 car 2 etages
-	};
+    int  place; // n dans le tableau des places de : tab_places_dispo.tab_dispo[n] 
+    char nom[MAX_NOM];
+    char prenom[MAX_NOM];
+    int  age;
+    int  billet; // code billet (date*10)+i
+  };
+  
+  struct UnBilletRegistre{
+    int  date; 
+    char idtrajet[MAX_ID]; 
+    char garedep[GARE];
+    char garearr[GARE];
+    char nom[MAX_NOM];
+    char prenom[MAX_NOM];
+    int  age;
+    int  classe;
+    int wagon;
+    int salle;
+    int siege;
+    int position;
+    float prix;
+    int  billet; // code billet (date*10)+i
+  };
+  
+  struct position { // quantit?de places dispo pour chaque position, par etage, par classe
+    int fenetre;
+    int couloir;
+    int isole  ;
+    int salle  ;
+  };
+  
+  struct caract { 
+    struct position position[2]; // 2 car 2 etages
+  };
 
 struct UnResPlaceDispo{
-	char id[MAX_ID];
-	struct UnePlace tab_dispo[MAX_PLACES];
-};	
+  char id[MAX_ID];
+  struct UnePlace tab_dispo[MAX_PLACES];
+};  
 /* --- dÃ©claration des variables globales --- */
 // donnÃ©es sncf
 struct UnTrajet *trajets;
@@ -691,7 +691,7 @@ void chargement_places2() // version des dossiers - 1 struct Ã  4 niveaux
           strcpy(nomrepid,nomrep);
           strcat(nomrepid,"/");
           strcat(nomrepid,trajets[i].idtrajet);
-          mkdir(nomrepid);
+          mkdir(nomrepid,0700);
         }
       }
       existe=0;
@@ -702,7 +702,7 @@ void chargement_places2() // version des dossiers - 1 struct Ã  4 niveaux
       strcpy(nomrepid,nomrep);
       strcat(nomrepid,"/");
       strcat(nomrepid,trajets[i].idtrajet);
-      mkdir(nomrepid);
+      mkdir(nomrepid,0700);
     }
   }
 
@@ -786,7 +786,7 @@ void chargement_places2() // version des dossiers - 1 struct Ã  4 niveaux
               strcat(nomrepdate,"/");
               sprintf(datechar,"%d",tab_date_vente[m].date);
               strcat(nomrepdate,datechar);
-              mkdir(nomrepdate);
+              mkdir(nomrepdate,0700);
             }
           }
           existe=0;
@@ -800,7 +800,7 @@ void chargement_places2() // version des dossiers - 1 struct Ã  4 niveaux
           strcat(nomrepdate,"/");
           sprintf(datechar,"%d",tab_date_vente[m].date);
           strcat(nomrepdate,datechar);
-          mkdir(nomrepdate);
+          mkdir(nomrepdate,0700);
         }
       }
     }
@@ -846,7 +846,7 @@ void chargement_places2() // version des dossiers - 1 struct Ã  4 niveaux
               strcat(nomrepseq,"/");
               sprintf(seqdepchar,"%d",tab_sequence[k].seqdep);
               strcat(nomrepseq,seqdepchar);
-              mkdir(nomrepseq);
+              mkdir(nomrepseq,0700);
             }
           }
         }
@@ -1303,9 +1303,9 @@ void lance_recherche()
           switch (choix2)
           {
             case 1: printf("choisir un train (nÂ°) : ") ;
-            		
-            		choix_resultat=lecture_choix(0,nb_res_date,lettre,&erreur4);
-            		reservation(tab_res[choix_resultat],nb_res_date,tab_places_dispo[choix_resultat].tab_dispo,date_int);
+                
+                choix_resultat=lecture_choix(0,nb_res_date,lettre,&erreur4);
+                reservation(tab_res[choix_resultat],nb_res_date,tab_places_dispo[choix_resultat].tab_dispo,date_int);
                     break;
             case 2: date_suivante_precedente(&jhebdo, &jour, &mois, &annee, -1) ; // ajouter verif_dispo + faire quelque chose pour la struct tab_place_dispo + date_int a mettre a jour
                     interprete_jour_semaine(jhebdo, jhebdo_alpha) ;
@@ -1335,7 +1335,8 @@ void lance_recherche()
 // ~~~~~~~~~~~
 struct UnHoraire * recherche_horaire(char rechgare[], int *nbres)
 {
-  struct idnomgare {
+  struct idnomgare 
+  {
     char idgare[100];
     char nomgare[GARE];
   } ;
@@ -1688,157 +1689,129 @@ struct UnRes * compare_avecdate(struct UnRes_nodate tab_res_nodate[], int *nb_re
 // ~~~~~~~~~~~
 /* Verification de la quantite de places disponibles (Totales/1ere/2nde) tout au long du trajet, pour chaque resultat */
 // ~~~~~~~~~~~
-void verification_res_dispo(struct UnRes tab_res[], int nb_res_date, struct UnResPlaceDispo tab_places_dispo[], int date_int){
-	
-
-	int i, j, k, l, m, t, z;
-	int itrouve, jtrouve, ktrouve;
-	int nbplace, nbpremiere, nbseconde;
-	int max_date, max_seq;
-	
-	m=0;
-	for(z=0; z < nb_res_date; z++)  //pour chacun des resultats
+void verification_res_dispo(struct UnRes tab_res[], int nb_res_date, struct UnResPlaceDispo tab_places_dispo[], int date_int)
+{
+  int i, j, k, l, m, t, z;
+  int itrouve, jtrouve, ktrouve;
+  int nbplace, nbpremiere, nbseconde;
+  int max_date, max_seq;
+  
+  m=0;
+  for(z=0; z < nb_res_date; z++)  //pour chacun des resultats
+  {
+    nbplace=0;
+    nbpremiere = 0;
+    nbseconde = 0;
+    i=0;
+    itrouve=0;
+    while(!itrouve && i<nbtrajet) // rechercher des toutes les places dans la limite des id existants, jusqu'?avoir trouv?l'id desir?
     {
-    	nbplace=0;
-    	nbpremiere = 0;
-    	nbseconde = 0;
-    	i=0;
-    	itrouve=0;
-	    while(!itrouve && i<nbtrajet) // rechercher des toutes les places dans la limite des id existants, jusqu'à avoir trouvé l'id desiré
-		{
-			
-			if(!strcmp(tab_places[i].idtrajet, tab_res[z].idtrajet)) //trouver l'id desiré
-			{
-				
-				itrouve=i;
-				
-				strcpy(tab_places_dispo[m].id, tab_places[i].idtrajet);
-				
-				
-				t=0;
-				while( strcmp(stockage_nb_rep[t].idtrajet, tab_places[i].idtrajet) && t<nbtrajet)
-				{
-					if(!strcmp(stockage_nb_rep[t].idtrajet,tab_places[i].idtrajet))
-					{
-						max_date = stockage_nb_rep[t].max_date    ;
-						max_seq  = stockage_nb_rep[t].max_seq ;
-					}
-					t++;
-				}
-			
-				j=0;
-				jtrouve=0;
-				while(!jtrouve && j<max_date) //rechercher dans cet id la date desiree dans la limite des dates par id (nbdate pas forcement la bonne limite car nbdate>=nbdate_par_id)
-				{
-					
-					if(tab_places[i].date[j].date == date_int)//trouver la date desirée dans l'id desirée (en char)
-					{
-						
-						jtrouve=j;
-						
-						k=0;
-						ktrouve=0;
-						while(!ktrouve && k<max_seq) //rechercher la sequence correspondante à la gare de depart 
-						{
-							
-							if(tab_places[i].date[j].sequence[k].seqdep==tab_res[z].seqdep) //trouver la sequence correspondante à votre gare de depart
-							{
-								ktrouve=k;
-										
-											for(l=0;l<MAX_PLACES;l++) //compter les places parmis la limite de places definie par la capacité
-											{
-													//transferer les informations sur la place dans le tableau approprié
-													
-												    tab_places_dispo[m].tab_dispo[l].wagon    = tab_places[i].date[j].sequence[k].place[l].wagon   ;
-												    tab_places_dispo[m].tab_dispo[l].classe   = tab_places[i].date[j].sequence[k].place[l].classe  ;
-								  				    tab_places_dispo[m].tab_dispo[l].salle    = tab_places[i].date[j].sequence[k].place[l].salle   ;
-		  											tab_places_dispo[m].tab_dispo[l].siege    = tab_places[i].date[j].sequence[k].place[l].siege   ; 
-		  											tab_places_dispo[m].tab_dispo[l].position = tab_places[i].date[j].sequence[k].place[l].position; 
-		  											
-													if(!tab_places[i].date[j].sequence[k].place[l].billet) //si la place est disponible
-													{
-													
-			  											tab_places_dispo[m].tab_dispo[l].billet   = 0  ; 
-			  											nbplace++;
-			  											
-			  											if(tab_places_dispo[m].tab_dispo[l].classe==1)
-			  											{
-			  												nbpremiere++;
-														}
-														else
-														{
-															nbseconde++;
-														}
-			  											
-													}
-													else  													//sinon
-													{
-														
-														tab_places_dispo[m].tab_dispo[l].billet   = 1  ;
-														
-													}//fin du if place disponible
-													
-											}//fin du for des places	
-									
-							}//fin du if sequence trouve
-							k++;
-							
-						}//fin du while des sequences
-						
-					}//fin du if date trouve
-					j++;
-					
-				}//fin du while des dates
-			
-			}//fin du if id trouve
-			i++;
-			
-		}//fin du while des id
-		
-		i=0;
-		j=0;
-		k=ktrouve;
-		l=0;
-		
-		//debut_seq_suivant = tab_places[itrouve].dates[jtrouve].tab_seq[ktrouve].arr_gare; // la fin de la sequence que l'on a trouvée devient notre debut de sequence
-		
-		
-		while( tab_places[itrouve].date[jtrouve].sequence[k].seqarr != tab_res[z].seqarr  && k<max_seq) //tant que l'on a pas trouvé notre sequence d'arrivée
-		{
-			k++; //prochaine sequence
-			
-				for(l=0;l<MAX_PLACES;l++)
-				{
-					
-							if(tab_places[itrouve].date[jtrouve].sequence[k].place[l].billet) //si la place est prise dans cette nouvelle sequence
-							{
-								//on notifie  que la place n'est plus disponible	
-													
-			  					tab_places_dispo[m].tab_dispo[l].billet = 1; 
-			  											
-			  					nbplace--; //decrémenter le nombre de places trouvées
-			  					if(tab_places_dispo[m].tab_dispo[l].classe==1)
-			  					{
-			  						nbpremiere--;
-								}
-								else
-								{
-									nbseconde--;
-								}
-			  					
-							}//fin du if place disponible
-								
-				}//fin du for des places
-				
-			
-			
-		}
-		
-		tab_res[z].dispo=nbplace; // il y a tant de places disponibles sur ce trajet
-		tab_res[z].dispo_1ere=nbpremiere; // il y a tant de places disponibles en premiere sur ce trajet
-		tab_res[z].dispo_2nde=nbseconde; // il y a tant de places disponibles en seconde  sur ce trajet
-		m++;
-	}//fin du for pour les resultats
+      if(!strcmp(tab_places[i].idtrajet, tab_res[z].idtrajet)) //trouver l'id desir?      
+      {  
+        itrouve=i;
+        
+        strcpy(tab_places_dispo[m].id, tab_places[i].idtrajet);
+              
+        t=0;
+        while( strcmp(stockage_nb_rep[t].idtrajet, tab_places[i].idtrajet) && t<nbtrajet)
+        {
+          if(!strcmp(stockage_nb_rep[t].idtrajet,tab_places[i].idtrajet))
+          {
+            max_date = stockage_nb_rep[t].max_date;
+            max_seq  = stockage_nb_rep[t].max_seq ;
+          }
+          t++;
+        }
+      
+        j=0;
+        jtrouve=0;
+        while(!jtrouve && j<max_date) //rechercher dans cet id la date desiree dans la limite des dates par id (nbdate pas forcement la bonne limite car nbdate>=nbdate_par_id)
+        {
+          if(tab_places[i].date[j].date == date_int)//trouver la date desir? dans l'id desir? (en char)
+          {          
+            jtrouve=j;          
+            k=0;
+            ktrouve=0;
+            while(!ktrouve && k<max_seq) //rechercher la sequence correspondante ?la gare de depart 
+            {            
+              if(tab_places[i].date[j].sequence[k].seqdep==tab_res[z].seqdep) //trouver la sequence correspondante ?votre gare de depart
+              {
+                ktrouve=k;
+                    
+                for(l=0;l<MAX_PLACES;l++) //compter les places parmis la limite de places definie par la capacit?
+                {
+                  //transferer les informations sur la place dans le tableau appropri?                          
+                  tab_places_dispo[m].tab_dispo[l].wagon    = tab_places[i].date[j].sequence[k].place[l].wagon   ;
+                  tab_places_dispo[m].tab_dispo[l].classe   = tab_places[i].date[j].sequence[k].place[l].classe  ;
+                  tab_places_dispo[m].tab_dispo[l].salle    = tab_places[i].date[j].sequence[k].place[l].salle   ;
+                  tab_places_dispo[m].tab_dispo[l].siege    = tab_places[i].date[j].sequence[k].place[l].siege   ; 
+                  tab_places_dispo[m].tab_dispo[l].position = tab_places[i].date[j].sequence[k].place[l].position; 
+                  
+                  if(!tab_places[i].date[j].sequence[k].place[l].billet) //si la place est disponible
+                  {              
+                    tab_places_dispo[m].tab_dispo[l].billet   = 0  ; 
+                    nbplace++;
+                    
+                    if(tab_places_dispo[m].tab_dispo[l].classe==1)
+                    {
+                      nbpremiere++;
+                    }
+                    else
+                    {
+                      nbseconde++;
+                    }      
+                  }
+                  else                            //sinon
+                  {
+                    tab_places_dispo[m].tab_dispo[l].billet   = 1  ;  
+                  }//fin du if place disponible    
+                }//fin du for des places    
+              }//fin du if sequence trouve
+              k++;            
+            }//fin du while des sequences
+          }//fin du if date trouve
+          j++;
+        }//fin du while des dates
+      }//fin du if id trouve
+      i++;  
+    }//fin du while des id
+      
+    i=0;
+    j=0;
+    k=ktrouve;
+    l=0;
+      
+    //debut_seq_suivant = tab_places[itrouve].dates[jtrouve].tab_seq[ktrouve].arr_gare; // la fin de la sequence que l'on a trouv? devient notre debut de sequence
+        
+    while( tab_places[itrouve].date[jtrouve].sequence[k].seqarr != tab_res[z].seqarr  && k<max_seq) //tant que l'on a pas trouv?notre sequence d'arriv?
+    {
+      k++; //prochaine sequence
+
+      for(l=0;l<MAX_PLACES;l++)
+      {
+            
+        if(tab_places[itrouve].date[jtrouve].sequence[k].place[l].billet) //si la place est prise dans cette nouvelle sequence
+        {
+          //on notifie  que la place n'est plus disponible
+          tab_places_dispo[m].tab_dispo[l].billet = 1; 
+                        
+          nbplace--; //decr?enter le nombre de places trouv?s
+          if(tab_places_dispo[m].tab_dispo[l].classe==1)
+          {
+            nbpremiere--;
+          }
+          else
+          {
+            nbseconde--;
+          }
+        }//fin du if place disponible
+      }//fin du for des places
+    }  
+    tab_res[z].dispo=nbplace;         // il y a tant de places disponibles sur ce trajet
+    tab_res[z].dispo_1ere=nbpremiere; // il y a tant de places disponibles en premiere sur ce trajet
+    tab_res[z].dispo_2nde=nbseconde;  // il y a tant de places disponibles en seconde sur ce trajet
+    m++;
+  }//fin du for pour les resultats
 }
 
 // ~~~~~~~~~~~
@@ -1867,787 +1840,772 @@ void tri(struct UnRes tab_res[], int * nb_res_date)
 /* Procedure Contenant les choix utilisateurs quat a la selection des places, + lance ecriture dans tab_places et sauvegarde dans le registre des billets */
 // ~~~~~~~~~~~
 void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], int date_int){  
-	
-	int i, j, k, z;
-	int jtrouve;
-	int nbplace;
-	int classe, nbpassagers, choix_salle, choix_position, choix_place;
-	int annulation, continuer, erreur4, deja_utilise;
-	char lettre;
-	char nom[GARE], prenom[GARE], position[10];
-	int age, montant_total;
-	
-	z=nbreservationjournee;
-	
-	
-	
-	struct caract tab_caract[2];  // 2 car 2 classes
-	
-	struct UnBillet tab_billet[MAX_RESERVATION];
-	struct UnBilletRegistre tab_registre[MAX_RESERVATION];
-	
-	//Initialisation du tableau des caracteristiques
-	for(i=0;i<2;i++)
-	{
-		for(j=0;j<2;j++)
-		{
-			tab_caract[i].position[j].fenetre=0;
-			tab_caract[i].position[j].couloir=0;
-			tab_caract[i].position[j].isole=0;
-			tab_caract[i].position[j].salle=0;
-			
-		}
-	}
-	
-	
-	//Remplissage des caractéristiques
-				for(j=0;j<MAX_PLACES;j++)
-				{
-					if(!tab_dispo[j].billet )
-					{
-						switch(tab_dispo[j].position)
-						{
-							case 0 :
-								tab_caract[tab_dispo[j].classe-1].position[tab_dispo[j].salle].fenetre++;
-								tab_caract[tab_dispo[j].classe-1].position[tab_dispo[j].salle].salle++;
-								break;
-							case 1 :
-								tab_caract[tab_dispo[j].classe-1].position[tab_dispo[j].salle].couloir++;
-								tab_caract[tab_dispo[j].classe-1].position[tab_dispo[j].salle].salle++;
-								break;
-							case 2 :
-								tab_caract[tab_dispo[j].classe-1].position[tab_dispo[j].salle].isole++;
-								tab_caract[tab_dispo[j].classe-1].position[tab_dispo[j].salle].salle++;
-								break;
-						}		
-					}
-				}
-	
-	/*-----------------------------------------------
-	-------Debut des choix utilisateur---------------
-	-----------------------------------------------*/
-	
-	saisie_int("Choisissez la classe dans laquelle vous souhaitez voyager (1 pour 1ere, 2 pour 2nde et 0 pour revenir au choix des resultats) :",0, 2, &classe);
-	if(classe)
-	{
-		if(classe==2)
-		{
-			saisie_int("Combien de places souhaitez vous reserver (0 pour revenir au choix des resultats) ",0, tab_res.dispo_2nde, &nbpassagers);
-		}
-		else
-		{
-			saisie_int("Combien de places souhaitez vous reserver (0 pour revenir au choix des resultats) ",0, tab_res.dispo_1ere, &nbpassagers);	
-		}
-		
-		if(nbpassagers)
-		{
-			
-			//initialisation de .billet qui servira de controle a la fin
-			for(i=0;i<nbpassagers;i++)
-			{
-				tab_billet[i].billet = 0;
-				tab_billet[i].place = -1;
-			}
-			
-			i=0;
-			annulation=0;
-			while(i<nbpassagers && !annulation)
-			{
-				saisie_text("Veuillez saisir un nom    : ", nom);
-				saisie_text("Veuillez saisir un prenom : ", prenom);
-				saisie_int("Veuillez saisir un age    : ",1, 200, &age);
-			
-			
-				if(classe==2)
-				{
-					
-					if(tab_caract[classe-1].position[0].salle && tab_caract[classe-1].position[1].salle) // si il y a des places aux deux étages
-					{
-						printf("A quel étage voulez vous être ? Tapez 0 pour le rez de chaussé, 1 pour l'étage :");
-						choix_salle = lecture_choix(0,1,lettre,&erreur4) ;
-						
-					}
-					else if(tab_caract[classe-1].position[0].salle) // si il n'y a de places qu'au rdc
-					{
-						printf("Il ne reste plus que des places au rez de chaussé.\n");
-						choix_salle=0;
-					}
-					else // si il n'y de places qu'à l'étage
-					{ 
-						printf("Il ne reste plus que des places à l'étage.\n");
-						choix_salle=1;
-					}
-					
-					
-					
-					if(    tab_caract[classe-1].position[choix_salle].fenetre
-						&& tab_caract[classe-1].position[choix_salle].couloir
-						&& tab_caract[classe-1].position[choix_salle].isole )     // si il reste les trois options, proposer
-					{
-						printf("Voulez vous etre installé côté fenetre, couloir ou isolé  ? (Tapez 0 pour fenetre, 1 pour couloir, 2 pour isolé):");
-						choix_position = lecture_choix(0,2,lettre,&erreur4) ;	
-					}
-					else    //si il reste une seule ou deux options : fenetre,couloir,isole, fenetre ou isole, fenetre ou couloir, couloir ou isole
-					{
-						if(tab_caract[classe-1].position[choix_salle].fenetre)
-						{
-							if(tab_caract[classe-1].position[choix_salle].couloir)
-							{
-								printf("Voulez vous etre installé côté ou fenetre ou couloir ? (Tapez 0 pour fenetre, 1 pour couloir ):");
-								choix_position = lecture_choix(0,1,lettre,&erreur4) ;
-							}
-							else if(tab_caract[classe-1].position[choix_salle].isole)
-							{
-								printf("Voulez vous etre installé côté fenetre ou isolé ? (Tapez 0 pour fenetre, 1 pour isolé ):");
-								choix_position = lecture_choix(0,1,lettre,&erreur4) ;
-								if(choix_position==1)
-								{
-									choix_position=2;
-								}
-							}
-							else
-							{
-								printf("Il ne reste plus que des places fenetres.\n");
-								choix_position=0;
-							}
-						}
-						else if (tab_caract[classe-1].position[choix_salle].couloir)
-						{
-							
-							if(tab_caract[classe-1].position[choix_salle].isole)
-							{
-								printf("Voulez vous etre installé côté isole ou couloir ? (Tapez 0 pour couloir, 1 pour isolé ):");
-								choix_position = lecture_choix(0,1,lettre,&erreur4) ;
-								choix_position++;
-							}
-							else
-							{
-								printf("Il ne reste plus que des places couloirs.\n");
-								choix_position=1;
-							}
-						}
-						else
-						{
-							
-								printf("Il ne reste plus que des places isolés.\n");
-								choix_position=2;
-							
-						}
-						
-					
-					}
-					printf("Voulez vous continuer ? ( Tapez 1 pour continuer, 0 pour revenir au menu des resultats ):");
-					continuer = lecture_choix(0,1,lettre,&erreur4) ;
-				
-					if(continuer)
-					{
-						j=0;
-						jtrouve=0;
-						while(j<MAX_PLACES && !jtrouve)
-						{
-							if(	  !tab_dispo[j].billet 
-								&& tab_dispo[j].classe   == classe
-								&& tab_dispo[j].salle    == choix_salle
-								&& tab_dispo[j].position == choix_position)
-							{
-								deja_utilise=0;
-								for(k=0;k<=i;k++)
-								{
-									if(tab_billet[k].place==j)
-									{
-										deja_utilise=1;
-									}
-								}
-								
-								
-								if(!deja_utilise)
-								{
-									tab_billet[i].place = j;
-									strcpy(tab_billet[i].nom,nom);
-									strcpy(tab_billet[i].prenom,prenom);
-									tab_billet[i].age = age;
-									tab_billet[i].billet = (date_int*100)+z;
-								}//fin du if deja_utilise
-								
-								
-							}//fin du if a quatre conditions
-							j++;
-						}// fin du while des places	dispo
-					}
-					else
-					{
-						annulation=1;
-					}	
-				}
-				else
-				{
-					erreur4=1;
-					while(erreur4)
-					{
-					
-						printf("-----------------------------------------------------------------------\n");
-						printf("| %11s | %5s | %5s | %5s | %8s |\n","Identifiant","Wagon","Salle","Siege","Position");
-						printf("-----------------------------------------------------------------------\n");
-						
-						for(j=0;j<MAX_PLACES;j++)
-						{
-							if(!tab_dispo[j].billet && tab_dispo[j].classe==1)
-							{
-								deja_utilise=0;
-								for(k=0;k<=i;k++)
-								{
-									if(tab_billet[k].place==j)
-									{
-										deja_utilise=1;
-									}
-								}
-								
-								if(!deja_utilise)
-								{
-									interprete_position(tab_dispo[j].position, position);
-									printf("-----------------------------------------------------------------------\n");
-									printf("| %11d | %5d | %5d | %5d | %8s |\n"
-																		 ,j
-																		 ,tab_dispo[j].wagon
-																		 ,tab_dispo[j].salle
-																		 ,tab_dispo[j].siege
-																		 ,position);
-									printf("-----------------------------------------------------------------------\n");
-								}
-							}	
-						}
-						
-						saisie_int("Veuillez selectionner un Identifiant de place (0 pour revenir au choix des resultats) :",0, j, &choix_place);
-						if(choix_place)
-						{
-							if(!tab_dispo[choix_place].billet && tab_dispo[choix_place].classe==1)
-							{
-								deja_utilise=0;
-								for(k=0;k<=i;k++)
-								{
-									if(tab_billet[k].place==j)
-									{
-										deja_utilise=1;
-									}
-								}
-								
-								if(!deja_utilise)
-								{
-							        tab_billet[i].place = choix_place;
-									strcpy(tab_billet[i].nom,nom);
-									strcpy(tab_billet[i].prenom,prenom);
-									tab_billet[i].age = age;
-									tab_billet[i].billet = (date_int*100)+z;
-									erreur4=0;
-								}
-								else
-								{
-									erreur4=1;
-									printf("Veuillez saisir un des identifiants proposés.\n");
-								}
-							}
-							else
-							{
-								erreur4=1;
-								printf("Veuillez saisir un des identifiants proposés.\n");
-							}
-						}
-						else
-						{
-							erreur4=0;
-							annulation=1;
-						}
-						
-					}//fin du while erreur
-					
-					
-				}// fin du if classe 1 ou 2	
-				i++; //incrementation compteur passagers
-				z++;
-			}// fin du while nbpassagers et potentielle sortie
-				
-		}
-		else
-		{
-			annulation=1;
-		}	//fin du if nbpassagers et potentielle sortie
-	}
-	else
-	{
-		annulation=1;
-	}//fin du if classe et potentielle sortie
-	
-	if(!annulation)
-	{
-		montant_total=10;
-		printf("Le montant total de votre commande est : %f\n", montant_total);
-		
-		faux_paiement();
-		
-		for(i=0;i<nbpassagers;i++)
-		{
-			tab_registre[i].date = date_int;
-			strcpy(tab_registre[i].idtrajet, tab_res.idtrajet);
-			strcpy(tab_registre[i].garedep,  tab_res.garedep);
-			strcpy(tab_registre[i].garearr,  tab_res.garearr);
-			strcpy(tab_registre[i].nom,    tab_billet[i].nom);
-			strcpy(tab_registre[i].prenom, tab_billet[i].prenom);
-			tab_registre[i].age = tab_billet[i].age;
-			
-			tab_registre[i].classe   = tab_dispo[tab_billet[i].place].classe;
-			tab_registre[i].wagon    = tab_dispo[tab_billet[i].place].wagon;
-			tab_registre[i].salle    = tab_dispo[tab_billet[i].place].salle;
-			tab_registre[i].siege    = tab_dispo[tab_billet[i].place].siege;
-			tab_registre[i].position = tab_dispo[tab_billet[i].place].position;
-			tab_registre[i].billet   = tab_billet[i].billet;
-			
-			//tab_registre[i].prix  = tab_billet[i].prix;
-			
-			
-			ecriture_resa_in_tab_places(tab_res ,tab_dispo[tab_billet[i].place], date_int, tab_billet[i].billet);
-		
-		}
-		creation_fichier_billet(tab_registre, nbpassagers);
-		nbreservationjournee=z;
-	}
-	else // je sais plus si c'est utile cette partie remise a zero
-	{
-		i=0;
-		while(i<nbpassagers && tab_billet[i].billet )
-		{
-			tab_billet[i].place  = 0;
-			strcpy(tab_billet[i].nom,   "\0");
-			strcpy(tab_billet[i].prenom,"\0");
-			tab_billet[i].age    = 0;
-			tab_billet[i].billet = 0;
-			i++;
-		}
-		//tout remettre a zero
-	}
-		
+  
+  int i, j, k, z;
+  int jtrouve;
+  int nbplace;
+  int classe, nbpassagers, choix_salle, choix_position, choix_place;
+  int annulation, continuer, erreur4, deja_utilise;
+  char lettre;
+  char nom[GARE], prenom[GARE], position[10];
+  int age, montant_total;
+  
+  z=nbreservationjournee;
+  
+  
+  
+  struct caract tab_caract[2];  // 2 car 2 classes
+  
+  struct UnBillet tab_billet[MAX_RESERVATION];
+  struct UnBilletRegistre tab_registre[MAX_RESERVATION];
+  
+  //Initialisation du tableau des caracteristiques
+  for(i=0;i<2;i++)
+  {
+    for(j=0;j<2;j++)
+    {
+      tab_caract[i].position[j].fenetre=0;
+      tab_caract[i].position[j].couloir=0;
+      tab_caract[i].position[j].isole=0;
+      tab_caract[i].position[j].salle=0;
+      
+    }
+  }
+  
+  
+  //Remplissage des caract?istiques
+        for(j=0;j<MAX_PLACES;j++)
+        {
+          if(!tab_dispo[j].billet )
+          {
+            switch(tab_dispo[j].position)
+            {
+              case 0 :
+                tab_caract[tab_dispo[j].classe-1].position[tab_dispo[j].salle].fenetre++;
+                tab_caract[tab_dispo[j].classe-1].position[tab_dispo[j].salle].salle++;
+                break;
+              case 1 :
+                tab_caract[tab_dispo[j].classe-1].position[tab_dispo[j].salle].couloir++;
+                tab_caract[tab_dispo[j].classe-1].position[tab_dispo[j].salle].salle++;
+                break;
+              case 2 :
+                tab_caract[tab_dispo[j].classe-1].position[tab_dispo[j].salle].isole++;
+                tab_caract[tab_dispo[j].classe-1].position[tab_dispo[j].salle].salle++;
+                break;
+            }   
+          }
+        }
+  
+  /*-----------------------------------------------
+  -------Debut des choix utilisateur---------------
+  -----------------------------------------------*/
+  
+  saisie_int("Choisissez la classe dans laquelle vous souhaitez voyager (1 pour 1ere, 2 pour 2nde et 0 pour revenir au choix des resultats) :",0, 2, &classe);
+  if(classe)
+  {
+    if(classe==2)
+    {
+      saisie_int("Combien de places souhaitez vous reserver (0 pour revenir au choix des resultats) ",0, tab_res.dispo_2nde, &nbpassagers);
+    }
+    else
+    {
+      saisie_int("Combien de places souhaitez vous reserver (0 pour revenir au choix des resultats) ",0, tab_res.dispo_1ere, &nbpassagers); 
+    }
+    
+    if(nbpassagers)
+    {
+      
+      //initialisation de .billet qui servira de controle a la fin
+      for(i=0;i<nbpassagers;i++)
+      {
+        tab_billet[i].billet = 0;
+        tab_billet[i].place = -1;
+      }
+      
+      i=0;
+      annulation=0;
+      while(i<nbpassagers && !annulation)
+      {
+        saisie_text("Veuillez saisir un nom    : ", nom);
+        saisie_text("Veuillez saisir un prenom : ", prenom);
+        saisie_int("Veuillez saisir un age    : ",1, 200, &age);
+      
+      
+        if(classe==2)
+        {
+          
+          if(tab_caract[classe-1].position[0].salle && tab_caract[classe-1].position[1].salle) // si il y a des places aux deux ?ages
+          {
+            printf("A quel ?age voulez vous ?re ? Tapez 0 pour le rez de chauss? 1 pour l'?age :");
+            choix_salle = lecture_choix(0,1,lettre,&erreur4) ;
+            
+          }
+          else if(tab_caract[classe-1].position[0].salle) // si il n'y a de places qu'au rdc
+          {
+            printf("Il ne reste plus que des places au rez de chauss?\n");
+            choix_salle=0;
+          }
+          else // si il n'y de places qu'?l'?age
+          { 
+            printf("Il ne reste plus que des places ?l'?age.\n");
+            choix_salle=1;
+          }
+          
+          
+          
+          if(    tab_caract[classe-1].position[choix_salle].fenetre
+            && tab_caract[classe-1].position[choix_salle].couloir
+            && tab_caract[classe-1].position[choix_salle].isole )     // si il reste les trois options, proposer
+          {
+            printf("Voulez vous etre install?c??fenetre, couloir ou isol? ? (Tapez 0 pour fenetre, 1 pour couloir, 2 pour isol?:");
+            choix_position = lecture_choix(0,2,lettre,&erreur4) ; 
+          }
+          else    //si il reste une seule ou deux options : fenetre,couloir,isole, fenetre ou isole, fenetre ou couloir, couloir ou isole
+          {
+            if(tab_caract[classe-1].position[choix_salle].fenetre)
+            {
+              if(tab_caract[classe-1].position[choix_salle].couloir)
+              {
+                printf("Voulez vous etre install?c??ou fenetre ou couloir ? (Tapez 0 pour fenetre, 1 pour couloir ):");
+                choix_position = lecture_choix(0,1,lettre,&erreur4) ;
+              }
+              else if(tab_caract[classe-1].position[choix_salle].isole)
+              {
+                printf("Voulez vous etre install?c??fenetre ou isol?? (Tapez 0 pour fenetre, 1 pour isol?):");
+                choix_position = lecture_choix(0,1,lettre,&erreur4) ;
+                if(choix_position==1)
+                {
+                  choix_position=2;
+                }
+              }
+              else
+              {
+                printf("Il ne reste plus que des places fenetres.\n");
+                choix_position=0;
+              }
+            }
+            else if (tab_caract[classe-1].position[choix_salle].couloir)
+            {
+              
+              if(tab_caract[classe-1].position[choix_salle].isole)
+              {
+                printf("Voulez vous etre install?c??isole ou couloir ? (Tapez 0 pour couloir, 1 pour isol?):");
+                choix_position = lecture_choix(0,1,lettre,&erreur4) ;
+                choix_position++;
+              }
+              else
+              {
+                printf("Il ne reste plus que des places couloirs.\n");
+                choix_position=1;
+              }
+            }
+            else
+            {
+              
+                printf("Il ne reste plus que des places isol?.\n");
+                choix_position=2;
+              
+            }
+            
+          
+          }
+          printf("Voulez vous continuer ? ( Tapez 1 pour continuer, 0 pour revenir au menu des resultats ):");
+          continuer = lecture_choix(0,1,lettre,&erreur4) ;
+        
+          if(continuer)
+          {
+            j=0;
+            jtrouve=0;
+            while(j<MAX_PLACES && !jtrouve)
+            {
+              if(   !tab_dispo[j].billet 
+                && tab_dispo[j].classe   == classe
+                && tab_dispo[j].salle    == choix_salle
+                && tab_dispo[j].position == choix_position)
+              {
+                deja_utilise=0;
+                for(k=0;k<=i;k++)
+                {
+                  if(tab_billet[k].place==j)
+                  {
+                    deja_utilise=1;
+                  }
+                }
+                
+                
+                if(!deja_utilise)
+                {
+                  tab_billet[i].place = j;
+                  strcpy(tab_billet[i].nom,nom);
+                  strcpy(tab_billet[i].prenom,prenom);
+                  tab_billet[i].age = age;
+                  tab_billet[i].billet = (date_int*100)+z;
+                }//fin du if deja_utilise
+                
+                
+              }//fin du if a quatre conditions
+              j++;
+            }// fin du while des places dispo
+          }
+          else
+          {
+            annulation=1;
+          } 
+        }
+        else
+        {
+          erreur4=1;
+          while(erreur4)
+          {
+          
+            printf("-----------------------------------------------------------------------\n");
+            printf("| %11s | %5s | %5s | %5s | %8s |\n","Identifiant","Wagon","Salle","Siege","Position");
+            printf("-----------------------------------------------------------------------\n");
+            
+            for(j=0;j<MAX_PLACES;j++)
+            {
+              if(!tab_dispo[j].billet && tab_dispo[j].classe==1)
+              {
+                deja_utilise=0;
+                for(k=0;k<=i;k++)
+                {
+                  if(tab_billet[k].place==j)
+                  {
+                    deja_utilise=1;
+                  }
+                }
+                
+                if(!deja_utilise)
+                {
+                  interprete_position(tab_dispo[j].position, position);
+                  printf("-----------------------------------------------------------------------\n");
+                  printf("| %11d | %5d | %5d | %5d | %8s |\n"
+                                     ,j
+                                     ,tab_dispo[j].wagon
+                                     ,tab_dispo[j].salle
+                                     ,tab_dispo[j].siege
+                                     ,position);
+                  printf("-----------------------------------------------------------------------\n");
+                }
+              } 
+            }
+            
+            saisie_int("Veuillez selectionner un Identifiant de place (0 pour revenir au choix des resultats) :",0, j, &choix_place);
+            if(choix_place)
+            {
+              if(!tab_dispo[choix_place].billet && tab_dispo[choix_place].classe==1)
+              {
+                deja_utilise=0;
+                for(k=0;k<=i;k++)
+                {
+                  if(tab_billet[k].place==j)
+                  {
+                    deja_utilise=1;
+                  }
+                }
+                
+                if(!deja_utilise)
+                {
+                      tab_billet[i].place = choix_place;
+                  strcpy(tab_billet[i].nom,nom);
+                  strcpy(tab_billet[i].prenom,prenom);
+                  tab_billet[i].age = age;
+                  tab_billet[i].billet = (date_int*100)+z;
+                  erreur4=0;
+                }
+                else
+                {
+                  erreur4=1;
+                  printf("Veuillez saisir un des identifiants propos?.\n");
+                }
+              }
+              else
+              {
+                erreur4=1;
+                printf("Veuillez saisir un des identifiants propos?.\n");
+              }
+            }
+            else
+            {
+              erreur4=0;
+              annulation=1;
+            }
+            
+          }//fin du while erreur
+          
+          
+        }// fin du if classe 1 ou 2 
+        i++; //incrementation compteur passagers
+        z++;
+      }// fin du while nbpassagers et potentielle sortie
+        
+    }
+    else
+    {
+      annulation=1;
+    } //fin du if nbpassagers et potentielle sortie
+  }
+  else
+  {
+    annulation=1;
+  }//fin du if classe et potentielle sortie
+  
+  if(!annulation)
+  {
+    montant_total=10;
+    printf("Le montant total de votre commande est : %f\n", montant_total);
+    
+    faux_paiement();
+    
+    for(i=0;i<nbpassagers;i++)
+    {
+      tab_registre[i].date = date_int;
+      strcpy(tab_registre[i].idtrajet, tab_res.idtrajet);
+      strcpy(tab_registre[i].garedep,  tab_res.garedep);
+      strcpy(tab_registre[i].garearr,  tab_res.garearr);
+      strcpy(tab_registre[i].nom,    tab_billet[i].nom);
+      strcpy(tab_registre[i].prenom, tab_billet[i].prenom);
+      tab_registre[i].age = tab_billet[i].age;
+      
+      tab_registre[i].classe   = tab_dispo[tab_billet[i].place].classe;
+      tab_registre[i].wagon    = tab_dispo[tab_billet[i].place].wagon;
+      tab_registre[i].salle    = tab_dispo[tab_billet[i].place].salle;
+      tab_registre[i].siege    = tab_dispo[tab_billet[i].place].siege;
+      tab_registre[i].position = tab_dispo[tab_billet[i].place].position;
+      tab_registre[i].billet   = tab_billet[i].billet;
+      
+      //tab_registre[i].prix  = tab_billet[i].prix;
+      
+      
+      ecriture_resa_in_tab_places(tab_res ,tab_dispo[tab_billet[i].place], date_int, tab_billet[i].billet);
+    
+    }
+    creation_fichier_billet(tab_registre, nbpassagers);
+    nbreservationjournee=z;
+  }
+  else // je sais plus si c'est utile cette partie remise a zero
+  {
+    i=0;
+    while(i<nbpassagers && tab_billet[i].billet )
+    {
+      tab_billet[i].place  = 0;
+      strcpy(tab_billet[i].nom,   "\0");
+      strcpy(tab_billet[i].prenom,"\0");
+      tab_billet[i].age    = 0;
+      tab_billet[i].billet = 0;
+      i++;
+    }
+    //tout remettre a zero
+  }
 }
 
 // ~~~~~~~~~~~
 /* Ecriture des reservation dans tab_places */
 // ~~~~~~~~~~~
-void ecriture_resa_in_tab_places( struct UnRes tab_res ,struct UnePlace tab_dispo, int date_int, int billet){
-	
-	int i, j, k, l, t, z;
-	int itrouve, jtrouve, ktrouve;
-	int nbplace;
-	int max_date,max_seq;
-	
-		nbplace=0;
-    	i=0;
-    	itrouve=0;
-	    while(!itrouve && i<nbtrajet) // rechercher des tous les id dans la limite des id existants, jusqu'à avoir trouvé l'id desiré
-		{
-			
-			if(!strcmp(tab_places[i].idtrajet, tab_res.idtrajet)) //trouver l'id desiré
-			{
-				
-				itrouve=i;
-				
-				t=0;
-				while(strcmp(stockage_nb_rep[t].idtrajet, tab_places[i].idtrajet) && t<nbtrajet)
-				{
-					if(!strcmp(stockage_nb_rep[t].idtrajet, tab_places[i].idtrajet))
-					{
-						max_date = stockage_nb_rep[t].max_date ;
-						max_seq  = stockage_nb_rep[t].max_seq  ;
-					}
-					t++;
-				}
-				
-				j=0;
-				jtrouve=0;
-				while(!jtrouve && j<max_date) //rechercher dans cet id la date desiree dans la limite des dates par id (nbdate pas forcement la bonne limite car nbdate>=nbdate_par_id)
-				{
-					
-					if(tab_places[i].date[j].date == date_int)//trouver la date desirée dans l'id desirée (en char)
-					{
-						
-						jtrouve=j;
-						
-						
-						/*
-						while(!ktrouve && k< stock.max_seq)
-						{
-							
-						}
-						*/
-						for(k=tab_res.seqdep; k<tab_res.seqarr;k++)
-						{
-						
-											for(l=0;l<MAX_PLACES;l++) //compter les places parmis la limite de places definie par la capacité
-											{
-													if(tab_places[i].date[j].sequence[k].place[l].wagon == tab_dispo.wagon
-													&& tab_places[i].date[j].sequence[k].place[l].siege == tab_dispo.siege)
-													{
-														tab_places[i].date[j].sequence[k].place[l].billet = billet   ;
-													}
-							
-											}//fin du for des places	
-							
-						}//fin du for des sequences
-						
-					}//fin du if date trouve
-					j++;
-					
-				}//fin du while des dates
-			
-			}//fin du if id trouve
-			i++;
-			
-		}//fin du while des id
-	
+void ecriture_resa_in_tab_places( struct UnRes tab_res ,struct UnePlace tab_dispo, int date_int, int billet)
+{  
+  int i, j, k, l, t, z;
+  int itrouve, jtrouve, ktrouve;
+  int nbplace;
+  int max_date,max_seq;
+  
+  nbplace=0;
+  i=0;
+  itrouve=0;
+  while(!itrouve && i<nbtrajet) // rechercher des tous les id dans la limite des id existants, jusqu'?avoir trouv?l'id desir?
+  {  
+    if(!strcmp(tab_places[i].idtrajet, tab_res.idtrajet)) //trouver l'id desir?
+    {  
+      itrouve=i;
+      
+      t=0;
+      while(strcmp(stockage_nb_rep[t].idtrajet, tab_places[i].idtrajet) && t<nbtrajet)
+      {
+        if(!strcmp(stockage_nb_rep[t].idtrajet, tab_places[i].idtrajet))
+        {
+          max_date = stockage_nb_rep[t].max_date ;
+          max_seq  = stockage_nb_rep[t].max_seq  ;
+        }
+        t++;
+      }
+      
+      j=0;
+      jtrouve=0;
+      while(!jtrouve && j<max_date) //rechercher dans cet id la date desiree dans la limite des dates par id (nbdate pas forcement la bonne limite car nbdate>=nbdate_par_id)
+      {      
+        if(tab_places[i].date[j].date == date_int)//trouver la date desir? dans l'id desir? (en char)
+        {        
+          jtrouve=j;
+          /*
+          while(!ktrouve && k< stock.max_seq)
+          {
+            
+          }
+          */
+          for(k=tab_res.seqdep; k<tab_res.seqarr;k++)
+          {        
+            for(l=0;l<MAX_PLACES;l++) //compter les places parmis la limite de places definie par la capacit?
+            {
+              if(tab_places[i].date[j].sequence[k].place[l].wagon == tab_dispo.wagon
+                && tab_places[i].date[j].sequence[k].place[l].siege == tab_dispo.siege)
+              {
+                tab_places[i].date[j].sequence[k].place[l].billet = billet   ;
+              }
+            }//fin du for des places
+          }//fin du for des sequences
+        }//fin du if date trouve
+        j++;
+      }//fin du while des dates
+    }//fin du if id trouve
+    i++;
+  }//fin du while des id
 }
 
 // ~~~~~~~~~~~
 /* Ecriture/Sauvegarde des reservation dans le fichier registre_billets */
 // ~~~~~~~~~~~
 void creation_fichier_billet(struct UnBilletRegistre tab_registre[], int nb_nouveau){
-	
-	struct UnBilletRegistre *registre_billets;
-	FILE *f1;
-	int nb_registre_billet;
-	int i;
-	
-	registre_billets = (struct UnBilletRegistre *) malloc(sizeof(struct UnBilletRegistre));
-	f1=fopen("registre_billet.txt","w");
-	
-	i=0;
-	//Chargement des donnees
-	while((! feof(f1)))
-	{
-		
-		fscanf(f1,"%101[^;];%101[^;];%101[^;];%51[^;];%51[^;];", registre_billets[i].idtrajet
-															  , registre_billets[i].garedep
-															  , registre_billets[i].garearr
-															  , registre_billets[i].nom
-															  , registre_billets[i].prenom);
-															  
-		fscanf(f1, "%d;%d;%d;%d;%d;%d;%d;%d"				  , registre_billets[i].date
-															  , registre_billets[i].age
-															  , registre_billets[i].classe
-															  , registre_billets[i].wagon
-															  , registre_billets[i].salle
-															  , registre_billets[i].siege
-															  , registre_billets[i].position
-															  , registre_billets[i].billet);   //rajouter %5.2f et registre_billets[nb_registre_billet].prix
-		
-		registre_billets = (struct UnBilletRegistre *) realloc(registre_billets,sizeof(struct UnBilletRegistre) * (i+1)) ;
-		i++;
-	}
-	
-	nb_registre_billet=i;
-	
-	//Ajout des nouveaux billets
-	
-	for(i=0;i<nb_nouveau;i++)
-	{
-	
-		strcpy(registre_billets[nb_registre_billet+i].idtrajet, tab_registre[i].idtrajet);
-		strcpy(registre_billets[nb_registre_billet+i].garedep, tab_registre[i].garedep);
-		strcpy(registre_billets[nb_registre_billet+i].garearr,tab_registre[i].garearr);
-		strcpy(registre_billets[nb_registre_billet+i].nom, tab_registre[i].nom);
-		strcpy(registre_billets[nb_registre_billet+i].prenom,tab_registre[i].prenom);
-		registre_billets[nb_registre_billet+i].date = tab_registre[i].date;
-		registre_billets[nb_registre_billet+i].age = tab_registre[i].age;
-		registre_billets[nb_registre_billet+i].classe = tab_registre[i].classe;
-		registre_billets[nb_registre_billet+i].wagon = tab_registre[i].wagon;
-		registre_billets[nb_registre_billet+i].salle = tab_registre[i].salle;
-		registre_billets[nb_registre_billet+i].siege = tab_registre[i].siege;
-		registre_billets[nb_registre_billet+i].position = tab_registre[i].position;
-		registre_billets[nb_registre_billet+i].billet = tab_registre[i].billet;
-		
-		//registre_billets[nb_registre_billet+i].prix = tab_registre[i].prix;
-		
-		registre_billets = (struct UnBilletRegistre *) realloc(registre_billets,sizeof(struct UnBilletRegistre) * (nb_registre_billet+i+1)) ;
-	}
-	
-	nb_registre_billet = nb_registre_billet+i+1;
-	
-	//Ecriture du registre
-	for(i=0;i<nb_registre_billet;i++)
-	{
-		fprintf(f1, "%s;%s;%s;%s;%s;%d;%d;%d;%d;%d;%d;%d\n",    registre_billets[i].idtrajet
-															  , registre_billets[i].garedep
-															  , registre_billets[i].garearr
-															  , registre_billets[i].nom
-															  , registre_billets[i].prenom
-															  , registre_billets[i].date
-															  , registre_billets[i].age
-															  , registre_billets[i].classe
-															  , registre_billets[i].wagon
-															  , registre_billets[i].salle
-															  , registre_billets[i].siege
-															  , registre_billets[i].position
-															  , registre_billets[i].billet);   //rajouter %5.2f et registre_billets[nb_registre_billet].prix
-	}
-	
-	fclose(f1);
+  
+  struct UnBilletRegistre *registre_billets;
+  FILE *f1;
+  int nb_registre_billet;
+  int i;
+  
+  registre_billets = (struct UnBilletRegistre *) malloc(sizeof(struct UnBilletRegistre));
+  f1=fopen("registre_billet.txt","w");
+  
+  i=0;
+  //Chargement des donnees
+  while((! feof(f1)))
+  {
+    
+    fscanf(f1,"%101[^;];%101[^;];%101[^;];%51[^;];%51[^;];", registre_billets[i].idtrajet
+                                , registre_billets[i].garedep
+                                , registre_billets[i].garearr
+                                , registre_billets[i].nom
+                                , registre_billets[i].prenom);
+                                
+    fscanf(f1, "%d;%d;%d;%d;%d;%d;%d;%d"          , registre_billets[i].date
+                                , registre_billets[i].age
+                                , registre_billets[i].classe
+                                , registre_billets[i].wagon
+                                , registre_billets[i].salle
+                                , registre_billets[i].siege
+                                , registre_billets[i].position
+                                , registre_billets[i].billet);   //rajouter %5.2f et registre_billets[nb_registre_billet].prix
+    
+    registre_billets = (struct UnBilletRegistre *) realloc(registre_billets,sizeof(struct UnBilletRegistre) * (i+1)) ;
+    i++;
+  }
+  
+  nb_registre_billet=i;
+  
+  //Ajout des nouveaux billets
+  
+  for(i=0;i<nb_nouveau;i++)
+  {
+  
+    strcpy(registre_billets[nb_registre_billet+i].idtrajet, tab_registre[i].idtrajet);
+    strcpy(registre_billets[nb_registre_billet+i].garedep, tab_registre[i].garedep);
+    strcpy(registre_billets[nb_registre_billet+i].garearr,tab_registre[i].garearr);
+    strcpy(registre_billets[nb_registre_billet+i].nom, tab_registre[i].nom);
+    strcpy(registre_billets[nb_registre_billet+i].prenom,tab_registre[i].prenom);
+    registre_billets[nb_registre_billet+i].date = tab_registre[i].date;
+    registre_billets[nb_registre_billet+i].age = tab_registre[i].age;
+    registre_billets[nb_registre_billet+i].classe = tab_registre[i].classe;
+    registre_billets[nb_registre_billet+i].wagon = tab_registre[i].wagon;
+    registre_billets[nb_registre_billet+i].salle = tab_registre[i].salle;
+    registre_billets[nb_registre_billet+i].siege = tab_registre[i].siege;
+    registre_billets[nb_registre_billet+i].position = tab_registre[i].position;
+    registre_billets[nb_registre_billet+i].billet = tab_registre[i].billet;
+    
+    //registre_billets[nb_registre_billet+i].prix = tab_registre[i].prix;
+    
+    registre_billets = (struct UnBilletRegistre *) realloc(registre_billets,sizeof(struct UnBilletRegistre) * (nb_registre_billet+i+1)) ;
+  }
+  
+  nb_registre_billet = nb_registre_billet+i+1;
+  
+  //Ecriture du registre
+  for(i=0;i<nb_registre_billet;i++)
+  {
+    fprintf(f1, "%s;%s;%s;%s;%s;%d;%d;%d;%d;%d;%d;%d\n",    registre_billets[i].idtrajet
+                                , registre_billets[i].garedep
+                                , registre_billets[i].garearr
+                                , registre_billets[i].nom
+                                , registre_billets[i].prenom
+                                , registre_billets[i].date
+                                , registre_billets[i].age
+                                , registre_billets[i].classe
+                                , registre_billets[i].wagon
+                                , registre_billets[i].salle
+                                , registre_billets[i].siege
+                                , registre_billets[i].position
+                                , registre_billets[i].billet);   //rajouter %5.2f et registre_billets[nb_registre_billet].prix
+  }
+  
+  fclose(f1);
 }
 
 // ~~~~~~~~~~~
 /* Procedure simulant la saisie de coordonnees bancaires */
 // ~~~~~~~~~~~
 void faux_paiement(){
-	
-	int j;
-	int i;
-	int erreur, booleen, test;
-	char lettre;
-	char dump;
-	char digit[MAX_DIGIT];  //MAX_AGE a creer
-	
-	int num_bancaire, date_bancaire, cvc_bancaire;
-	int len_num;
-	
-	/*-- Carte Bancaire -- */
-	
-	erreur=1;
-	while(erreur)
-	{
-		
-		i=0;
-		erreur = 1;
-		while(erreur)
-		{
-			i=0;
-			erreur=0;
-			lettre=50;
-			printf("Veuillez saisir votre numero de carte bancaire : ");
-			while(!erreur && i<MAX_DIGIT && lettre!='\n' && ( (lettre<58) && (lettre>47)) )    
-			{
-				scanf("%c", &lettre);
-				
-				if( lettre!='\n')
-				{
-					if( (lettre<58) && (lettre>47) ) 
-					{
-						digit[i]=lettre;
-						i++;
-						erreur=0;
-					}
-					else
-					{
-						erreur=1;
-						
-					}	
-				}
-				else
-				{
-					if(strlen(digit)!=16)
-					{
-						erreur=1;
-					}	
-				}
-			}
-			
-			if(i>=MAX_DIGIT)
-			{
-				erreur=1;
-				printf("Saisie superieure a 25 caracteres. ");
-			}
-			
-			if(erreur)
-			{
-					i=0;
-					test=0;
-					for(i=0;i<MAX_DIGIT;i++)
-					{
-						digit[i]='\0';
-					}
-					
-					if(lettre != '\n')
-					{
-						while(dump!='\n')
-						{
-							scanf("%c", &dump);
-						}
-					}
-					lettre=50;
-					dump='a';
-					printf("Veuillez saisir un numero de carte bancaire valide.\n");
-			}
-		}//Fin du while(erreur) de num_bancaire
-		num_bancaire=atoi(digit);
-		digit[i]='\0';
-		len_num =strlen(digit);
-		for(i=0;i<MAX_DIGIT;i++)
-		{
-			digit[i]='\0';
-		}
-		if(len_num==16)
-		{
-		
-			i=0;
-			erreur = 1;
-			while(erreur)
-			{
-				i=0;
-				erreur=0;
-				lettre=50;
-				printf("Veuillez saisir la date d'expiration de votre carte bancaire au format MMAA : ");
-				while(!erreur && i<MAX_DIGIT && lettre!='\n' && ( (lettre<58) && (lettre>47)) )    
-				{
-					scanf("%c", &lettre);
-				
-					if( lettre!='\n')
-					{
-						if( (lettre<58) && (lettre>47) ) 
-						{
-							digit[i]=lettre;
-							i++;
-						}
-						else
-						{
-							erreur=1;
-						}	
-					}
-					else 
-					{
-						digit[i]='\0';
-						test = atoi(digit);
-						if(test>1299 || test < 121)   // expiration min pour Jan 2021 -> 01/21 -> 121 -> EXP_MIN_CARTE a creer
-						{
-							erreur=1;
-						}
-					}
-				}
-				
-				if(i>=MAX_DIGIT)
-				{
-					erreur=1;
-					printf("Saisie superieure a 25 caracteres. ");
-				}
-				
-				if(erreur)
-				{
-					i=0;
-					test=0;
-					for(i=0;i<MAX_DIGIT;i++)
-					{
-						digit[i]='\0';
-					}
-					
-					if(lettre != '\n')
-					{
-						while(dump!='\n')
-						{
-							scanf("%c", &dump);
-						}
-					}
-					dump='a';
-					printf("Veuillez saisir une date d'expiration valide.\n");
-				}
-			}//Fin du while(erreur) de date_bancaire
-			date_bancaire=test;
-			
-			for(i=0;i<MAX_DIGIT;i++)
-			{
-				digit[i]='\0';
-			}
-			if(date_bancaire<=1299 && date_bancaire >= 121)
-			{
-				
-				i=0;
-				erreur = 1;
-				while(erreur)
-				{
-					i=0;
-					erreur=0;
-					lettre=50;
-					printf("Veuillez saisir le code CVC de votre carte bancaire : ");
-					while(!erreur && i<MAX_DIGIT && lettre!='\n' && ( (lettre<58) && (lettre>47)) )
-					{
-						scanf("%c", &lettre);
-				
-						if(lettre!='\n')
-						{
-							if( (lettre<58) && (lettre>47) ) 
-							{
-								digit[i]=lettre;
-								i++;
-							}
-							else
-							{
-								erreur=1;
-								
-							}	
-						}
-						else 
-						{
-							digit[i]='\0';
-							test=atoi(digit);
-							if(test>1000 || test<99)
-							{
-								erreur=1;
-							}
-						}
-						
-					}
-					
-					if(i>=MAX_DIGIT)
-					{
-						erreur=1;
-						printf("Saisie superieure a 25 caracteres. ");
-					}
-					
-					if(erreur)
-					{
-						i=0;
-						test=0;
-						for(i=0;i<MAX_DIGIT;i++)
-						{
-							digit[i]='\0';
-						}
-						
-						if(lettre != '\n')
-						{
-							while(dump!='\n')
-							{
-								scanf("%c", &dump);
-							}
-						}
-						lettre=50;
-						dump='a';
-						printf("Veuillez saisir un code cvc valide.\n");
-					}
-				}//Fin du while(erreur) de cvc_bancaire
-				cvc_bancaire=test;
-				for(i=0;i<MAX_DIGIT;i++)
-				{
-					digit[i]='\0';
-				}
-				if(cvc_bancaire<1000 && cvc_bancaire>99)
-				{
-					erreur=0;
-					printf("Paiement effectue avec success.\n");
-				}//Fin du if( date_bancaire )
-				else
-				{
-					erreur=1;
-					printf("Carte bancaire non valide.\n");
-				}
-			}//Fin du if( date_bancaire )
-			else
-			{
-				erreur=1;
-				printf("Carte bancaire non valide.\n");
-			}
-		}//Fin du if( num_bancaire )
-		else
-		{
-			erreur=1;
-			printf("Carte bancaire non valide.\n");
-		}
-		
-		
-	}//Fin grande boucle while(erreur)
-	
-	
+  
+  int j;
+  int i;
+  int erreur, booleen, test;
+  char lettre;
+  char dump;
+  char digit[MAX_DIGIT];  //MAX_AGE a creer
+  
+  int num_bancaire, date_bancaire, cvc_bancaire;
+  int len_num;
+  
+  /*-- Carte Bancaire -- */
+  
+  erreur=1;
+  while(erreur)
+  {
+    
+    i=0;
+    erreur = 1;
+    while(erreur)
+    {
+      i=0;
+      erreur=0;
+      lettre=50;
+      printf("Veuillez saisir votre numero de carte bancaire : ");
+      while(!erreur && i<MAX_DIGIT && lettre!='\n' && ( (lettre<58) && (lettre>47)) )    
+      {
+        scanf("%c", &lettre);
+        
+        if( lettre!='\n')
+        {
+          if( (lettre<58) && (lettre>47) ) 
+          {
+            digit[i]=lettre;
+            i++;
+            erreur=0;
+          }
+          else
+          {
+            erreur=1;
+            
+          } 
+        }
+        else
+        {
+          if(strlen(digit)!=16)
+          {
+            erreur=1;
+          } 
+        }
+      }
+      
+      if(i>=MAX_DIGIT)
+      {
+        erreur=1;
+        printf("Saisie superieure a 25 caracteres. ");
+      }
+      
+      if(erreur)
+      {
+          i=0;
+          test=0;
+          for(i=0;i<MAX_DIGIT;i++)
+          {
+            digit[i]='\0';
+          }
+          
+          if(lettre != '\n')
+          {
+            while(dump!='\n')
+            {
+              scanf("%c", &dump);
+            }
+          }
+          lettre=50;
+          dump='a';
+          printf("Veuillez saisir un numero de carte bancaire valide.\n");
+      }
+    }//Fin du while(erreur) de num_bancaire
+    num_bancaire=atoi(digit);
+    digit[i]='\0';
+    len_num =strlen(digit);
+    for(i=0;i<MAX_DIGIT;i++)
+    {
+      digit[i]='\0';
+    }
+    if(len_num==16)
+    {
+    
+      i=0;
+      erreur = 1;
+      while(erreur)
+      {
+        i=0;
+        erreur=0;
+        lettre=50;
+        printf("Veuillez saisir la date d'expiration de votre carte bancaire au format MMAA : ");
+        while(!erreur && i<MAX_DIGIT && lettre!='\n' && ( (lettre<58) && (lettre>47)) )    
+        {
+          scanf("%c", &lettre);
+        
+          if( lettre!='\n')
+          {
+            if( (lettre<58) && (lettre>47) ) 
+            {
+              digit[i]=lettre;
+              i++;
+            }
+            else
+            {
+              erreur=1;
+            } 
+          }
+          else 
+          {
+            digit[i]='\0';
+            test = atoi(digit);
+            if(test>1299 || test < 121)   // expiration min pour Jan 2021 -> 01/21 -> 121 -> EXP_MIN_CARTE a creer
+            {
+              erreur=1;
+            }
+          }
+        }
+        
+        if(i>=MAX_DIGIT)
+        {
+          erreur=1;
+          printf("Saisie superieure a 25 caracteres. ");
+        }
+        
+        if(erreur)
+        {
+          i=0;
+          test=0;
+          for(i=0;i<MAX_DIGIT;i++)
+          {
+            digit[i]='\0';
+          }
+          
+          if(lettre != '\n')
+          {
+            while(dump!='\n')
+            {
+              scanf("%c", &dump);
+            }
+          }
+          dump='a';
+          printf("Veuillez saisir une date d'expiration valide.\n");
+        }
+      }//Fin du while(erreur) de date_bancaire
+      date_bancaire=test;
+      
+      for(i=0;i<MAX_DIGIT;i++)
+      {
+        digit[i]='\0';
+      }
+      if(date_bancaire<=1299 && date_bancaire >= 121)
+      {
+        
+        i=0;
+        erreur = 1;
+        while(erreur)
+        {
+          i=0;
+          erreur=0;
+          lettre=50;
+          printf("Veuillez saisir le code CVC de votre carte bancaire : ");
+          while(!erreur && i<MAX_DIGIT && lettre!='\n' && ( (lettre<58) && (lettre>47)) )
+          {
+            scanf("%c", &lettre);
+        
+            if(lettre!='\n')
+            {
+              if( (lettre<58) && (lettre>47) ) 
+              {
+                digit[i]=lettre;
+                i++;
+              }
+              else
+              {
+                erreur=1;
+                
+              } 
+            }
+            else 
+            {
+              digit[i]='\0';
+              test=atoi(digit);
+              if(test>1000 || test<99)
+              {
+                erreur=1;
+              }
+            }
+            
+          }
+          
+          if(i>=MAX_DIGIT)
+          {
+            erreur=1;
+            printf("Saisie superieure a 25 caracteres. ");
+          }
+          
+          if(erreur)
+          {
+            i=0;
+            test=0;
+            for(i=0;i<MAX_DIGIT;i++)
+            {
+              digit[i]='\0';
+            }
+            
+            if(lettre != '\n')
+            {
+              while(dump!='\n')
+              {
+                scanf("%c", &dump);
+              }
+            }
+            lettre=50;
+            dump='a';
+            printf("Veuillez saisir un code cvc valide.\n");
+          }
+        }//Fin du while(erreur) de cvc_bancaire
+        cvc_bancaire=test;
+        for(i=0;i<MAX_DIGIT;i++)
+        {
+          digit[i]='\0';
+        }
+        if(cvc_bancaire<1000 && cvc_bancaire>99)
+        {
+          erreur=0;
+          printf("Paiement effectue avec success.\n");
+        }//Fin du if( date_bancaire )
+        else
+        {
+          erreur=1;
+          printf("Carte bancaire non valide.\n");
+        }
+      }//Fin du if( date_bancaire )
+      else
+      {
+        erreur=1;
+        printf("Carte bancaire non valide.\n");
+      }
+    }//Fin du if( num_bancaire )
+    else
+    {
+      erreur=1;
+      printf("Carte bancaire non valide.\n");
+    }
+    
+    
+  }//Fin grande boucle while(erreur)
+  
+  
 }
 
 // ~~~~~~~~~~~
@@ -3564,168 +3522,167 @@ int lecture_choix(int deb, int fin, char lettre, int * erreur)
 /* ---------------------------------------- */
 /* -- Saisie Textuelle Securisee -- */
 /* ---------------------------------------- */
-void saisie_text(char invite[], char sortie[]){
-		
-	 int i;
-	  char dump, lettre;									//securisation des saisies
-	  int val_choix, erreur;										//securisation des saisies
-	  int compteur_saisie, compteur_saisie_date;					//securisation des saisies
-	  int choix_reserver, date_prob;
-	  int jour_prec, mois_prec, annee_prec;
-  
-  
-		compteur_saisie=0;
-		erreur = 1;
-		while(erreur==1)
-		{
-			erreur=0;
-			lettre='a';
-			printf("\n%s                      : ", invite); 		// invite de saisie
-			while(!erreur && compteur_saisie<GARE && lettre!='\n' && ( ((lettre<91) && (lettre>64)) || ((lettre<123) && (lettre>96)) || (lettre==32) || (lettre==45) ) )
-			{															// si la saisie n'est pas une lettre maj ou min, un LF, un espace ou un -, ou qu'elle est trop grande, erreur
-				scanf("%c", &lettre);
-				
-				if(compteur_saisie<GARE && lettre!='\n')  				// si la saisie est trop grande ou un LF, sortir, si il n'y avait pas d'erreur avant, fin de la saisie avec success
-				{
-					if( ((lettre<91) && (lettre>64)) || ((lettre<123) && (lettre>96)) || (lettre==32) || (lettre==45) ) 
-					{													// si la saisie n'est pas une lettre maj ou min, un espace ou un -
-						sortie[compteur_saisie]=lettre;    	//insertion du caractère
-						compteur_saisie++;
-						erreur=0;										//pas d'erreur pour l'instant
-					}
-					else												//erreur
-					{
-						erreur=1;
-					}	
-				}
-				else
-				{
-					if(compteur_saisie<1)
-					{
-						erreur=1;
-					}
-				}
-			}
-			if(compteur_saisie==GARE)
-			{
-				printf("Saisie superieure a 100 caracteres. La saisie a ete tronquee.\n");
-				compteur_saisie--;
-			}
-			
-			if(erreur)
-			{
-				compteur_saisie=0;
-						
-				for(i=0;i<GARE;i++)
-				{
-					sortie[i]='\0';
-				}
-						
-				if(lettre!='\n')
-				{
-					while(dump!='\n')
-					{
-						scanf("%c", &dump);
-					}
-				}
-				dump='a';
-				printf("Veuillez saisir un nom valide : 100 lettres maximum, sans caracteres speciaux autres que '-'.\n");
-			}
-		}
-		sortie[compteur_saisie]='\0';									//fermeture de la chaine de caractère
-	}	
+void saisie_text(char invite[], char sortie[])
+{    
+  int i;
+  char dump, lettre;                  //securisation des saisies
+  int val_choix, erreur;                    //securisation des saisies
+  int compteur_saisie, compteur_saisie_date;          //securisation des saisies
+  int choix_reserver, date_prob;
+  int jour_prec, mois_prec, annee_prec;
+
+  compteur_saisie=0;
+  erreur = 1;
+  while(erreur==1)
+  {
+    erreur=0;
+    lettre='a';
+    printf("\n%s                      : ", invite);     // invite de saisie
+    while(!erreur && compteur_saisie<GARE && lettre!='\n' && ( ((lettre<91) && (lettre>64)) || ((lettre<123) && (lettre>96)) || (lettre==32) || (lettre==45) ) )
+    {                             // si la saisie n'est pas une lettre maj ou min, un LF, un espace ou un -, ou qu'elle est trop grande, erreur
+      scanf("%c", &lettre);
+      
+      if(compteur_saisie<GARE && lettre!='\n')          // si la saisie est trop grande ou un LF, sortir, si il n'y avait pas d'erreur avant, fin de la saisie avec success
+      {
+        if( ((lettre<91) && (lettre>64)) || ((lettre<123) && (lettre>96)) || (lettre==32) || (lettre==45) ) 
+        {                         // si la saisie n'est pas une lettre maj ou min, un espace ou un -
+          sortie[compteur_saisie]=lettre;     //insertion du caract?e
+          compteur_saisie++;
+          erreur=0;                   //pas d'erreur pour l'instant
+        }
+        else                        //erreur
+        {
+          erreur=1;
+        } 
+      }
+      else
+      {
+        if(compteur_saisie<1)
+        {
+          erreur=1;
+        }
+      }
+    }
+    if(compteur_saisie==GARE)
+    {
+      printf("Saisie superieure a 100 caracteres. La saisie a ete tronquee.\n");
+      compteur_saisie--;
+    }
+    
+    if(erreur)
+    {
+      compteur_saisie=0;
+          
+      for(i=0;i<GARE;i++)
+      {
+        sortie[i]='\0';
+      }
+          
+      if(lettre!='\n')
+      {
+        while(dump!='\n')
+        {
+          scanf("%c", &dump);
+        }
+      }
+      dump='a';
+      printf("Veuillez saisir un nom valide : 100 lettres maximum, sans caracteres speciaux autres que '-'.\n");
+    }
+  }
+  sortie[compteur_saisie]='\0';                 //fermeture de la chaine de caract?e
+} 
 
 /* ---------------------------------------- */
 /* -- Saisie Numerique Securisee -- */
 /* ---------------------------------------- */
 void saisie_int(char invite[],int min,int max, int *mon_int){
-	
-	char digit[MAX_DIGIT];
-	int test;
-	char dump;
-	
-	int i=0;
-	int erreur = 1;
-	while(erreur==1)
-	{
-		i=0;
-		erreur=0;
-		char lettre=50;
-		printf("%s",invite);
-		while(!erreur && i<MAX_DIGIT && lettre!='\n' && ( (lettre<58) && (lettre>47)) )
-		{
-			scanf("%c", &lettre);
-			
-				
-			if( lettre!='\n')
-			{
-				if( (lettre<58) && (lettre>47) ) 
-				{
-					digit[i]=lettre;
-					i++;
-				}
-				else
-				{
-					erreur=1;
-				}	
-			}
-			else
-			{
-				test = atoi(digit);
-				if(test<min || test > max)
-				{
-					erreur=1;
-				}
-			}
-		}
-		if(i>=MAX_DIGIT)
-		{
-			erreur=1;
-			printf("Saisie superieure a 25 caracteres. ");
-		}
-		if(erreur)
-		{
-			test=0;
-			i=0;
-			for(i=0;i<MAX_DIGIT; i++)
-			{
-				digit[i]='\0';
-			}
-			if(lettre!='\n')
-			{
-				while(dump!='\n')
-				{
-					scanf("%c", &dump);
-				}
-			}		
-			dump='a';
-			printf("Veuillez saisir un nombre valide.\n");
-		}
-	}
-	*mon_int=test;
-	for(i=0;i<MAX_DIGIT; i++)
-	{
-		digit[i]='\0';
-	}
+  
+  char digit[MAX_DIGIT];
+  int test;
+  char dump;
+  
+  int i=0;
+  int erreur = 1;
+  while(erreur==1)
+  {
+    i=0;
+    erreur=0;
+    char lettre=50;
+    printf("%s",invite);
+    while(!erreur && i<MAX_DIGIT && lettre!='\n' && ( (lettre<58) && (lettre>47)) )
+    {
+      scanf("%c", &lettre);
+      
+        
+      if( lettre!='\n')
+      {
+        if( (lettre<58) && (lettre>47) ) 
+        {
+          digit[i]=lettre;
+          i++;
+        }
+        else
+        {
+          erreur=1;
+        } 
+      }
+      else
+      {
+        test = atoi(digit);
+        if(test<min || test > max)
+        {
+          erreur=1;
+        }
+      }
+    }
+    if(i>=MAX_DIGIT)
+    {
+      erreur=1;
+      printf("Saisie superieure a 25 caracteres. ");
+    }
+    if(erreur)
+    {
+      test=0;
+      i=0;
+      for(i=0;i<MAX_DIGIT; i++)
+      {
+        digit[i]='\0';
+      }
+      if(lettre!='\n')
+      {
+        while(dump!='\n')
+        {
+          scanf("%c", &dump);
+        }
+      }   
+      dump='a';
+      printf("Veuillez saisir un nombre valide.\n");
+    }
+  }
+  *mon_int=test;
+  for(i=0;i<MAX_DIGIT; i++)
+  {
+    digit[i]='\0';
+  }
 }
 
-/* ---------------------------------------- */
+/* ---------------------------------------------- */
 /* -- Interpretation du int position en string -- */
-/* ---------------------------------------- */
-void interprete_position(int pos, char position[]){
-	
-	switch(pos)
-	{
-		case 0:
-			strcpy(position, "fenetre");
-			break;
-		case 1:
-			strcpy(position, "couloir");
-			break;
-		case 2:
-			strcpy(position, "isole");
-			break;
-	}
+/* ---------------------------------------------- */
+void interprete_position(int pos, char position[])
+{  
+  switch(pos)
+  {
+    case 0:
+      strcpy(position, "fenetre");
+      break;
+    case 1:
+      strcpy(position, "couloir");
+      break;
+    case 2:
+      strcpy(position, "isole");
+      break;
+  }
 }
 
 /* ------------------------------------- */
