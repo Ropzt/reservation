@@ -773,6 +773,7 @@ void chargement_places() // version des dossiers - 1 struct à 4 niveaux
   // On liste le contenu de place (sous-dossiers id)
   nbrep_idtrajet=ListerRep(nomrep,rep_idtrajet);
 
+
   // Pour chaque idtrajet possible
   existe=0;
   for (i=0;i<nbtrajet;i++)
@@ -855,7 +856,7 @@ void chargement_places() // version des dossiers - 1 struct à 4 niveaux
     stockage_nb_rep[i].max_seq = nbsequence ;
 
   // printf de controle
-  // printf("%d\n",nbsequence) ;
+  // printf("nbsequence %d de idtrajet=%s\n",nbsequence,trajets[i].idtrajet) ;
 
     // On liste le contenu de id (sous-dossiers date)
     strcpy(nomrepid,nomrep);
@@ -934,9 +935,8 @@ void chargement_places() // version des dossiers - 1 struct à 4 niveaux
         // S'il est vide, on crée les dossiers sequence
         if (nbrep_seq == 0)
         {
-          if (nbsequence>1)
+          if (nbsequence>=1)
           {
-  // printf("nbsequence ici : %d\n");
             for (k=0;k<nbsequence;k++)
             {
               strcpy(nomrepseq,nomrep);
@@ -1099,61 +1099,6 @@ void sauvegarde()
 /* ---------------------------------------------------------------- */
 /* --- Sauvegarder les données de réservation (de chaque train) --- */
 /* ---------------------------------------------------------------- */
-// void sauvegarde_places()
-// {
-//   int i ;
-//   FILE *f1 ;
-//   struct UnVoyage voyage ;
-//   char nomfichier[30]="./data/place/places.txt" ;
-
-//   f1=fopen(nomfichier,"w") ;
-//   if(f1 == NULL)
-//   {
-//     printf("\nImpossible d'écrire le fichier %s\n",nomfichier);
-//   }
-//   else
-//   {
-//     for (i=0 ; i < nbvoyage ; i++)
-//     {
-//       voyage = tab_voyages[i];
-//       fprintf(f1,"%s;%d;%s;%s;%s;%d;%d;%s;%s;%d;%d;%d;%d;%d;%d;%d",
-//         voyage.idtrajet,voyage.date,voyage.type,voyage.garedep,
-//         voyage.garearr,voyage.seqdep,voyage.seqarr,voyage.hd,
-//         voyage.ha,voyage.wagon,voyage.classe,voyage.salle,
-//         voyage.siege,voyage.position,voyage.etat,voyage.billet);
-//       //       struct UnVoyage {
-//       //   char idtrajet[MAX_ID] ;
-//       //   int  date          ;
-//       //   char type[5]       ;
-//       //   char garedep[MAX_GARE] ;
-//       //   char garearr[MAX_GARE] ;
-//       //   int seqdep         ;
-//       //   int seqarr         ;
-//       //   char hd[MAX_HEURE]         ;
-//       //   char ha[MAX_HEURE]         ;
-//       //   int  wagon    ; // n° de wagon
-//       //   int  classe   ; // 1re classe, 2e classe
-//       //   int  salle    ; // 0 bas, 1 haut
-//       //   int  siege    ; // numéro de siège
-//       //   int  position ; // 0 fenêtre, 1 couloir, 2 place isolée
-//       //   int  etat     ; // à supprimer si on teste sur billet
-//       //   int  billet   ; // numéro unique de billet
-//       // } ;
-//       if (i<nbvoyage-1)
-//       {
-//         fprintf(f1,"\n");
-//       }
-//     }
-//     fclose(f1) ;
-//   }
-// }
-
-// struct Stockage { // Structure des compteurs de tab_places
-//     char idtrajet[MAX_ID];
-//     int  max_date;
-//     int  max_seq;
-// };
-
 void sauvegarde_places()
 {
   int i, j, k, l;
@@ -1195,17 +1140,17 @@ void sauvegarde_places()
         {
           for (l=0;l<stockage_nb_rep[i].max_place;l++)
           {
-          //  fprintf(f1,"%d;%d;%d;%d;%d;%d",
-          //    tab_places[i].date[j].sequence[k].place[l].wagon,
-          //    tab_places[i].date[j].sequence[k].place[l].classe,
-          //    tab_places[i].date[j].sequence[k].place[l].salle,
-          //    tab_places[i].date[j].sequence[k].place[l].siege,
-          //    tab_places[i].date[j].sequence[k].place[l].position,
-          //    tab_places[i].date[j].sequence[k].place[l].billet);
-            if (i<nbplacestrain-1)
-            {
-              fprintf(f1,"\n");
-            }
+           // fprintf(f1,"%d;%d;%d;%d;%d;%d",
+           //   tab_places[i].date[j].sequence[k].place[l].wagon,
+           //   tab_places[i].date[j].sequence[k].place[l].classe,
+           //   tab_places[i].date[j].sequence[k].place[l].salle,
+           //   tab_places[i].date[j].sequence[k].place[l].siege,
+           //   tab_places[i].date[j].sequence[k].place[l].position,
+           //   tab_places[i].date[j].sequence[k].place[l].billet);
+           //  if (i<nbplacestrain-1)
+           //  {
+           //    fprintf(f1,"\n");
+           //  }
     printf("i stock %d=%s i tab_places %d=%s j %d=%d k %d=%d l %d/%d : ",
       i,stockage_nb_rep[i].idtrajet,i,tab_places[i].idtrajet,j,tab_places[i].date[j].date,
       k,tab_places[i].date[j].sequence[k].seqdep,l,stockage_nb_rep[i].max_place);
@@ -1286,14 +1231,6 @@ void lance_recherche()
     
     // tab_res_nodate = compare_nodate(res_depart,nb_res_depart,res_arrive,nb_res_arrive,&nb_res_nodate);
     tab_res_nodate = compare_nodate(tab_res_depart,nb_res_depart,tab_res_arrive,nb_res_arrive,&nb_res_nodate);
-
-// for (cpt=0;cpt<tab_res_arrive;cpt++)
-// {
-//   printf("%s\n",tab_res[cpt].idtrajet);
-//   printf("%d\n",tab_res[cpt].numtrain);
-//   printf("%d\n",tab_res[cpt].seqdep);
-//   printf("%d\n",tab_res[cpt].seqarr);
-// }
 
     if(nb_res_nodate==0) // Cas : pas de train identique entre la gare de départ et la gare d'arrivée
     {     
@@ -1622,11 +1559,11 @@ struct UnRes_nodate * compare_nodate(struct UnHoraire gare_dep_trouve[], int nb_
 /* Fonction de selection des resultats en fonction du jour de la semaine desire 
   (retourne un tableau des résultats, construit à partir des match) */
 // ~~~~~~~~~~~
-struct UnRes * compare_avecdate(struct UnRes_nodate tab_res_nodate[], int nb_res_nodate, int jhebdo, int *nb_res_date  /*, char date_rech[SizeDate]*/ )       //la plus belle des fonctions
+struct UnRes * compare_avecdate(struct UnRes_nodate tab_res_nodate[], int nb_res_nodate, int jhebdo, int *nb_res_date)
 {  
   // printf("passage dans date : jour de la semaine %d\n", jhebdo);
   // printf("passage dans date : numéro de train du 2e résultat du tableau de résultats no date %d\n", tab_res_nodate[1].num_train);     // ces 2 printf ne s'allument pas, la fonction n'arrive donc pas a s'executer
-  int i=0 ; // compteur de tab_resultat_nodate                    // j'ai mis en commentaire toutes les mentions de la date dans la structure resultat jusqu'a trouver comment convertir proprement
+  int i=0 ; // compteur de tab_resultat_nodate
   int j=0 ; // compteur de tab_resultat
   struct UnRes *tab_resultats ; // pointeur du tableau de résultats communs à retourner
   
@@ -1641,8 +1578,7 @@ struct UnRes * compare_avecdate(struct UnRes_nodate tab_res_nodate[], int nb_res
           tab_resultats[j].idservice = tab_res_nodate[i].idservice    ;
           tab_resultats[j].numtrain = tab_res_nodate[i].numtrain      ;
           tab_resultats[j].numtrain = tab_res_nodate[i].numtrain      ;
-          // strcpy(tab_resultats[j].date    , date_rech)                  ;
-          // strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
+          // strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)   ;
           strcpy(tab_resultats[j].hd, tab_res_nodate[i].hd)           ;
           strcpy(tab_resultats[j].ha, tab_res_nodate[i].ha)           ;
           tab_resultats[j].seqdep    = tab_res_nodate[i].seqdep       ;
@@ -1655,164 +1591,6 @@ struct UnRes * compare_avecdate(struct UnRes_nodate tab_res_nodate[], int nb_res
     }
   }
   
-  // switch(jhebdo)        // en fonction de jhebdo, on cherche dans la bonne colonne
-  // {
-  //   case 0: 
-  //     for(i=0;i<*nb_res_nodate;i++)
-  //     {
-  //       if(tab_res_nodate[i].dim)
-  //       {
-  //         strcpy(tab_resultats[j].idtrajet, tab_res_nodate[i].idtrajet) ;
-  //         tab_resultats[j].idservice = tab_res_nodate[i].idservice ;
-  //         tab_resultats[j].numtrain = tab_res_nodate[i].numtrain ;
-  //         tab_resultats[j].numtrain = tab_res_nodate[i].numtrain  ;
-  //         strcpy(tab_resultats[j].garedep, tab_res_nodate[i].garedep)   ;
-  //         strcpy(tab_resultats[j].garearr, tab_res_nodate[i].garearr)   ;
-  //         // strcpy(tab_resultats[j].date    , date_rech)                  ;
-  //         // strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-  //         strcpy(tab_resultats[j].hd, tab_res_nodate[i].hd)      ;
-  //         strcpy(tab_resultats[j].ha, tab_res_nodate[i].ha)      ;
-  //         tab_resultats[j].seqdep    = tab_res_nodate[i].seqdep  ;
-  //         tab_resultats[j].seqarr    = tab_res_nodate[i].seqarr  ;
-                
-  //         j++;
-  //         tab_resultats = (struct UnRes *) realloc(tab_resultats,sizeof(struct UnRes) * (j+1));
-  //       }
-  //     }
-  //     break;
-  //   case 1:
-  //     for(i=0;i<*nb_res_nodate;i++)
-  //     {
-  //       if(tab_res_nodate[i].lun)
-  //       {
-  //         strcpy(tab_resultats[j].idtrajet, tab_res_nodate[i].idtrajet) ;
-  //         tab_resultats[j].idservice = tab_res_nodate[i].idservice ;
-  //         tab_resultats[j].numtrain = tab_res_nodate[i].numtrain      ;
-  //         strcpy(tab_resultats[j].garedep, tab_res_nodate[i].garedep) ;
-  //         strcpy(tab_resultats[j].garearr, tab_res_nodate[i].garearr) ;
-  //         // strcpy(tab_resultats[j].date    , date_rech)                   ;
-  //         // strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-  //         strcpy(tab_resultats[j].hd, tab_res_nodate[i].hd)     ;
-  //         strcpy(tab_resultats[j].ha, tab_res_nodate[i].ha)      ;
-  //         tab_resultats[j].seqdep    = tab_res_nodate[i].seqdep  ;
-  //         tab_resultats[j].seqarr    = tab_res_nodate[i].seqarr  ;
-                
-  //         j++;
-  //         tab_resultats = (struct UnRes *) realloc(tab_resultats,sizeof(struct UnRes) * (j+1));
-  //       }
-  //     }
-  //     break;
-  //   case 2:
-  //     for(i=0;i<*nb_res_nodate;i++)
-  //     {
-  //       if(tab_res_nodate[i].mar)
-  //       {
-  //         strcpy(tab_resultats[j].idtrajet, tab_res_nodate[i].idtrajet) ;
-  //         tab_resultats[j].idservice = tab_res_nodate[i].idservice ;
-  //         tab_resultats[j].numtrain = tab_res_nodate[i].numtrain      ;
-  //         strcpy(tab_resultats[j].garedep, tab_res_nodate[i].garedep) ;
-  //         strcpy(tab_resultats[j].garearr, tab_res_nodate[i].garearr) ;
-  //         // strcpy(tab_resultats[j].date    , date_rech)                   ;
-  //         // strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-  //         strcpy(tab_resultats[j].hd, tab_res_nodate[i].hd)     ;
-  //         strcpy(tab_resultats[j].ha, tab_res_nodate[i].ha)      ;
-  //         tab_resultats[j].seqdep    = tab_res_nodate[i].seqdep  ;
-  //         tab_resultats[j].seqarr    = tab_res_nodate[i].seqarr  ;
-                
-  //         j++;
-  //         tab_resultats = (struct UnRes *) realloc(tab_resultats,sizeof(struct UnRes) * (j+1));
-  //       }
-  //     }
-  //     break;
-  //   case 3:
-  //     for(i=0;i<*nb_res_nodate;i++)
-  //     {
-  //       if(tab_res_nodate[i].mer)
-  //       {
-  //         strcpy(tab_resultats[j].idtrajet, tab_res_nodate[i].idtrajet) ;
-  //         tab_resultats[j].idservice = tab_res_nodate[i].idservice ;
-  //         tab_resultats[j].numtrain = tab_res_nodate[i].numtrain      ;
-  //         strcpy(tab_resultats[j].garedep, tab_res_nodate[i].garedep) ;
-  //         strcpy(tab_resultats[j].garearr, tab_res_nodate[i].garearr) ;
-  //         // strcpy(tab_resultats[j].date    , date_rech)                   ;
-  //         // strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-  //         strcpy(tab_resultats[j].hd, tab_res_nodate[i].hd)     ;
-  //         strcpy(tab_resultats[j].ha, tab_res_nodate[i].ha)      ;
-  //         tab_resultats[j].seqdep    = tab_res_nodate[i].seqdep  ;
-  //         tab_resultats[j].seqarr    = tab_res_nodate[i].seqarr  ;
-                
-  //         j++;
-  //         tab_resultats = (struct UnRes *) realloc(tab_resultats,sizeof(struct UnRes) * (j+1));
-  //       }
-  //     }
-  //     break;
-  //   case 4:
-  //     for(i=0;i<*nb_res_nodate;i++)
-  //     {
-  //       if(tab_res_nodate[i].jeu)
-  //       {
-  //         strcpy(tab_resultats[j].idtrajet, tab_res_nodate[i].idtrajet) ;
-  //         tab_resultats[j].idservice = tab_res_nodate[i].idservice ;
-  //         tab_resultats[j].numtrain = tab_res_nodate[i].numtrain      ;
-  //         strcpy(tab_resultats[j].garedep, tab_res_nodate[i].garedep) ;
-  //         strcpy(tab_resultats[j].garearr, tab_res_nodate[i].garearr) ;
-  //         // strcpy(tab_resultats[j].date    , date_rech)                   ;
-  //         // strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-  //         strcpy(tab_resultats[j].hd, tab_res_nodate[i].hd)     ;
-  //         strcpy(tab_resultats[j].ha, tab_res_nodate[i].ha)      ;
-  //         tab_resultats[j].seqdep    = tab_res_nodate[i].seqdep  ;
-  //         tab_resultats[j].seqarr    = tab_res_nodate[i].seqarr  ;
-                
-  //         j++;
-  //         tab_resultats = (struct UnRes *) realloc(tab_resultats,sizeof(struct UnRes) * (j+1));
-  //       }
-  //     }
-  //     break;
-  //   case 5:
-  //     for(i=0;i<*nb_res_nodate;i++)
-  //     {
-  //       if(tab_res_nodate[i].ven)
-  //       {
-  //         strcpy(tab_resultats[j].idtrajet, tab_res_nodate[i].idtrajet) ;
-  //         tab_resultats[j].idservice = tab_res_nodate[i].idservice ;
-  //         tab_resultats[j].numtrain = tab_res_nodate[i].numtrain      ;
-  //         strcpy(tab_resultats[j].garedep, tab_res_nodate[i].garedep) ;
-  //         strcpy(tab_resultats[j].garearr, tab_res_nodate[i].garearr) ;
-  //         // strcpy(tab_resultats[j].date    , date_rech)                   ;
-  //         // strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-  //         strcpy(tab_resultats[j].hd, tab_res_nodate[i].hd)     ;
-  //         strcpy(tab_resultats[j].ha, tab_res_nodate[i].ha)      ;
-  //         tab_resultats[j].seqdep    = tab_res_nodate[i].seqdep  ;
-  //         tab_resultats[j].seqarr    = tab_res_nodate[i].seqarr  ;
-                
-  //         j++;
-  //         tab_resultats = (struct UnRes *) realloc(tab_resultats,sizeof(struct UnRes) * (j+1));
-  //       }
-  //     }
-  //     break;
-  //   case 6:
-  //     for(i=0;i<*nb_res_nodate;i++)
-  //     {
-  //       if(tab_res_nodate[i].sam)
-  //       {
-  //         strcpy(tab_resultats[j].idtrajet, tab_res_nodate[i].idtrajet) ;
-  //         tab_resultats[j].idservice = tab_res_nodate[i].idservice ;
-  //         tab_resultats[j].numtrain = tab_res_nodate[i].numtrain      ;
-  //         strcpy(tab_resultats[j].garedep, tab_res_nodate[i].garedep) ;
-  //         strcpy(tab_resultats[j].garearr, tab_res_nodate[i].garearr) ;
-  //         // strcpy(tab_resultats[j].date    , date_rech)                   ;
-  //         // strcpy(tab_resultats[j].type    , tab_res_nodate[i].type)     ;
-  //         strcpy(tab_resultats[j].hd, tab_res_nodate[i].hd)     ;
-  //         strcpy(tab_resultats[j].ha, tab_res_nodate[i].ha)      ;
-  //         tab_resultats[j].seqdep    = tab_res_nodate[i].seqdep  ;
-  //         tab_resultats[j].seqarr    = tab_res_nodate[i].seqarr  ;
-                
-  //         j++;
-  //         tab_resultats = (struct UnRes *) realloc(tab_resultats,sizeof(struct UnRes) * (j+1));
-  //       }
-  //     }
-  //     break;
-  // }     
   *nb_res_date = j   ;
   return tab_resultats ;
 }
@@ -2077,7 +1855,7 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
       annulation=0;
       while(i<nbpassagers && !annulation)
       {
-        printf("INFORMATIONS VOYAGEUR %d\n",i) ;
+        printf("INFORMATIONS VOYAGEUR %d\n",i+1) ;
         saisie_text("Nom   ", nom);
         saisie_text("Prénom", prenom);
         saisie_int("Age                         : ",1, 200, &age);
@@ -2885,7 +2663,14 @@ int sequence(char idtrajet[MAX_ID], struct UneSeq tab_sequence[])
   }
 
   // On reconstitue les sequences en croisant les infos de 2 stops consecutifs
-  nbsequence = nbarret-1 ;
+  if (nbarret==0)
+  {
+    nbsequence = 0;
+  }
+  else
+  {
+    nbsequence = nbarret-1 ;
+  }
   for (i=0;i<nbsequence;i++)
   {
     strcpy(tab_sequence[i].gd,tab_stops[i].idgare)         ;
