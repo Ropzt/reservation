@@ -24,21 +24,25 @@
 ## Contexte
 
 La SNCF est une compagnie ferroviaire ayant entre autres activités le transport de voyageurs.
-Elle souhaite disposer d'un logiciel (programme ?) de réservation de place : `reservation`.
+Elle souhaite disposer d'un logiciel de réservation de place : `reservation`.
 
 ## Portée
 
-`reservation` est un programme de réservation de place dans les différents modes de transport assurés par la SNCF.
+`reservation` est un programme de réservation de place dans les différents modes de transport assurés par la SNCF. 
+Cette première version est limitée à la réservation de places :
+* de TGV uniquement
+* à horizon 1 mois pour la réservation
+* à 45 places par rame
+Cette première version peut supporter une montée en charge, dans la limite des ressources matériels, notamment RAM, allouées.
 
-Il permet xx fonctions principales : (ne pas s'arrêter aux interfaces présentées à l'utilisateur ?)
+Il permet 6 fonctions principales :
 
 * la consultation d'horaires de voyage entre deux gares données à une date donnée ;
 * la consultation des tarifs de ces voyages selon (préciser plus tard ?)
   * la classe du wagon
   * (le profil du voyageur : carte de réduction)
 * la réservation de places
-* (la gestion des réservations d'un client)
-
+* la gestion des réservations d'un client
 * la gestion des places disponibles à bord d'un train
 * le calcul des tarifs de voyage
 
@@ -66,7 +70,7 @@ Une ville peut posséder plusieurs gares.
 
 **itinéraire** : 
 
-**place** : siège à bord d'un train, réservable par un voyageur pour un voyage.
+**place** et **siège** : siège à bord d'un train, réservable par un voyageur pour un voyage.
 
 **rame** : train au sens « matériel roulant». *compléter : dire quels attributs sont propres à la rame (le nb de places, etc.) là où d'autres attributs sont propres au train ou au voyage*
 
@@ -75,7 +79,7 @@ Une ville peut posséder plusieurs gares.
 **train** : tout véhicule dont la circulation est assurée par la SNCF et dont l'utilisateur peut réserver une place. 
 Les trains sont de différents types, qu'ils circulent sur voie ferrée ou routière (TGV, INOUI, TER, OUIGO, Car).
 
-**trajet** : 
+**trajet** : Un trajet est une combinaison unique d'une liste arrêts à des gares dans un sens précis, opérant à une certaine heure de la journée, certains jours de la semaine pendant une durée déterminée.
 
 **service** : ligne commerciale définie par une gare de départ, une gare d'arrivée, des gares d'arrêt, des horaires de départ et d'arrivée dans chacune des gares de départ, d'arrivée et d'arrêt, et un calendrier de circulation (circule ou ne circule pas, pour chaque jour de semaine). Le service est le numéro de train utilisé en gare et sur un billet de train pour la communication avec les voyageurs.
 
@@ -154,28 +158,104 @@ Un rang de composé de 4 sièges, dont
 * deux sièges côté fenêtre
 * deux sièges côté couloir
 
-#### OUIGO
+#### Autres Modes de Transport Gérés par la SNCF
 
-*Infos wikipédia : 634 places en classe unique*
+La SNCF gère plusieurs autres modes de transport : 
+* Des trains :
+  * OUIGO
+  * TER
+  * Intercités
+* Des Cars :
+  * Car
+  * Navette
+* Des tramways
 
-Un train de type OUIGO est composé de 8 wagons de passagers à 2 niveaux.
+Ces modes de transport n'ont pas les mêmes caractéristiques que les TGV.
+La gestion de ces modes de transport a un impact sur les caractéristiques suivantes :
+* La classe : possiblement une classe unique au lieu de 2.
+* Le nombre de salles : possiblement réduit à une.
+* Le nombre de sièges.
+* La position des sièges : possiblement moins de positions différentes.
 
-Chaque wagon est composé de 
+Le programme `reservation` ne permet pas de gerer ces modes de transport.
 
-#### TER
+### Une Place
 
-#### Intercités
+Une place est caractérisée par son appartenance à un train empreintant un trajet, pour une séquence précise, à une date précise.
+Une place est réservable lorsque le voyage auquel elle correspond est ouvert à la vente. 
+Une place peut être réservée ou non durant tout ou partie du trajet.
+Une place peut être identifiée par le numéro de son wagon ainsi que son numéro de siège.
 
-#### Car
+#### Un Wagon
 
-### Place
+Un wagon possède possède les caractéristiques suivantes :
 
-Une place est réservable lorsque le voyage auquel elle correspond est ouvert à la vente.
+* Une classe : 1ère classe ou 2nde classe. La classe influe sur le tarif.
+* Un nombre de salle : 1 ou 2.
 
+#### Un Siège
+ 
+Un siège possède possède les caractéristiques suivantes :
+
+* Une salle : 1 ou, lorsque c'est possible, 2.
+* Une position : fenêtre, couloir ou isolé.
 
 ## Circulation des trains
 
-Les trains circulent selon un calendrier
+Les trains circulent en suivant un trajet, découpé en séquences caractérisées par une gare de départ et une gare d'arrivée, selon un calendrier/une fréquence.
+
+### Un Trajet
+
+Un train circule en suivant un trajet. Un trajet est une combinaison unique d'une liste arrêts à des gares, dans un sens précis, opérant à une certaine heure de la journée, certains jours de la semaine pendant une durée déterminée.
+
+Un trajet peut être décrit comme suit :
+Un trajet effectuant la liaison depuis Bordeaux vers Nice en passant par Marseille, dans cet ordre, partant de Bordeaux à 14h03 et arrivant à Nice à 18h47, opérant tous les Mardi et Mercredi, du 27 Novembre 2020 au 3 Mars 2021.
+
+
+### Une séquence
+
+Une séquence est un élément constitutif d'un trajet, ce dernier étant composé d'une suite de séquence continues et cohérentes.
+
+Une séquence est caractérisée par une gare de départ, une heure de départ, une gare d'arrivée et une heure d'arrivée. 
+Pour un trajet, il y a donc une séquence de moins qu'il n'y a de gares.
+
+Un numéro de séquence est égale au numéro de "stop" de départ de cette séquence.
+
+Une séquence peut donc être décrite comme suit :
+
+La séquence numéro 3, commençant à la troisième gare et finissant à la quatrième gare du trajet XXX.
+
+
+### Une Gare
+
+Une gare représente un arrêt, ou "stop", dans un trajet. Une gare peut être incluse dans plusieurs trajets. Une gare est un élément constitutif d'une séquence.
+
+Une gare peut être identifiée par son nom, ou bien par sa position dans un trajet, le trajet étant quelque chose d'unique.
+
+Etant ce qu'on peut appeler un sommet, une gare peut être décrite comme la fin d'une séquence X ou le début d'une séquence X+1.
+
+Une gare peut être décrite comme suit :
+* Gare de Lyon Perrache
+* La gare d'arrivée de la quatrième séquence du trajet XXX / 
+  La gare de départ de la cinquième séquence du trajet XXX .
+
+### Une Fréquence / Un Calendrier
+
+Un train effectue un trajet suivant une fréquence hebdomadaire et régulière. De plus, cette fréquence possède une date de début et une date de fin. 
+
+Un trajet est effectué à certain(s) jour(s) de la semaine, toujours suivant les mêmes horaires de départ et d'arrivée.
+
+Cette fréquence est définie comme valide d'une date à une autre, elle a donc une date de début et une date de fin, tout comme le trajet.
+
+Une fréquence peut être décrite comme suit :
+Le trajet commence à 18h10 et se termine à 21h15 tous les Mardi et Jeudi du 27 Novembre 2020 au 3 Mars 2021.
+
+### Simplification
+
+Etant donné que notre programme ne rencontrera pas de modifications des fichiers concernant la circulation, nous avons choisis de na pas gérer le calendrier. Chaque trajet opère donc pour une durée illimitée.
+
+Un trajet dans le programme peut donc être décrit comme suit :
+Un trajet effectuant la liaison depuis Bordeaux vers Nice en passant par Marseille, dans cet ordre, partant de Bordeaux à 14h03 et arrivant à Nice à 18h47, opérant tous les Mardis et Mercredis.
 
 
 
@@ -211,6 +291,7 @@ Au démarrage du système, il faut
   * parser les dates
   * si la date est antérieure à la date système, supprimer ses rames
 
+## Gestion des Tarifs
 
 ## Réservation
 
@@ -222,10 +303,16 @@ Le processus de réservation d'une place de train suit généralement les étape
   * choix de la date
   * choix des options de voyage : classe de wagon, tarif particulier.
 2. Consultation des résultats
-3. (optionnel) Modification des critères de recherche
-4. Choix et réservation d'un voyage parmi les résultats
+3. Modification des critères de recherche
+4. Choix et réservation d'un voyage parmi les résultats, avec renseignement des informations utilisateurs
 
 ### Recherche
+
+Un voyageur/agent doit pouvoir consulter les horaires de voyages en indiquant :
+
+* la ville de départ
+* la ville d'arrivée
+* la date du voyage
 
 #### Choix de la gare/ville de départ
 
@@ -254,30 +341,132 @@ La date de voyage ne peut pas être antérieure à la date système.
 Si la date saisie est antérieure, le processus de recherche doit s'interrompre.
 Il peut éventuellement proposer la saisie d'une autre date en conservant la gare/ville de départ et la gare/ville d'arrivée précédemment choisies.
 
-### Gestion de la date/heure
+#### Gestion de la date/heure
 
 Concernant la date/heure, le cas de la réservation de voyage et le cas de la consultation d'horaires sont différents.  
 Dans le cas d'une réservation de voyage, le programme ne doit pas proposer de résultats de voyages partant à une date/heure antérieure à la date/heure système.
 Dans le cas d'une consultation d'horaire, le programme ne doit pas proposer de résultats de voyages arrivant à une date/heure antérieure à la date/heure système.
 
+### Consultation des résultats
 
+Les résultats de la recherche doivent être affichés et des actions doivent être proposées à l'utilisateur.
 
+#### Affichage des résultats
 
-Un voyageur/agent doit pouvoir consulter les horaires de voyages en indiquant :
+L'affichage des résultats doit faire apparaitre suffisament d'informations pour permettre à l'utilisateur de choisir entre continuer le processus de réservation ou y apporter des modifications, sans qu'il n'y ai de sur-abondance d'informations.
+
+Il est nécessaire d'afficher :
+* La gare de départ
+* La gare d'arrivée
+* L'heure de départ
+* L'heure d'arrivée
+* Le type de transport
+* Le prix ou l'indisponibilité en Première Classe
+* Le prix ou l'indisponibilité en Seconde Classe
+
+#### Proposition d'actions
+
+Des résultats proposées doivent découler des actions.
+
+Les actions possibles pour l'utilisateur à la vue des résultats sont :
+* Réserver un des trajets proposés
+* Modifier sa recherche
+* Quitter le processus de réservation
+
+##### Réserver
+
+Si l'utilisateur est satisfait par un des résultats proposés, il doit pouvoir sélectionner l'un des trajets pour poursuivre le processus de réservation.
+
+##### Modification des critères de recherche
+
+Un voyageur/agent doit pouvoir modifier les critères suivants de sa recherche :
 
 * la ville de départ
 * la ville d'arrivée
+* la date du voyage
+
+La modification de la ville départ ou de la ville d'arrivée peut être assimilée au fait de quitter le processus de réservation et d'en recommencer un nouveau.
+
+Nous ne traiterons donc que de la modification du paramètre Date.
+Ce dernier peut être modifié de deux façons :
+* Par incrémentation : le jour suivant.
+* Par décrémentation : le jour précédent.
+
+### Choix et réservation d'un voyage parmi les résultats
+
+Une fois que l'utilisateur a sélectionné un trajet, il est nécessaire qu'il précise sa demande afin de lui obtroyer un siège précis.
+
+Il est aussi possible que l'utilisateur souhaite réserver plusieurs sièges.
+
+Il est donc nécessaire de poser des questions à l'utilisateur mais également de vérifier la faisabilité de ses demandes.
+
+Par exemple, il est y avoir des sièges restant au Première Classe, mais aucun côté fenêtre.
+
+Suite à ces vérifications, l'utilisateur peut poursuivre ou non la procédure de réservation.
+
+Si il choisit de poursuivre, il est nécessaire de passer par une étape de calcul du montant total, ainsi qu'une étape de paiement avant de passer à la création de son ou ses billets et d'inscrire cette réservation dans la base de données.
+
+#### Choix Utilisateur
 
 Un voyageur/agent doit pouvoir réserver des places en choisissant :
 
-* la gare de départ
-* la gare d'arrivée
-* la date du voyage
-* le nombre de places
+* la classe de wagon : 1ère ou 2nde Classe.
+* le nombre de places : dans la limite du nombre de places disponibles.
+* la salle : si le train possède plus d'une salle, proposer la salle basse ou la salle haute.
+* la position de son siège : fenêtre, couloir, isolé.
 
+#### Verification
 
+Les choix de l'utilisateur étant fait les uns après les autres, chaque choix influe sur la faisabilité du choix suivant.
 
-# Spécifications (le lien avec notre programme)
+Il faut vérifier qu'on ne propose pas à l'utilisateur une classe où il n'y a plus de places disponibles.
+
+Il faut demander à l'utilisateur de modifier son choix tant qu'il n'a pas renseigné un nombre de sièges désirés inférieur au nombre de sièges disponibles pour une classe donnée.
+
+##### Seconde Classe
+
+Lorsque l'utilisateur précise qu'il veut un siège ou plusieurs sièges en Seconde Classe et que sa demande est faisable, il ne doit être laissé le choix à l'utilisateur de préciser sa demande que si plusieurs solutions sont possibles à chaque fois. Sinon, le choix des caractéristiques de salle et de position doit lui être imposé. 
+
+Si il ne reste des places disponibles que dans une salle, il faut prévenir l'utilisateur.
+Si il reste des places disponibles dans les deux salles, il faut proposer à l'utilisateur de choisir.
+
+Si il ne reste des places disponibles que pour une seule position de siège dans cette salle, il faut prévenir l'utilisateur.
+Si il reste des places disponibles dans plusieurs positions de sièges dans cette salle, il faut proposer à l'utilisateur de choisir.
+
+Enfin, il faut demander à l'utilisateur si ses choix, ou ces assignations, lui conviennent, ou si il veut revenir au choix du trajet.
+
+#### Première Classe
+
+Lorsque l'utilisateur précise qu'il veut un siège ou plusieurs sièges en Seconde Classe et que sa demande est faisable, il faut lui présenter la liste des places disponibles en Première Classe, avec les caractéristiques de chaque place.
+
+L'utilisateur renseigne alors son ou ses choix. 
+
+Une place ne pouvant être choisie deux fois, un choix n'est plus affiché par la suite.
+
+Enfin, il faut demander à l'utilisateur si ses choix lui conviennent, ou si il veut revenir au choix du trajet.
+
+#### Paiement
+
+Une fois que l'utilisateur est satisfait de ses choix, il faut lui présenter le montant total de sa réservation et procéder au paiement.
+
+Le paiement se compose de trois informations que l'utilisateur doit renseigner :
+* Le numéro de carte bancaire
+* La date d'expiration de la carte bancaire
+* Le code CVC de la carte bancaire
+
+Le succès de la procédure de paiement doit être notifié à l'utilisateur
+
+#### Export de la réservation
+
+Une fois la réservation effectuée avec succès, les informations de réservation doivent être stockées dans la base de données. 
+
+Les places sélectionnées doivent être mentionnées comme étant désormais non disponibles sur l'intégralité des séquences sur lesquelles l'utilisateur souhaite voyager.
+
+#### Création du billet
+
+Pour terminer le processus de réservation, un billet récupitulant les informations sur sa réservation doit être donné à l'utilisateur, et une copie de ce billet doit être stockée sur la base de données.
+
+# Spécifications
 
 
 
@@ -286,6 +475,92 @@ Un voyageur/agent doit pouvoir réserver des places en choisissant :
 
 ## Fonctions
 
+### Fonctionnalités Coeur de Métier
+
+#### Fonctionnalités concernant le Processus de Recherche
+
+* Procédure Mère lançant les procédures et fonctions suivantes :
+
+  * Recherche de trajets contenant la gare désirée
+  * Filtrage des trajets ne contenant pas les bonnes gares de départ et d'arrivée ou dans le mauvais sens
+  * Filtrage des trajets ne circulant pas le jour de la semaine découlant de la date de voyage désirée
+  * Quantification du nombre de places disponibles pour les trajets restants, en Première et Seconde Classe
+  * Tri des trajets en fonctions de l'heure de départ
+  * Procédure Mère de Réservation
+
+#### Fonctionnalités concernant le Processus de Réservation
+
+* Procédure Mère lançant les procédures et fonctions suivantes :
+  * Ecriture des places réservées dans la structure contenant les places
+  * Procédure de paiement
+  * Ecriture des billets créés dans la structure contenant le registre des billets
+
+### Fonctionnalités Support
+
+#### Les Horaires
+
+* Récupération des horaires depuis un dossier vers une structure dédiée
+
+#### Les Dates ouvertes à la vente
+
+* Création d'un tableau contenant les dates pour lesquelles la vente est ouverte
+
+#### Les Places
+
+##### Fonctionnalités en Amont
+
+* Récupération des places depuis une architecture de dossiers vers une structure dédiée
+
+* Tri de la structure contenant les places afin de supprimer celles concernant des trajets passés
+
+* Incrémentation de la structure contenant les places afin d'ajouter celles concernant les dates et trajets désormais ouverts à la vente
+
+##### Fonctionnalités en Aval
+
+* Création et/ou écriture depuis la structure contenant les places vers une architecture de dossiers
+
+#### Les Billets
+
+* Récupération du registre des billets depuis un dossier vers une structure dédiée
+
+* Ecriture du registre des billets depuis une structure dédiée vers un dossier
+
+### Fonctionnalités Outils
+
+#### Fonctionnalités concernant les dates
+
+* Récupération du la date du système
+* Incrémentation/Décrémentation de la date d'un jour (Jour Suivant/Précédent)
+* Récupération du jour de la semaine depuis une date
+* Séparation d'une date en jour, mois, année
+
+#### Fonctionnalités concernant les conversions et interpretations
+
+* Conversion de chaque caractère d'une chaine de caractères en majuscule
+* Conversion de chaque `-` en `space` d'une chaine de caractères
+* Conversion de chaque motif dans une chaine de caractères en un autre motif
+* Suppression des accents
+* Interpretation du jour de la semaine, de son code vers son nom
+* Interpretation de la position du siège, de son code vers son nom
+
+#### Fonctionnalités concernant les saisies
+
+* Saisie textuelle sécurisée
+* Saisie numérique sécurisée
+* Lecture de choix utilisateur sécurisée
+* Saisie de date sécurisée
+
+#### Fonctionnalités concernant les interface avec le système
+
+* Vidage du buffer
+* Suppression d'un répertoire
+* Récupération du contenu d'un répertoire
+* Récupération des informations sur un objet
+
+
+
+
+Pour plus tard :
 * afficher les horaires
 
 * afficher les tarifs
@@ -297,13 +572,7 @@ Un voyageur/agent doit pouvoir réserver des places en choisissant :
   * en fonction d'un programme de réduction
   * en fonction du remplissage
 
-* réserver des places
 
-* gestion du nombre de places disponibles
-
-* catégories de places
-
-* éditer les billets
 
 ## Base de données
 
@@ -320,6 +589,29 @@ Les ensembles de données utilisés sont ceux mis à disposition par la SNCF à 
   * Horaires des Tram-Train TER Pays de la Loire : https://ressources.data.sncf.com/explore/dataset/sncf-tram-train-ter-pdl-gtfs/table/
 * Tarifs
   * **à compléter**
+
+### Architecture des dossiers de données
+
+
+#### Horaires
+
+Les données relatives aux horaires sont situées dans le dossier "Data", puis le sous dossier "Horaires".
+Le chemin relatif est donc : "./Data/Horaires/".
+
+#### Tarifs
+
+Les données relatives aux tarifs sont situées dans le dossier "Data", puis le sous dossier "Tarifs".
+Le chemin relatif est donc : "./Data/Tarifs/".
+
+#### Billets
+
+Les données relatives aux billets sont situées dans le dossier "Data", puis le sous dossier "Billets".
+Le chemin relatif est donc : "./Data/Billets/".
+
+#### Places
+
+Les données relatives aux places sont situées dans le dossier "Data", puis le sous dossier "Places", puis un des sous dossiers de trajets ayant comme nom l'identifiant du trajet, puis un des sous dossiers de date ayant comme nom une date au format AAAAMMJJ, puis un des sous dossiers de séquence ayant comme nom le numéro de la séquence.
+Le chemin relatif est donc : "./Data/Places/<idtrajet>/<date>/<séquence>/".
 
 ### Description des données
 
@@ -344,6 +636,18 @@ Parmi les fichiers obligatoires et facultatifs du standard GTFS, chaque ensemble
 Le schéma logique d'un ensemble de données Horairesest le suivant :
 
 ![Schéma logique des ensembles de données Horaires fournis par la SNCF](diagrammes/bdd_sncf_horaires.png "Schéma logique des ensembles de données Horaires fournis par la SNCF")
+
+##### Fichiers Horaires
+
+Il existe 8 fichiers relatifs aux horaires :
+* "agency.txt"
+* "stops.txt"
+* "routes.txt"
+* "trips.txt"
+* "stop_times.txt"
+* "calendar.txt"
+* "calendar_dates.txt"
+* "transferts.txt"
 
 ###### Fichier `agency.txt`
 
@@ -502,4 +806,145 @@ Le fichier est vide pour les ensembles de données utilisés. Nous ne nous servo
 Toutes les données fournies dans un ensemble de données Horaires ne sont pas utiles pour le programme `reservation`.
 Parmi les données des ensembles de données, seule une partie est lue par le programme.
 Parmi les données lues par le programme, seule une partie est stockée en mémoire.
+
+#### Places
+
+Les fichiers `places.txt` sont tous identiques. 
+Ils contiennent 6 colonnes :
+* `wagon` : le numéro du wagon dans lequel se trouve la place : allant de 1 à 4.
+* `classe` : la classe à laquelle appartient le wagon : allant de 1 à 2.
+* `salle` : la salle à laquelle se trouve la place : allant de 0 à 1.
+* `siege` : le numéro de siège de la place.
+* `position` : la position de la place : allant de 0 à 2. 
+* `disponible` : prend la valeur du billet qui a réservé cette place, ou 0 si disponible.
+
+
+#### Tarifs
+
+
+#### Billets
+
+Le fichier `registre_billets.txt` contient les informations suivantes réparties dans X colonnes :
+* `idtrajet` : une chaine de caractères identifiant le trajet.
+* `garedep` : une chaine de caractères identifiant la gare de départ par son nom.
+* `garearr` : une chaine de caractères identifiant la gare d'arrivée par son nom.
+* `nom` : une chaine de caractères contenant le nom du passager.
+* `prenom` : une chaine de caractères contenant le prenom du passager.
+* `date` : la date de voyage au format AAAAMMJJ.
+* `age` : l'age du passager.
+* `classe` : la classe du wagon dans lequel le passager voyage.
+* `wagon` : le numéro du wagon dans lequel le passager voyage.
+* `salle` : la salle du wagon dans lequel le passager voyage.
+* `siège` : le numéro du siège dans lequel le passager voyage.
+* `position` : la position du siège dans lequel le passager voyage.
+* `prix` : le prix que le passager a payé pour voyager.
+* `billet` : le code du billet.
+
+## Processus
+
+### Processus Support Amont
+
+Au lancement du programme, une série de procédure sont lancées afin de récupérer les données depuis les dossiers et fichiers.
+
+Chronologiquement, on récupère d'abord les données relatives aux horaires, puis celles relatives aux places.
+
+#### Chargement des données Horaires
+#### Chargement des données Places
+
+### Processus Coeur de Métier
+
+Une fois les données récupérées, on lance la procédure mère de recherche. Enfin, elle lance également la procédure mère de réservation.
+
+#### Recherche
+
+Une fois les données récupérées, on lance la procédure mère de recherche. C'est elle qui appelle la plupart des procédures et fonctions Coeur de Métier, ainsi que les saisies utilisateurs et l'affichage des résultats.
+
+##### Saisies Utilisateurs et Recherches Itératives
+
+* La procédure commence par demander à l'utilisateur de saisir la gare de départ via une saisie sécurisée
+* La procédure lance ensuite la fonctionnalité de recherche de trajet en fonction de la gare
+  * Si il n'y a pas de résultat, la procédure de recherche se termine ici
+
+* La procédure demande ensuite à l'utilisateur de saisir la gare d'arrivée via une saisie sécurisée
+* La procédure lance de nouveau la fonctionnalité de recherche de trajet en fonction de la gare
+  * Si il n'y a pas de résultat, la procédure de recherche se termine ici
+
+* La procédure lance ensuite la fonctionnalité de filtrage des trajets, ne conservant que les trajets contenant les bonnes gares de départ et d'arrivée, dans le bon sens
+  * Si il n'y a pas de résultat, la procédure de recherche se termine ici
+
+* La procédure demande ensuite à l'utilisateur de saisir la date de voyage via une saisie sécurisée
+* La procédure lance ensuite la fonctionnalité de filtrage des trajets en fonction du jour de la semaine découlant de la date de voyage renseignée
+  * Si il n'y a pas de résultat, la procédure de recherche se termine ici
+
+* La procédure lance ensuite la fonctionnalité de quantification des places disponibles pour chaque trajet, pour la Première et la Seconde Classe
+* La procédure lance ensuite la fonctionnalité de tri en fonction de l'heure de départ de chaque trajet
+
+##### Affichage des Résultats et Choix Utilisateur
+
+* La procédure procède alors à l'affichage des résultats sous forme de tableau
+* La procédure affiche un menu sous le tableau des résultats et demande à l'utilisateur de choisir entre :
+
+  * Réserver un des trajets présentés
+    * La procédure demande à l'utilisateur de choisir un des trajets proposés
+    * La procédure lance la procédure mère de réservation
+
+  * Afficher les résultats pour le jour suivant
+    * La procédure lance la fonctionnalité d'incrémentation de la date
+    * La procédure relance alors la fonctionnalité de filtrage des trajets en fonction du jour de la semaine découlant de la nouvelle date de voyage
+      * Si il n'y a pas de résultat, la procédure de recherche se termine ici
+    * La procédure lance de nouveau la fonctionnalité de quantification des places disponibles pour chaque trajet, pour la Première et la Seconde Classe
+    * La procédure lance de nouveau la fonctionnalité de tri en fonction de l'heure de départ de chaque trajet
+    * La procédure reboucle sur l'affichage des résultats sous formes de tableau, affiche le menu sous le tableau des résultats et demande à l'utilisateur de choisir de nouveau
+
+  * Afficher les résultats pour le jour précédent
+    * La procédure lance la fonctionnalité de décrémentation de la date
+      * La procédure relance alors la fonctionnalité de filtrage des trajets en fonction du jour de la semaine découlant de la nouvelle date de voyage
+        * Si il n'y a pas de résultat, la procédure de recherche se termine ici
+      * La procédure lance de nouveau la fonctionnalité de quantification des places disponibles pour chaque trajet, pour la Première et la Seconde Classe
+      * La procédure lance de nouveau la fonctionnalité de tri en fonction de l'heure de départ de chaque trajet
+      * La procédure reboucle sur l'affichage des résultats sous formes de tableau, affiche le menu sous le tableau des résultats et demande à l'utilisateur de choisir de nouveau
+
+  * Quitter la procédure
+
+#### Reservation
+
+La procédure mère de réservation s'occupe des saisies utilisateurs et des vérifications relatives à la réservation, et lance les fonctions d'écriture dans la structure des places et dans la structure des billets.
+
+##### Saisies Utilisateurs et Sélection de Place(s)
+
+* La procédure commence par demander à l'utilisateur dans quelle classe il souhaite voyager via une saisie sécurisée
+  * L'utilisateur a la possibilité de revenir au menu des résultats 
+* La procédure demande alors à l'utilisateur de choisir le nombre de sièges qu'il souhaite réserver, dans la limite du nombre de places disponibles pour la classe qu'il a choisi
+  * L'utilisateur a la possibilité de revenir au menu des résultats 
+* La procédure lance alors une boucle pour chaque siège demandé :
+  * La procédure demande à l'utilisateur de saisir un nom, un prenom et un age
+  * Si l'utilisateur avait choisi la Première Classe :
+    * La procédure affiche alors un tableau des places disponibles en Première Classe et demande à l'utilisateur de choisir une des places proposées
+      * L'utilisateur a la possibilité de revenir au menu des résultats
+  * Si l'utilisateur avait choisi la Seconde Classe :
+    * La procédure propose à l'utilisateur de choisir entre salle haute et salle basse si des places sont disponibles dans les deux. Sinon il l'informe qu'il ne reste que des places dans une des salles.
+    * La procédure propose à l'utilisateur de choisir une position de siège entre celles disponibles parmis "fenetre", "couloir" et "isolé" si au moins deux des trois sont disponibles. Sinon il l'informe qu'il ne reste que des places pour une des positions.
+      * La procédure demande à l'utilisateur si ses choix, ou ces assignations lui conviennent, ou si il préfère revenir au menu des résultats
+  * La procédure affiche le montant total de la réservation
+    * L'utilisateur a la possibilité de revenir au menu des résultats
+  * La procédure lance la fonctionnalité de paiement
+  * Une fois le paiement effectué avec succès, la procédure lance la fonctionnalité d'écriture des réservations dans la structure contenant les places
+  * La procédure lance ensuite la fonctionnalité d'écriture des billets dans la structure de registre des billets
+
+### Processus Support Aval
+
+
+
+#### Sauvegarde des Places
+
+
+
+## Tests
+
+### Tests Métiers
+
+
+
+### Tests Techniques
+
 
