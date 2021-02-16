@@ -437,10 +437,10 @@ int main()
     {
       erreur=0;
       printf("\n-1- Réserver\n")                ;
-      printf("-2- Consulter les horaires\n")    ;
-      printf("-3- Mes réservations\n")          ;
+      /*printf("-2- Consulter les horaires\n")    ;
+      printf("-3- Mes réservations\n")          ;*/
       printf("-0- Quitter\n")                   ;
-      saisie_int("\nChoix : ",0,3,&choix)       ;
+      saisie_int("\nChoix : ",0,1,&choix)       ;
       // printf("\nChoix : ")                      ;
       // scanf("%c", &lettre)                      ;
       // choix = lecture_choix(0,3,lettre,&erreur) ; 
@@ -1336,6 +1336,7 @@ void lance_recherche()
   int jour, mois, annee, jhebdo ; // éléments de la date de voyage
   char jhebdo_alpha[9]          ; // élément de la date de voyage
   int date_int;
+  int jour_test,mois_test,annee_test,jhebdo_test;
 
   char garedep[MAX_GARE]   ; // saisie utilisateur Gare de départ
   char garearr[MAX_GARE]   ; // saisie utilisateur Gare d'arrivée
@@ -1427,11 +1428,11 @@ void lance_recherche()
       {
         while (choix2 != 0)
         {
-          erreur5 = date_anterieure(tab_date_vente[nbdatevente].jour,
-                                tab_date_vente[nbdatevente].mois,
-                                tab_date_vente[nbdatevente].annee,
+          erreur5 = date_anterieure(tab_date_vente[nbdatevente-1].jour,
+                                tab_date_vente[nbdatevente-1].mois,
+                                tab_date_vente[nbdatevente-1].annee,
                                 jour, mois, annee) ;
-          if(!erreur5)
+          if(erreur5)
           {
             printf("Les billets pour la date que vous avez selectionnee ne sont pas encore ouverts a la vente.\n");
           }
@@ -1443,7 +1444,7 @@ void lance_recherche()
           printf("---------------------------------------------------------------------------------------------------------------------------------------------\n") ;
           for(i=0;i<nb_res_date;i++)
           {
-            if(!erreur5)
+            if(erreur5)
             {
               // printf("%3d | %-22s | %-22s | %6d | %2d:%02d | %2d:%02d | %s\n", i+1, 
                 printf("%3d | %-30s| %-30s| %6d | %8s | %8s |  TGV  | %7s | %10s | %10s\n", i+1, 
@@ -1512,7 +1513,7 @@ void lance_recherche()
               }
             }  
           }
-          if(!erreur5)
+          if(erreur5)
           {
             printf("---------------------------------------------------------------------------------------------------------------------------------------------\n") ;
             printf("\n") ;
@@ -1530,12 +1531,23 @@ void lance_recherche()
           {
             erreur3=0;
             erreur4=0;
-            erreur3 = date_anterieure(jour-1, mois, annee, jour_sys, mois_sys, annee_sys) ;
-            erreur4 = date_anterieure(tab_date_vente[nbdatevente].jour,
-                                tab_date_vente[nbdatevente].mois,
-                                tab_date_vente[nbdatevente].annee,
-                                jour+1, mois, annee) ;
-            if(erreur3)
+            jour_test=jour;
+            mois_test=mois;
+            annee_test=annee;
+            jhebdo_test=jhebdo;
+            date_suivante_precedente(&jhebdo_test, &jour_test, &mois_test, &annee_test, -1) ;
+            erreur3 = date_anterieure(jour_test, mois_test, annee_test, jour_sys, mois_sys, annee_sys) ;
+            
+            jour_test=jour;
+            mois_test=mois;
+            annee_test=annee;
+            jhebdo_test=jhebdo;
+            date_suivante_precedente(&jhebdo_test, &jour_test, &mois_test, &annee_test, 1) ;
+            erreur4 = date_anterieure(tab_date_vente[nbdatevente-1].jour,
+                                tab_date_vente[nbdatevente-1].mois,
+                                tab_date_vente[nbdatevente-1].annee,
+                                jour_test, mois_test, annee_test) ;
+            if(!erreur3)
             {
               printf("---------------------------------------------------------------------------------------------------------------------------------------------\n") ;
               printf("\n") ;
@@ -1548,7 +1560,7 @@ void lance_recherche()
                 choix2++;
               }
             }
-            else if(!erreur4)
+            else if(erreur4)
             {
               printf("---------------------------------------------------------------------------------------------------------------------------------------------\n") ;
               printf("\n") ;
@@ -1587,6 +1599,11 @@ void lance_recherche()
                     //   choix_resultat=lecture_choix(1,nb_res_date,lettre,&erreur5);
                     // }
                     reservation(tab_res[choix_resultat-1],nb_res_date,tab_places_dispo[choix_resultat-1].tab_dispo,date_int);
+                    free(tab_places_dispo);
+                    free(tab_res);
+                    free(tab_res_nodate);
+                    free(tab_res_arrive);
+                    free(tab_res_depart);
                     choix2=0;
                     break;
             case 2: date_suivante_precedente(&jhebdo, &jour, &mois, &annee, -1) ; // ajouter verif_dispo + faire quelque chose pour la struct tab_place_dispo + date_int a mettre a jour
@@ -2337,8 +2354,7 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
             // choix de la salle
             if(tab_caract[classe-1].position[0].salle && tab_caract[classe-1].position[1].salle) // s'il y a des places aux deux etages
             {
-              printf("Salle (0=salle basse, 1=salle haute) : ");
-              choix_salle = lecture_choix(0,1,lettre,&erreur4) ;
+              saisie_int("Salle (0=salle basse, 1=salle haute)",0,1,&choix_salle);
             }
 
             else if(tab_caract[classe-1].position[0].salle) // si il n'y a de places qu'au rdc
@@ -2359,8 +2375,7 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
               // && tab_caract[classe-1].position[choix_salle].isole 
               )     // si il reste les trois options, proposer
             {
-              printf("Placement (0=fenetre, 1=couloir) : ");
-              choix_position = lecture_choix(0,1,lettre,&erreur4) ;
+              saisie_int("Placement (0=fenetre, 1=couloir)",0,1,&choix_position);
             }
             else  // s'il reste une seule ou deux options : fenetre,couloir,isole, fenetre ou isole, fenetre ou couloir, couloir ou isole
             {
@@ -2415,8 +2430,7 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
               }
             }
 
-            printf("Voulez vous continuer ? (1 pour continuer, 0 pour revenir au menu des resultats) : ");
-            continuer = lecture_choix(0,1,lettre,&erreur4) ;
+            saisie_int("Voulez vous continuer ? (1 pour continuer, 0 pour revenir au menu des resultats)",0,1,&continuer);
           
             if(continuer)
             {
@@ -2498,6 +2512,7 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
               printf("--------------------------------------------------\n");
 
               saisie_int("Veuillez selectionner un Identifiant de place\n(0 pour revenir au choix des resultats) : ",0, j, &choix_place);
+              choix_place--;
               if(choix_place)
               {
                 if(!tab_dispo[choix_place].billet && tab_dispo[choix_place].classe==1)
