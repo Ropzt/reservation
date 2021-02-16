@@ -1240,14 +1240,14 @@ void sauvegarde_places()
           strcat(fichierplace,"/");
           strcat(fichierplace,"places.txt");
 
-          for (l=0;l<stockage_nb_rep[i].max_place;l++)
+          f1 = fopen(fichierplace,"w");
+          if(f1 == NULL)
           {
-            f1 = fopen(fichierplace,"w");
-            if(f1 == NULL)
-            {
-              printf("\nImpossible d'écrire le fichier %s\n",fichierplace);
-            }
-            else
+            printf("\nImpossible d'écrire le fichier %s\n",fichierplace);
+          }
+          else
+          {
+            for (l=0;l<stockage_nb_rep[i].max_place;l++)
             {
               fprintf(f1,"%d;%d;%d;%d;%d;%d",
                tab_places[i].date[j].sequence[k].place[l].wagon,
@@ -1261,17 +1261,7 @@ void sauvegarde_places()
                 fprintf(f1,"\n");
               }
             }
-          fclose(f1) ;
-  printf("i stock %d=%s i tab_places %d=%s j %d=%d k %d=%d l %d/%d : ",
-      i,stockage_nb_rep[i].idtrajet,i,tab_places[i].idtrajet,j,tab_places[i].date[j].date,
-      k,tab_places[i].date[j].sequence[k].seqdep,l,stockage_nb_rep[i].max_place);
-    printf("%d;%d;%d;%d;%d;%d\n",
-          tab_places[i].date[j].sequence[k].place[l].wagon,
-          tab_places[i].date[j].sequence[k].place[l].classe,
-          tab_places[i].date[j].sequence[k].place[l].salle,
-          tab_places[i].date[j].sequence[k].place[l].siege,
-          tab_places[i].date[j].sequence[k].place[l].position,
-          tab_places[i].date[j].sequence[k].place[l].billet);
+            fclose(f1) ;
           }
         }
       }
