@@ -40,14 +40,11 @@ Cette première version peut supporter une montée en charge, dans la limite des
 Il permet 6 fonctions principales :
 
 * la consultation d'horaires de voyage entre deux gares données à une date donnée ;
-* la consultation des tarifs de ces voyages selon :
-  * la classe du wagon
-  * (le profil du voyageur : carte de réduction)
+* la consultation des tarifs de ces voyages selon la classe du wagon
 * la réservation de places
 * la gestion des réservations d'un client
 * la gestion des places disponibles à bord d'un train
 * le calcul des tarifs de voyage
-
 
 `reservation` ne permet pas :
 
@@ -55,50 +52,39 @@ Il permet 6 fonctions principales :
 
 ## Définitions
 
-**billet**, **billet de train** : titre de transport valant pour une place et pour un voyage.
-
-**classe** : catégorie de prestation offerte à bord d'un wagon. Certains trains possèdent des wagons de différentes classes : première classe (classe 1) et seconde classe (classe 2). D'autres trains possèdent  des wagons d'une seule et même classe.
-
-**date système**, **date/heure système** et **heure système** : informations de date, date/heure et heure de l'équipement terminal sur lequel le programme est utilisé.  
+* **billet**, **billet de train** : titre de transport valant pour une place et pour un voyage.
+* **classe** : 
+catégorie de prestation offerte à bord d'un wagon. Certains trains possèdent des wagons de différentes classes : première classe (classe 1) et seconde classe (classe 2). D'autres trains possèdent  des wagons d'une seule et même classe.
+* **date système**, **date/heure système** et **heure système** : 
+informations de date, date/heure et heure de l'équipement terminal sur lequel le programme est utilisé.  
 D'un point de vue métier, il s'agit de la date, date/heure et heure courantes, c'est-à-dire la date, date/heure et heure d'utilisation du programme, sachant que le comportement du programme dépend de cette date, date/heure et heure (les voyages proposés ont une date/heure postérieure à la date courante).  
 Dans le programme, ces informations sont obtenues via l'équipement terminal sur lequel le programme est exécuté. Elles s'appellent donc date système, date/heure système et heure système malgré la consonance très peu « métier ».
-
-* **date** désigne le jour calendaire d'une année donnée (jour de semaine, jour du mois, mois, année). *Exemple : mardi 16/02/2021*.
-* **heure** désigne un horaire (heures, minutes et secondes). *Exemple : 23:59:00*.
-* **date/heure** désigne un horaire d'une date. *Exemple : mardi 16/02/2021 23:59:00*.
-
-**gare** : station à partir ou au départ de laquelle il est possible de faire un voyage assuré par la SNCF. 
+  * **date** désigne le jour calendaire d'une année donnée (jour de semaine, jour du mois, mois, année). *Exemple : mardi 16/02/2021*.
+  * **heure** désigne un horaire (heures, minutes et secondes). *Exemple : 23:59:00*.
+  * **date/heure** désigne un horaire d'une date. *Exemple : mardi 16/02/2021 23:59:00*.
+* **gare** : station à partir ou au départ de laquelle il est possible de faire un voyage assuré par la SNCF. 
 Il peut s'agir d'une gare de chemin de fer ou d'une gare routière. 
 Une ville peut posséder plusieurs gares.
-
-**itinéraire** : 
-
-**place** : siège à bord d'un train pour une séquence d'un voyage, réservable par un voyageur.
-
-**rame** : train au sens « matériel roulant», caractérisée par une composition en siège.
-
-**terminal** : équipement terminal, appareil, sur lequel le programme est utilisé. Dans la version courante du programme, seul l'ordinateur peut être un terminal.
-
-**train** : catégorie mixte de véhicule / service commercial, dont la circulation est assurée par la SNCF et dont l'utilisateur peut réserver une place.
+* **itinéraire** : 
+* **place** : siège à bord d'un train pour une séquence d'un voyage, réservable par un voyageur.
+* **rame** : train au sens « matériel roulant», caractérisée par une composition en siège.
+* **terminal** : équipement terminal, appareil, sur lequel le programme est utilisé. Dans la version courante du programme, seul l'ordinateur peut être un terminal.
+* **train** : catégorie mixte de véhicule / service commercial, dont la circulation est assurée par la SNCF et dont l'utilisateur peut réserver une place.
 Les trains sont de différents types, que la rame circule sur voie ferrée ou routière (TGV, INOUI, TER, OUIGO, Car).
-
-**trajet** : combinaison unique de gares desservies par un train, et d'horaires d'arrivée et de départ dans chaque gare.
-
-**sequence** : portion de trajet entre deux gares d'arrêt consécutives.
-
-**service** : combinaison d'un trajet et d'un calendrier de circulation (circule ou ne circule pas, pour chaque jour de semaine).
-
-**siège** : unité de composition d'une rame où un voyageur peut s'asseoir.
-
-**voyage** : déplacement en train entre deux gares pour un trajet et une date donnée.
+* **trajet** : combinaison unique de gares desservies par un train, et d'horaires d'arrivée et de départ dans chaque gare.
+* **sequence** : portion de trajet entre deux gares d'arrêt consécutives.
+* **service** : combinaison d'un trajet et d'un calendrier de circulation (circule ou ne circule pas, pour chaque jour de semaine).
+* **siège** : unité de composition d'une rame où un voyageur peut s'asseoir.
+* **voyage** : déplacement en train entre deux gares pour un trajet et une date donnée.
 
 ## Vue d'ensemble
 
-La suite du document est divisé en deux partie : une analyse métier de la réservation de places et une description des spécifications du programme.
+La suite du document est divisé en deux parties : une analyse métier de la réservation de places et une description des spécifications du programme.
 
 # Analyse métier
 
-La SNCF assure la circulation de différents types de trains. **compléter**
+La SNCF assure la circulation de différents types de trains. 
+**compléter**
 
 ## Utilisateur
 
@@ -615,7 +601,6 @@ Le programme ne gère qu'un type de train (4 mois, et 1 seul pour la démo)
 
 #### Fonctionnalités concernant les dates
 
-* Récupération du la date du système
 * Incrémentation/Décrémentation de la date d'un jour (Jour Suivant/Précédent)
 * Récupération du jour de la semaine depuis une date
 * Séparation d'une date en jour, mois, année
@@ -631,13 +616,14 @@ Le programme ne gère qu'un type de train (4 mois, et 1 seul pour la démo)
 
 #### Fonctionnalités concernant les saisies
 
-* Saisie textuelle sécurisée
-* Saisie numérique sécurisée
-* Lecture de choix utilisateur sécurisée
-* Saisie de date sécurisée
+* Saisie textuelle sécurisée : `saisie_text()`
+* Saisie numérique sécurisée : `saisie_int()`
+* Lecture de choix utilisateur sécurisée : `lecture_choix()`
+* Saisie de date sécurisée : `valide_date()`
 
 #### Fonctionnalités concernant les interface avec le système
 
+* Récupération du la date du système : 
 * Vidage du buffer
 * Suppression d'un répertoire
 * Récupération du contenu d'un répertoire
@@ -772,16 +758,16 @@ Il comporte les champs :
 * `route_long_name` : le nom complet d'un itinéraire. Ce nom est généralement plus descriptif que la version courte indiquée dans le champ `route_short_name`. Il inclut souvent la destination ou le terminus de l'itinéraire. 
 * `route_desc` : description d'un itinéraire. Les informations fournies doivent être utiles et de qualité, elles ne répètent pas le nom de l'itinéraire. Ce champ n'est pas renseigné.
 * `route_type` : décrit le moyen de transport utilisé pour un itinéraire. Les options suivantes sont acceptées :
-    * `0` : tramway ou métro léger. Tout système de métro léger ou circulant sur la chaussée dans une zone métropolitaine.
-    * `1` : métro. Tout système ferroviaire souterrain circulant au sein d'une zone métropolitaine.
-    * `2` : train. Utilisé pour les trajets interurbains ou longue distance.
-    * `3` : bus. Utilisé pour les lignes de bus courte et longue distance.
-    * `4` : ferry. Utilisé pour le service de bateaux courte et longue distance.
-    * `5` : tramway à traction par câble. Utilisé pour les systèmes de tramways au niveau de la chaussée dans lesquels le câble passe sous le véhicule, comme c'est le cas à San Francisco.
-    * `6` : téléphérique. Service de transport par câble où les cabines, voitures, télécabines ou sièges sont suspendus à l'aide d'un ou de plusieurs câbles.
-    * `7` : funiculaire. Tout système ferroviaire conçu pour les pentes raides.
-    * `11` : trolleybus. Autobus électrique alimenté par des lignes aériennes de contact.
-    * `12` : monorail. Service de chemin de fer roulant sur une voie constituée d'un rail ou d'une poutre unique.
+  * `0` : tramway ou métro léger. Tout système de métro léger ou circulant sur la chaussée dans une zone métropolitaine.
+  * `1` : métro. Tout système ferroviaire souterrain circulant au sein d'une zone métropolitaine.
+  * `2` : train. Utilisé pour les trajets interurbains ou longue distance.
+  * `3` : bus. Utilisé pour les lignes de bus courte et longue distance.
+  * `4` : ferry. Utilisé pour le service de bateaux courte et longue distance.
+  * `5` : tramway à traction par câble. Utilisé pour les systèmes de tramways au niveau de la chaussée dans lesquels le câble passe sous le véhicule, comme c'est le cas à San Francisco.
+  * `6` : téléphérique. Service de transport par câble où les cabines, voitures, télécabines ou sièges sont suspendus à l'aide d'un ou de plusieurs câbles.
+  * `7` : funiculaire. Tout système ferroviaire conçu pour les pentes raides.
+  * `11` : trolleybus. Autobus électrique alimenté par des lignes aériennes de contact.
+  * `12` : monorail. Service de chemin de fer roulant sur une voie constituée d'un rail ou d'une poutre unique.
 * `route_url` : URL d'une page Web pour un itinéraire spécifique.
 * `route_color` : couleur de l'itinéraire correspondant à celle utilisée dans les supports destinés au public.
 * `route_text_color` : couleur lisible pour le texte à afficher sur la couleur d'arrière-plan `route_color`.
@@ -797,8 +783,8 @@ Il comporte les champs :
 * `trip_id` : définit un trajet.
 * `trip_headsign` : texte qui apparaît sur la signalétique indiquant aux voyageurs la destination du trajet (le numéro de train tel qu'affiché en gare et sur les billets). Ce champ permet de différencier les modèles de service sur un même itinéraire.
 * `direction_id` : indique la direction du trajet. Ce champ n'est pas utilisé pour les itinéraires, mais il permet de distinguer les trajets en fonction de leur direction lors de la publication des horaires. Les options suivantes sont acceptées :
-    * `0` : trajet dans un sens (trajet aller, par exemple).
-    * `1` : trajet dans le sens opposé (trajet retour, par exemple)
+  * `0` : trajet dans un sens (trajet aller, par exemple).
+  * `1` : trajet dans le sens opposé (trajet retour, par exemple)
 * `block_id` : identifie le bloc auquel appartient le trajet. Un bloc comprend un seul trajet ou de nombreux trajets séquentiels effectués par le même véhicule. Ce champ n'est pas renseigné.
 * `shape_id` : définit une forme géospatiale décrivant le parcours du véhicule lors d'un trajet. Ce champ n'est pas renseigné.
 
@@ -815,15 +801,15 @@ Il comporte les champs :
 * `stop_sequence` : ordre des arrêts desservis lors d'un trajet particulier. Les valeurs augmentent à mesure du trajet, mais ne sont pas nécessairement consécutives.
 * `stop_headsign` : texte qui apparaît sur la signalétique indiquant aux voyageurs la destination du trajet.
 * `pickup_type` : indique les possibilités de montée à bord. Les options suivantes sont acceptées :
-    * `0` ou vide : les usagers peuvent monter à bord aux horaires standards.
-    * `1` : les usagers ne peuvent pas monter à bord.
-    * `2` : les usagers doivent téléphoner à l'agence pour pouvoir monter à bord.
-    * `3` : les usagers doivent contacter le conducteur pour pouvoir monter.
+  * `0` ou vide : les usagers peuvent monter à bord aux horaires standards.
+  * `1` : les usagers ne peuvent pas monter à bord.
+  * `2` : les usagers doivent téléphoner à l'agence pour pouvoir monter à bord.
+  * `3` : les usagers doivent contacter le conducteur pour pouvoir monter.
 * `drop_off_type` : indique les possibilités de descente du véhicule. Les options suivantes sont acceptées :
-    * `0` ou vide : les usagers peuvent monter à bord aux horaires standards.
-    * `1` : les usagers ne peuvent pas monter à bord.
-    * `2` : les usagers doivent téléphoner à l'agence pour pouvoir monter à bord.
-    * `3` : les usagers doivent contacter le conducteur pour pouvoir monter.
+  * `0` ou vide : les usagers peuvent monter à bord aux horaires standards.
+  * `1` : les usagers ne peuvent pas monter à bord.
+  * `2` : les usagers doivent téléphoner à l'agence pour pouvoir monter à bord.
+  * `3` : les usagers doivent contacter le conducteur pour pouvoir monter.
 * `shape_dist_traveled` : indique la distance réelle parcourue le long du tracé donné entre le premier arrêt et l'arrêt spécifié dans cet enregistrement.
 
 ###### Fichier `calendar.txt` 
@@ -834,8 +820,8 @@ Il comporte les champs :
 
 * `service_id` : définit de façon unique les dates auxquelles le service est disponible pour un ou plusieurs itinéraires. Fait référence à `trips.service_id`.
 * `monday` : indique si le service est proposé tous les lundis de la plage de dates spécifiée par les champs `start_date` et `end_date`. Les options suivantes sont acceptées :
-    * `1` : le service est disponible tous les lundis de la plage de dates.
-    * `0` : le service n'est pas disponible les lundis de la plage de dates.
+  * `1` : le service est disponible tous les lundis de la plage de dates.
+  * `0` : le service n'est pas disponible les lundis de la plage de dates.
 * `tuesday` : fonctionne comme le champ `monday`, mais pour les mardis
 * `wednesday` : fonctionne comme le champ `monday`, mais pour les mercredis
 * `thursday` : fonctionne comme le champ `monday`, mais pour les jeudis
@@ -854,8 +840,8 @@ Il comporte les champs :
 * `service_id` : définit les dates auxquelles le service est exceptionnellement disponible ou indisponible pour un ou plusieurs itinéraires. Fait référence à `calendar.service_id`.
 * `date` : date à laquelle le service proposé est différent du service standard.
 * `exception_type` : indique si le service est disponible à la date spécifiée dans le champ date. Les options suivantes sont acceptées :
-    * `1` : le service a été ajouté pour la date spécifiée.
-    * `2` : le service a été supprimé pour la date spécifiée.
+  * `1` : le service a été ajouté pour la date spécifiée.
+  * `2` : le service a été supprimé pour la date spécifiée.
 
 Nous ne nous servont pas de cette table.
 
@@ -867,10 +853,10 @@ Il comporte les champs :
 * `from_stop_id` : identifie l'arrêt ou la station de départ pour une liaison entre deux itinéraires. Si ce champ fait référence à une station, la règle de correspondance s'applique à tous ses arrêts enfants. Fait référence à `stops.stop_id`.
 * `to_stop_id` : identifie l'arrêt ou la station de départ pour une liaison entre deux itinéraires. Si ce champ fait référence à une station, la règle de correspondance s'applique à tous ses arrêts enfants. Fait référence à `stops.stop_id`.
 * `transfer_type` : Indique le type de correspondance pour la paire (from_stop_id, to_stop_id) spécifiée. Les options suivantes sont acceptées :
-    * `0` ou vide : point de correspondance recommandé entre deux itinéraires.
-    * `1` : point de correspondance temporisé entre deux itinéraires. Le véhicule qui part doit attendre celui qui arrive et laisser suffisamment de temps pour que les usagers puissent prendre la correspondance.
-    * `2` : correspondance nécessitant une durée minimale entre l'heure d'arrivée et l'heure de départ. Spécifiez la durée en question dans le champ `min_transfer_time`.
-    * `3` : aucune correspondance ne peut être assurée à cet emplacement.
+  * `0` ou vide : point de correspondance recommandé entre deux itinéraires.
+  * `1` : point de correspondance temporisé entre deux itinéraires. Le véhicule qui part doit attendre celui qui arrive et laisser suffisamment de temps pour que les usagers puissent prendre la correspondance.
+  * `2` : correspondance nécessitant une durée minimale entre l'heure d'arrivée et l'heure de départ. Spécifiez la durée en question dans le champ `min_transfer_time`.
+  * `3` : aucune correspondance ne peut être assurée à cet emplacement.
 * `min_transfer_time` : délai (en secondes) devant être accordé pour permettre une correspondance entre deux itinéraires aux arrêts spécifiés.
 
 Le fichier est vide pour les ensembles de données utilisés. Nous ne nous servons pas de ce fichier.
@@ -910,21 +896,21 @@ La structure contenant les places est articulée ainsi :
 * `idtrajet` : l'identifiant du trajet
 * `type` : le type du train
 * `date[]` -> un tableau des dates pour lesquelles ce trajet circule
-    * `date` : la date au format AAAAMMJJ
-    * `sequence[]` -> un tableau des sequences du trajet 
-        * `gd`: la gare de départ de la séquence
-        * `ga` : la gare d'arrivée de la séquence
-        * `seqdep` : la position de la gare de départ dans son trajet  
-        * `seqarr` : la position de la gare d'arrivée dans son trajet 
-        * `hd` : l'heure de départ de la séquence
-        * `ha` : l'heure d'arrivée de la séquence
-        * `place[]` -> un tableau des places (disponibilité et caractéristiques) pour cette séquence
-          * `wagon`
-          * `classe`
-          * `salle`
-          * `siege`
-          * `position`
-          * `billet`
+  * `date` : la date au format AAAAMMJJ
+  * `sequence[]` -> un tableau des sequences du trajet 
+    * `gd`: la gare de départ de la séquence
+    * `ga` : la gare d'arrivée de la séquence
+    * `seqdep` : la position de la gare de départ dans son trajet  
+    * `seqarr` : la position de la gare d'arrivée dans son trajet 
+    * `hd` : l'heure de départ de la séquence
+    * `ha` : l'heure d'arrivée de la séquence
+    * `place[]` -> un tableau des places (disponibilité et caractéristiques) pour cette séquence
+      * `wagon`
+      * `classe`
+      * `salle`
+      * `siege`
+      * `position`
+      * `billet`
 
 #### Tarifs
 
@@ -968,21 +954,21 @@ Chronologiquement, on récupère d'abord les données relatives aux horaires, pu
 #### Chargement des données Horaires
 
 * La procédure ouvre le fichier `./data/horaire/trips.txt` et charge les données suivantes en mémoire :
-    * `idtrajet`
-    * `idservice`
-    * `numtrain`
-    * `direction`
+  * `idtrajet`
+  * `idservice`
+  * `numtrain`
+  * `direction`
 * La procédure ouvre le fichier `./data/horaire/calendar.txt` et charge les données suivantes en mémoire :
-    * `idservice`
-    * `lun` ; `mar` ; `mer` ; `jeu` ; `ven` ; `sam` ; `dim`
+  * `idservice`
+  * `lun` ; `mar` ; `mer` ; `jeu` ; `ven` ; `sam` ; `dim`
 * La procédure ouvre le fichier `./data/horaire/stop_times.txt` et charge les données suivantes en mémoire :
-    * `sequence`
-    * `idgare`
-    * `hd` : heure de départ
-    * `ha` : heure d'arrivée
+  * `sequence`
+  * `idgare`
+  * `hd` : heure de départ
+  * `ha` : heure d'arrivée
 * La procédure ouvre le fichier `./data/horaire/stops.txt` et charge les données suivantes en mémoire :
-    * `idgare`
-    * `nomgare`
+  * `idgare`
+  * `nomgare`
 
 #### Creation du tableau des dates ouvertes à la vente
 
@@ -992,15 +978,15 @@ Chronologiquement, on récupère d'abord les données relatives aux horaires, pu
 #### Chargement des données Places
 
 * La procédure commence par compter le nombre de dossier présent dans `./data/place` :
-    * S'il n'y en a aucun, elle crée tous les dossiers ```./data/place/<idtrajet>```
-    * S'il en existe, elle crée les éventuels dossier manquants
+  * S'il n'y en a aucun, elle crée tous les dossiers ```./data/place/<idtrajet>```
+  * S'il en existe, elle crée les éventuels dossier manquants
 * La procédure lit le fichier `places.txt` de référence
 * La procédure vérifie, pour chaque date, pour chaque trajet s'il circule à cette date :
-    * Si oui et que le dossier ```./data/place/<idtrajet>/<date>``` correspondant est manquant elle le crée 
+  * Si oui et que le dossier ```./data/place/<idtrajet>/<date>``` correspondant est manquant elle le crée 
 * La procédure supprime ensuite tous les dossiers ```./data/place/<idtrajet>/<date>``` dont la date ne figure pas dans le tableau des dates ouvertes à la vente
 * La procédure vérifie ensuite, pour chaque date pour chaque trajet, s'il existe des dossiers ```./data/place/<idtrajet>/<date>/<séquence>``` et crée les éventuels dossiers manquants
 * La procédure vérifie ensuite, pour chaque séquence pour chaque date pour chaque trajet, s'il existe des fichiers ```./data/place/<idtrajet>/<date>/<séquence>/places.txt```
-    * Si non, elle les crée en utilisant le fichier `places.txt` de référence
+  * Si non, elle les crée en utilisant le fichier `places.txt` de référence
 * La procédure lit alors le fichier et le charge dans la structure contenant les places 
 
 ### Processus Coeur de Métier
@@ -1015,15 +1001,15 @@ Une fois les données récupérées, on lance la procédure mère de recherche. 
 
 * La procédure commence par demander à l'utilisateur de saisir la gare de départ via une saisie sécurisée
 * La procédure lance ensuite la fonctionnalité de recherche de trajet en fonction de la gare
-    * S'il n'y a pas de résultat, la procédure de recherche se termine ici
+  * S'il n'y a pas de résultat, la procédure de recherche se termine ici
 * La procédure demande ensuite à l'utilisateur de saisir la gare d'arrivée via une saisie sécurisée
 * La procédure lance de nouveau la fonctionnalité de recherche de trajet en fonction de la gare
-    * S'il n'y a pas de résultat, la procédure de recherche se termine ici
+  * S'il n'y a pas de résultat, la procédure de recherche se termine ici
 * La procédure lance ensuite la fonctionnalité de filtrage des trajets, ne conservant que les trajets contenant les bonnes gares de départ et d'arrivée, dans le bon sens
-    * S'il n'y a pas de résultat, la procédure de recherche se termine ici
+  * S'il n'y a pas de résultat, la procédure de recherche se termine ici
 * La procédure demande ensuite à l'utilisateur de saisir la date de voyage via une saisie sécurisée
 * La procédure lance ensuite la fonctionnalité de filtrage des trajets en fonction du jour de la semaine découlant de la date de voyage renseignée
-    * S'il n'y a pas de résultat, la procédure de recherche se termine ici
+  * S'il n'y a pas de résultat, la procédure de recherche se termine ici
 * La procédure lance ensuite la fonctionnalité de quantification des places disponibles pour chaque trajet, pour la Première et la Seconde Classe
 * La procédure lance ensuite la fonctionnalité de tri en fonction de l'heure de départ de chaque trajet
 
@@ -1031,24 +1017,24 @@ Une fois les données récupérées, on lance la procédure mère de recherche. 
 
 * La procédure procède alors à l'affichage des résultats sous forme de tableau
 * La procédure affiche un menu sous le tableau des résultats et demande à l'utilisateur de choisir entre :
-    * Réserver un des trajets présentés
-        * La procédure demande à l'utilisateur de choisir un des trajets proposés
-        * La procédure lance la procédure mère de réservation
-    * Afficher les résultats pour le jour suivant
-        * La procédure lance la fonctionnalité d'incrémentation de la date
-        * La procédure relance alors la fonctionnalité de filtrage des trajets en fonction du jour de la semaine découlant de la nouvelle date de voyage
-            * S'il n'y a pas de résultat, la procédure de recherche se termine ici
-        * La procédure lance de nouveau la fonctionnalité de quantification des places disponibles pour chaque trajet, pour la Première et la Seconde Classe
-        * La procédure lance de nouveau la fonctionnalité de tri en fonction de l'heure de départ de chaque trajet
-        * La procédure reboucle sur l'affichage des résultats sous formes de tableau, affiche le menu sous le tableau des résultats et demande à l'utilisateur de choisir de nouveau
-    * Afficher les résultats pour le jour précédent
-    * La procédure lance la fonctionnalité de décrémentation de la date
-        * La procédure relance alors la fonctionnalité de filtrage des trajets en fonction du jour de la semaine découlant de la nouvelle date de voyage
-            * S'il n'y a pas de résultat, la procédure de recherche se termine ici
-        * La procédure lance de nouveau la fonctionnalité de quantification des places disponibles pour chaque trajet, pour la Première et la Seconde Classe
-        * La procédure lance de nouveau la fonctionnalité de tri en fonction de l'heure de départ de chaque trajet
-        * La procédure reboucle sur l'affichage des résultats sous formes de tableau, affiche le menu sous le tableau des résultats et demande à l'utilisateur de choisir de nouveau
-    * Quitter la procédure
+  * Réserver un des trajets présentés
+    * La procédure demande à l'utilisateur de choisir un des trajets proposés
+    * La procédure lance la procédure mère de réservation
+  * Afficher les résultats pour le jour suivant
+    * La procédure lance la fonctionnalité d'incrémentation de la date
+    * La procédure relance alors la fonctionnalité de filtrage des trajets en fonction du jour de la semaine découlant de la nouvelle date de voyage
+      * S'il n'y a pas de résultat, la procédure de recherche se termine ici
+    * La procédure lance de nouveau la fonctionnalité de quantification des places disponibles pour chaque trajet, pour la Première et la Seconde Classe
+    * La procédure lance de nouveau la fonctionnalité de tri en fonction de l'heure de départ de chaque trajet
+    * La procédure reboucle sur l'affichage des résultats sous formes de tableau, affiche le menu sous le tableau des résultats et demande à l'utilisateur de choisir de nouveau
+  * Afficher les résultats pour le jour précédent
+  * La procédure lance la fonctionnalité de décrémentation de la date
+    * La procédure relance alors la fonctionnalité de filtrage des trajets en fonction du jour de la semaine découlant de la nouvelle date de voyage
+      * S'il n'y a pas de résultat, la procédure de recherche se termine ici
+    * La procédure lance de nouveau la fonctionnalité de quantification des places disponibles pour chaque trajet, pour la Première et la Seconde Classe
+    * La procédure lance de nouveau la fonctionnalité de tri en fonction de l'heure de départ de chaque trajet
+    * La procédure reboucle sur l'affichage des résultats sous formes de tableau, affiche le menu sous le tableau des résultats et demande à l'utilisateur de choisir de nouveau
+  * Quitter la procédure
 
 #### Reservation
 
@@ -1091,4 +1077,40 @@ La procédure mère de réservation s'occupe des saisies utilisateurs et des vé
 
 ### Tests Techniques
 
+
+## Limites
+
+Plusieurs limites ont été rencontrées lors du développement. Elles résultent principalement des données d'entrée du programme.
+
+Les données horaires sont peu volumineuses dans leur format de stockage GTFS.
+Cependant, une place est un siège, libre ou occupé, pour une séquence d'un trajet à une date donnée sur une période d'au moins 4 mois (cas des TGV).
+Le nombre de places à gérer est trop important pour que nos terminaux traitent l'entièreté des données horaires SNCF, et même l'entièreté d'un seul ensemble de données horaires.
+
+Pour contourner ce problème, les choix suivants ont été faits :
+
+* utiliser un seul ensemble de données horaires (TGV)
+* réduire cet ensemble
+* réduire la taille d'un train (45 places)
+
+Certaines incohérences dans le programme résultent d'un mauvais échantillonnage (des trajets qui circulent à une date mais pour lequel il n'y a pas de séquences) : il existe des dossiers de dates sans séquences.
+
+`***`
+
+Un choix de simplification a été fait concernant les dates de début et fin de validité des services (elles sont igornées). De ce choix résulte la présence de doublons dans les résultats de recherche : ils correspondent à des intervalles de validité du service différents.
+
+`***`
+
+La recherche d'un voyage au départ ou à l'arrivée d'une gare se fait par recherche de la sous-chaine « nom de gare » saisie par l'utilisateur dans la chaine « nom de gare » provenant des données horaires. Il arrive que la sous-chaine soit contenue dans un nom de gare ne désignant pas la gare recherchée. Par exemple, des résultats au départ ou à l'arrivée de la gare « Paris Gare de Lyon » apparaissent lorsque l'utilisateur souhaite voyager par Lyon. Un choix de gare parmi une liste de gares trouvées sur la base de la saisie aurait pu être implémenté. 
+
+Cette solution engendrait d'autres difficultés : la possibilité laissée à l'utilisateur de ne choisir qu'une seule gare. Comme exposé plus haut, certaines villes possédent plusieurs gares que l'utilisateur veut voir apparaitre comme résultat d'une même recherche. Une solution consistait alors à faire choisir à l'utilisateur, pour chaque gare trouvée, s'il veut ou non l'inclure dans la recherche.
+
+`***`
+
+Un défaut du programme est lié à la qualité des données de tarif. Les noms de gare des données tarifaires sont généralement réduits au nom de la ville, tandis que les résultats de recherche contiennent le nom entier de la gare extrait des données horaires. Le choix a donc été fait de prendre les noms de gare des données tarifaires comme sous-chaîne et les noms de gare des données horaires comme chaîne lors de la recherche des tarifs de chaque résultat. Cependant, certains noms de gare restent différents comme ceux composés de « Saint », parfois orthographié « ST », Dans ces cas-là, la recherche échoue.
+
+`***`
+
+Un défaut de développement résulte du choix d'utiliser les données horaires des TGV, en oubliant de traiter le type de train dans plusieurs fonctions. Un élargissement de la portée du programme pour intégrer les données d'autres types de train nécessiterait des modifications.
+
+`***`
 
