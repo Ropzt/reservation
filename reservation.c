@@ -111,6 +111,18 @@ struct UnVoyage { // niveau 1 de tab_places
   struct UneDate date[200] ;
 } ;
 
+struct SeqModif {
+  int modifie ;
+} ;
+
+struct DateModif {
+  struct SeqModif sequence[30] ;
+} ;
+
+struct TrajetModif {
+  struct DateModif date[200] ;
+} ;
+
 struct date {
   int jhebdo ;
   int jour   ;
@@ -249,6 +261,8 @@ int    nbgare       ;
 int    nbtarif      ;
 // places
 struct UnVoyage *tab_places ;
+// places modifiées
+struct TrajetModif *a_sauvegarder ;
 // dates ouvertes à la vente
 struct date *tab_date_vente; // tableau des dates prises en charge par le programme
 int    nbdatevente         ; // nb dates ouvertes à la réservation
@@ -739,7 +753,9 @@ void chargement_tarifs()
       
       coupe_chaine_au_caractere(od,tarifs[i].garedep,tarifs[i].garearr,sep);
       convmaj(tarifs[i].garedep);
+      tiret_to_space(tarifs[i].garedep) ;
       convmaj(tarifs[i].garedep);
+      tiret_to_space(tarifs[i].garedep) ;
       // supprime_accent(tarifs[i].garedep);
       // supprime_accent(tarifs[i].garearr);
   // printf("%s-%s prems=%f seconde=%f premiere=%f\n",tarifs[i].garedep,tarifs[i].garearr,tarifs[i].prix0,tarifs[i].prix2,tarifs[i].prix1);
@@ -802,6 +818,7 @@ void chargement_places() // version des dossiers - 1 struct à 4 niveaux
   tab_places = (struct UnVoyage *) malloc(sizeof(struct UnVoyage)) ;
   stockage_nb_rep = (struct Stockage *) malloc (sizeof(struct Stockage));
   strcpy(nomrep,"./data/place");
+  a_sauvegarder = (struct TrajetModif *) malloc(sizeof(struct TrajetModif)) ;
 
   // On liste le contenu de place (sous-dossiers id)
   nbrep_idtrajet=ListerRep(nomrep,rep_idtrajet);
@@ -1064,6 +1081,7 @@ void chargement_places() // version des dossiers - 1 struct à 4 niveaux
               {
                 /* Création d'une nouvelle case à la fin du tableau */
                 tab_places = (struct UnVoyage *) realloc(tab_places, sizeof(struct UnVoyage) * (nbplaces + 1)) ;
+                a_sauvegarder = (struct TrajetModif *) realloc(a_sauvegarder, sizeof(struct TrajetModif) * (nbplaces + 1)) ;
 
                 strcpy(tab_places[i].idtrajet,rep_idtrajet[i]);
                 strcpy(tab_places[i].type,"TGV"); // on n'a mis que les TGV mais il faudrait un type selon l'idtrajet
@@ -1081,6 +1099,8 @@ void chargement_places() // version des dossiers - 1 struct à 4 niveaux
                 tab_places[i].date[j].sequence[k].place[l].siege  = siege ;
                 tab_places[i].date[j].sequence[k].place[l].position = position ;
                 tab_places[i].date[j].sequence[k].place[l].billet = billet ;
+
+                a_sauvegarder[i].date[j].sequence[k].modifie = 0 ;
 
                 l++ ;
 // printf("Ça va i=%d=%s j=%d=%s k=%d=%d nbsequence=%d l=%d %d;%d;%d;%d;%d\n",i,rep_idtrajet[i],j,rep_date[j],k,tab_sequence[k].seqdep,nbsequence,l,wagon,classe,salle,siege,position) ;
@@ -1169,10 +1189,7 @@ void chargement_billets()
 /* ---------------------------- */
 void quitter()
 {
-  int a_sauvegarder=0 ;
-
-  if (a_sauvegarder)
-    sauvegarde();
+  sauvegarde();
 
   printf("À bientôt sur SNCF Voyages\n") ; 
 } 
@@ -1209,38 +1226,42 @@ void sauvegarde_places()
     {
       for (k=0;k<stockage_nb_rep[i].max_seq;k++)
       {
-        strcpy(fichierplace,nomrep);
-        strcat(fichierplace,"/");
-        strcat(fichierplace,tab_places[i].idtrajet);
-        strcat(fichierplace,"/");
-        sprintf(datechar,"%d",tab_places[i].date[j].date);
-        strcat(fichierplace,datechar);
-        strcat(fichierplace,"/");
-        sprintf(seqdepchar,"%d",tab_places[i].date[j].sequence[k].seqdep);
-        strcat(fichierplace,seqdepchar);
-        strcat(fichierplace,"/");
-        strcat(fichierplace,"places.txt");
+        if (a_sauvegarder[i].date[j].sequence[k].modifie == 1 )
+        {
+          strcpy(fichierplace,nomrep);
+          strcat(fichierplace,"/");
+          strcat(fichierplace,tab_places[i].idtrajet);
+          strcat(fichierplace,"/");
+          sprintf(datechar,"%d",tab_places[i].date[j].date);
+          strcat(fichierplace,datechar);
+          strcat(fichierplace,"/");
+          sprintf(seqdepchar,"%d",tab_places[i].date[j].sequence[k].seqdep);
+          strcat(fichierplace,seqdepchar);
+          strcat(fichierplace,"/");
+          strcat(fichierplace,"places.txt");
 
-        f1 = fopen(fichierplace,"w");
-        if(f1 == NULL)
-        {
-          printf("\nImpossible d'écrire le fichier %s\n",fichierplace);
-        }
-        else
-        {
           for (l=0;l<stockage_nb_rep[i].max_place;l++)
           {
-           // fprintf(f1,"%d;%d;%d;%d;%d;%d",
-           //   tab_places[i].date[j].sequence[k].place[l].wagon,
-           //   tab_places[i].date[j].sequence[k].place[l].classe,
-           //   tab_places[i].date[j].sequence[k].place[l].salle,
-           //   tab_places[i].date[j].sequence[k].place[l].siege,
-           //   tab_places[i].date[j].sequence[k].place[l].position,
-           //   tab_places[i].date[j].sequence[k].place[l].billet);
-           //  if (i<nbplacestrain-1)
-           //  {
-           //    fprintf(f1,"\n");
-           //  }
+            f1 = fopen(fichierplace,"w");
+            if(f1 == NULL)
+            {
+              printf("\nImpossible d'écrire le fichier %s\n",fichierplace);
+            }
+            else
+            {
+              fprintf(f1,"%d;%d;%d;%d;%d;%d",
+               tab_places[i].date[j].sequence[k].place[l].wagon,
+               tab_places[i].date[j].sequence[k].place[l].classe,
+               tab_places[i].date[j].sequence[k].place[l].salle,
+               tab_places[i].date[j].sequence[k].place[l].siege,
+               tab_places[i].date[j].sequence[k].place[l].position,
+               tab_places[i].date[j].sequence[k].place[l].billet);
+              if (l<stockage_nb_rep[i].max_place-1)
+              {
+                fprintf(f1,"\n");
+              }
+            }
+          fclose(f1) ;
   printf("i stock %d=%s i tab_places %d=%s j %d=%d k %d=%d l %d/%d : ",
       i,stockage_nb_rep[i].idtrajet,i,tab_places[i].idtrajet,j,tab_places[i].date[j].date,
       k,tab_places[i].date[j].sequence[k].seqdep,l,stockage_nb_rep[i].max_place);
@@ -1252,7 +1273,6 @@ void sauvegarde_places()
           tab_places[i].date[j].sequence[k].place[l].position,
           tab_places[i].date[j].sequence[k].place[l].billet);
           }
-          fclose(f1) ;
         }
       }
     }
@@ -1413,13 +1433,13 @@ void lance_recherche()
                                 jour, mois, annee) ;
           if(!erreur5)
           {
-            printf("Les billets pour la date que vous avez selectionnees ne sont pas encore ouverts a la vente.\n");
+            printf("Les billets pour la date que vous avez selectionnee ne sont pas encore ouverts a la vente.\n");
           }
 
           printf("\n") ;
           printf("---------------------------------------------------------------------------------------------------------------------------------------------\n") ;
           // printf(" n° | Gare de départ         | Gare d'arrivée         | numéro | hh:mm | hh:mm | Type\n") ;
-          printf(" %3s | %-30s | %-30s | %6s | %8s | %8s | %5s | %5s | %10s | %10s\n","n°","Gare de départ","Gare d'arrivée","Train","hh:mm:ss","hh:mm:ss","Type","Prems","2de classe","1re classe");
+          printf(" %3s | %-30s | %-30s | %6s | %8s | %8s | %5s | %7s | %10s | %10s\n","n°","Gare de départ","Gare d'arrivée","Train","hh:mm:ss","hh:mm:ss","Type","Prems","2de classe","1re classe");
           printf("---------------------------------------------------------------------------------------------------------------------------------------------\n") ;
           for(i=0;i<nb_res_date;i++)
           {
@@ -2265,7 +2285,7 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
   {
     if(tab_res.dispo_1ere && tab_res.dispo_2nde)
     {
-      saisie_int("\n(0 pour choisir un autre train) Voyager en classe (1 ou 2) : ",0, 2, &classe);
+      saisie_int("\n(0 pour choisir un autre train)\nVoyager en classe (1 ou 2) : ",0, 2, &classe);
     }
     else
     {
@@ -2408,7 +2428,7 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
                   && tab_dispo[j].classe   == classe
                   && tab_dispo[j].salle    == choix_salle
                   && tab_dispo[j].position == choix_position)
-                {
+                  {
                   deja_utilise=0;
                   for(k=0;k<=i;k++)
                   {
@@ -2467,7 +2487,7 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
                     interprete_salle(tab_dispo[j].salle, salle) ;
                     // printf("-----------------------------------------------------------------------\n");
                     printf("| %11d | %5d | %5s | %5d | %8s |\n"
-                                       ,j
+                                       ,j+1
                                        ,tab_dispo[j].wagon
                                        ,salle
                                        ,tab_dispo[j].siege
@@ -2477,7 +2497,7 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
               }
               printf("--------------------------------------------------\n");
 
-              saisie_int("Veuillez selectionner un Identifiant de place (0 pour revenir au choix des resultats) :",0, j, &choix_place);
+              saisie_int("Veuillez selectionner un Identifiant de place\n(0 pour revenir au choix des resultats) : ",0, j, &choix_place);
               if(choix_place)
               {
                 if(!tab_dispo[choix_place].billet && tab_dispo[choix_place].classe==1)
@@ -2578,7 +2598,7 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
       
     }
     
-    creation_fichier_billet(tab_registre, nbpassagers);
+    // creation_fichier_billet(tab_registre, nbpassagers);
     
     nbreservationjournee=z;
   }
@@ -2667,7 +2687,8 @@ void ecriture_resa_in_tab_places( struct UnRes tab_res ,struct UnePlace tab_disp
               if(tab_places[i].date[j].sequence[k].place[l].wagon == tab_dispo.wagon
                 && tab_places[i].date[j].sequence[k].place[l].siege == tab_dispo.siege)
               {
-                tab_places[i].date[j].sequence[k].place[l].billet = billet   ;
+                tab_places[i].date[j].sequence[k].place[l].billet = billet ;
+                a_sauvegarder[i].date[j].sequence[k].modifie = 1           ;
                 //printf("%d\n",tab_places[i].date[j].sequence[k].place[l].billet);
               }
             }//fin du for des places
@@ -2708,15 +2729,15 @@ void creation_fichier_billet(struct UnBilletRegistre tab_registre[], int nb_nouv
     registre_billets[nb_registre_billet+i].billet = tab_registre[i].billet;
     
     registre_billets[nb_registre_billet+i].prix = tab_registre[i].prix;
-    
-    registre_billets = (struct UnBilletRegistre *) realloc(registre_billets,sizeof(struct UnBilletRegistre) * (nb_registre_billet+i+1)) ;
+
+    registre_billets = (struct UnBilletRegistre *) realloc(registre_billets,sizeof(struct UnBilletRegistre) * (nb_registre_billet+i)) ;
+  printf("Ça va après le realloc\n") ;
   }
   nb_registre_billet = nb_registre_billet+i;
   if(nb_registre_billet)
   {
     nb_registre_billet++;
-  }
-  
+  } 
 }
 
 // ~~~~~~~~~~~
