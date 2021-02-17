@@ -23,7 +23,6 @@
 #define MAX_GARE   100
 #define MAX_ID     100
 #define MAX_NOM     50
-//#define DATE        11 // remplacé
 #define MAX_DATENUM  9 // pour les dates 20210211
 #define MAX_DATE    12 // pour les dates 15/02/2021 // c'est pas plutôt 11 ?
 #define MAX_HEURE    9 // pour les horaires 14:15:00
@@ -68,7 +67,7 @@ struct UneGare { // fichier stops.txt
   char gareattache[MAX_ID] ;
 };
 
-struct UnTarif {
+struct UnTarif { // fichier tarifs-tgv-par-od.csv
   char  garedep[MAX_GARE] ;
   char  garearr[MAX_GARE] ;
   float prix0             ;
@@ -77,53 +76,48 @@ struct UnTarif {
 };
 
 struct UnePlace { // niveau place de tab_places
-    int wagon    ; // numéro de wagon
-    int classe   ; // 1 1re classe, 2 2e classe
-    int salle    ; // 0 bas 1 haut
-    int siege    ; // numéro de siège
-    int position ; // 0 fenêtre, 1 couloir, 2 place isolée
-    int billet   ; // numéro unique de billet
-  };
+  int wagon    ; // numéro de wagon
+  int classe   ; // 1 1re classe, 2 2e classe
+  int salle    ; // 0 bas 1 haut
+  int siege    ; // numéro de siège
+  int position ; // 0 fenêtre, 1 couloir, 2 place isolee
+  int billet   ; // numéro unique de billet
+};
   
 struct UneSeq { // niveau sequence de tab_places
-  char gd[MAX_GARE]  ;
-  char ga[MAX_GARE]  ;
-  int  seqdep        ;
-  int  seqarr        ;
-  char hd[MAX_HEURE] ;
-  char ha[MAX_HEURE] ;
-  // struct UnePlace *place;
+  char gd[MAX_GARE]  ; // gare de départ
+  char ga[MAX_GARE]  ; // gare d'arrivée
+  int  seqdep        ; // numéro de séquence départ dans le trajet
+  int  seqarr        ; // numéro de séquence arrivee dans le trajet
+  char hd[MAX_HEURE] ; // heure de départ
+  char ha[MAX_HEURE] ; // heure d'arrivée
   struct UnePlace place[45];
-} ;
+};
 
 struct UneDate { // niveau date de tab_places
   int date ;
-  // struct UneSeq *sequence ;
   struct UneSeq sequence[30] ;
-} ;
+};
 
-struct UnVoyage { // niveau 1 de tab_places
+struct UnVoyage { // niveau idtrajet de tab_places
   char idtrajet[MAX_ID] ;
-  char type[5] ;  //Si c'est Car, TER, TGV, ça reprend le type de trajet, mais ça permet
-                  //1. d'aller chercher l'info moins loin
-                  //2. de nuancer les types de rames de TGV (un jour lointain) 
-  // struct UneDate *date ;
+  char type[5] ;  // type de train
   struct UneDate date[200] ;
-} ;
+};
 
-struct SeqModif {
-  int modifie ;
-} ;
+struct SeqModif { // niveau sequence de a_sauvegarder
+  int modifie ; 
+};
 
-struct DateModif {
+struct DateModif { // niveau date de a_sauvegarder
   struct SeqModif sequence[30] ;
-} ;
+};
 
-struct TrajetModif {
+struct TrajetModif { // niveau idtrajet de a_sauvegarder
   struct DateModif date[200] ;
-} ;
+};
 
-struct date {
+struct date { // éléments d'une date composée
   int jhebdo ;
   int jour   ;
   int mois   ;
@@ -131,18 +125,10 @@ struct date {
   int date   ;
 };
 
-struct UnHoraire {
+struct UnHoraire { // horaire de passage d'un trajet dans une gare
   char idtrajet[MAX_ID]  ;
   int  idservice         ;
   int  numtrain          ;
-  // int  lun               ;
-  // int  mar               ;
-  // int  mer               ;
-  // int  jeu               ;
-  // int  ven               ;
-  // int  sam               ;
-  // int  dim               ;
-  // int  direction         ;
   char ha[MAX_HEURE]     ;
   char hd[MAX_HEURE]     ;
   int  sequence          ;
@@ -150,18 +136,10 @@ struct UnHoraire {
   char nomgare[MAX_GARE] ;
 };
 
-struct UnRes_nodate { // Résultat origine/destination sans date
+struct UnRes_nodate { // résultat origine/destination sans date
   char idtrajet[MAX_ID];
   int  idservice;
   int  numtrain;
-  // int lun; // se servir  circule_jhebdo() ?
-  // int mar;
-  // int mer;
-  // int jeu;
-  // int ven;
-  // int sam;
-  // int dim;
-  // int direction;
   char hd[MAX_HEURE] ;
   char ha[MAX_HEURE] ;
   int  seqdep ;
@@ -170,13 +148,11 @@ struct UnRes_nodate { // Résultat origine/destination sans date
   char garedep[MAX_GARE];
   char idgarearr[MAX_ID];
   char garearr[MAX_GARE];
-  // struct resultat_nodate *p_prec      ;
-  // struct resultat_nodate *p_suiv      ;
-} ;
+};
 
-struct UnRes { // Résultat origine/destination avec date
+struct UnRes { // résultat origine/destination avec date
   char  idtrajet[MAX_ID]  ;
-  int   idservice         ; // inutile ?
+  int   idservice         ;
   int   numtrain          ;
   char  ha[MAX_HEURE]     ;
   char  hd[MAX_HEURE]     ;
@@ -192,11 +168,9 @@ struct UnRes { // Résultat origine/destination avec date
   float prix0             ;
   float prix2             ;
   float prix1             ;
-  // struct resultat_nodate *p_prec      ;
-  // struct resultat_nodate *p_suiv      ;
-} ;
+};
 
-struct Stockage { // Compteurs de chaque niveau de tab_places
+struct Stockage { // compteurs de chaque niveau de tab_places
     char idtrajet[MAX_ID] ;
     int  max_date         ;
     int  max_seq          ;
@@ -204,15 +178,15 @@ struct Stockage { // Compteurs de chaque niveau de tab_places
 };
 
 struct UnBillet{
-    int  place           ; // n dans le tableau des places de : tab_places_dispo.tab_dispo[n] 
-    char nom[MAX_NOM]    ;
-    char prenom[MAX_NOM] ;
-    int  age             ;
-    int  billet          ; // code billet (date*10)+i
-    float prix           ;
-  };
+  int  place           ; // n dans le tableau des places de : tab_places_dispo.tab_dispo[n] 
+  char nom[MAX_NOM]    ;
+  char prenom[MAX_NOM] ;
+  int  age             ;
+  int  billet          ; // code billet (date*10)+i
+  float prix           ;
+};
   
-struct UnBilletRegistre {
+struct UnBilletRegistre { // billets des voyages réservées
   int   date              ; 
   char  idtrajet[MAX_ID]  ; 
   char  garedep[MAX_GARE] ;
@@ -229,15 +203,15 @@ struct UnBilletRegistre {
   int   billet            ; // code billet (date*10)+i
 };
 
-struct position { // quantité de places dispo pour chaque position, par etage, par classe
+struct position { // quantité de places dispo pour chaque position, par salle
   int fenetre ;
   int couloir ;
   int isole   ;
   int salle   ;
 };
 
-struct caract { 
-  struct position position[2]; // 2 car 2 etages // tu voulais dire 2 classes ?
+struct caract { // tableau de quantité de places dispo pour chaque position, par salle
+  struct position position[2]; // 2 car 2 classes
 };
 
 struct UnResPlaceDispo {
@@ -267,15 +241,13 @@ struct TrajetModif *a_sauvegarder ;
 struct date *tab_date_vente; // tableau des dates prises en charge par le programme
 int    nbdatevente         ; // nb dates ouvertes à la réservation
 // compteurs
-struct Stockage *stockage_nb_rep;
+struct Stockage *stockage_nb_rep; // 
 int nbreservationjournee=0;
 // billets
 struct UnBilletRegistre *registre_billets;
 int nb_registre_billet;
-  //  struct stock_nb_rep_date tab_stock_nbrepdate[3990];
-  //  id|nbdate|max_stop_seq
-// éléments de date
-int    jhebdo_num_sys, jour_sys, mois_sys, annee_sys ; // éléments de la date du système
+// éléments de date système
+int    jhebdo_num_sys, jour_sys, mois_sys, annee_sys ;
 char   jhebdo_alpha_sys[9] ;
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -295,37 +267,42 @@ void chargement_billets()    ;
 void quitter()               ;
 void sauvegarde()            ;
 void sauvegarde_places()     ;
-void sauveagarde_billets()   ;
+void sauvegarde_billets()   ;
 
 // ~~~ Procédures et fonctions métier ~~~
-void lance_recherche() ;
-struct UnHoraire * recherche_horaire(char rechgare[], int *nbres) ;
+void lance_recherche();
+struct UnHoraire * recherche_horaire(char rechgare[], int *nbres);
 struct UnRes_nodate * compare_nodate(struct UnHoraire gare_dep_trouve[], int nb_gare_dep_trouve, struct UnHoraire gare_arr_trouve[], int nb_gare_arr_trouve, int *nb_res_nodate);
-// struct horaire * recherche_horaire(char rechgare[], int *nb_res_horaire) ;
 struct UnRes * compare_avecdate(struct UnRes_nodate tab_res_nodate[], int nb_res_nodate, int jhebdo, int *nb_res_date  /*, char date_rech[SizeDate]*/ );
-// void calcule_tarif(char garedep[], char garearr[], struct UnTarif * untarif) ;
-//void calcule_tarif(char garedep[], char garearr[], struct UnTarif *untarif) ;
-// void trouve_tarif(char garedep[], char garearr[], struct UnTarif * untarif) ;
-void trouve_tarif(char garedep[], char garearr[], /*char type[],*/ struct UnTarif *untarif) ;
+// void calcule_tarif(char garedep[], char garearr[], struct UnTarif *untarif)
+void trouve_tarif(char garedep[], char garearr[], /*char type[],*/ struct UnTarif *untarif);
 void tri(struct UnRes tab_res[], int * nb_res_date);
 
-int lecture_choix(int deb, int fin, char lettre, int * erreur) ;
-void saisie_int(char invite[], int min,int max, int *mon_int);
-void saisie_text(char invite[], char sortie[]);
-int valide_date(int * jour, int * mois, int * annee) ;
-
-int sequence(char idtrajet[MAX_ID], struct UneSeq tab_sequence[]);
-// struct UnRes_nodate * compare_nodate2(struct UnHoraire gare_dep_trouve[], int nb_gare_dep_trouve, struct UnHoraire gare_arr_trouve[], int nb_gare_arr_trouve, int *nb_res_nodate);
+int  sequence(char idtrajet[MAX_ID], struct UneSeq tab_sequence[]);
 void verification_res_dispo(struct UnRes tab_res[], int nb_res, struct UnResPlaceDispo tab_places_dispo[], int date);
-int circule_date(char idtrajet[MAX_ID], int date);
+int  circule_date(char idtrajet[MAX_ID], int date);
 void crea_date_vente(int jour, int mois, int annee);
-int circule_jhebdo(char idtrajet[MAX_ID], int jhebdo);
+int  circule_jhebdo(char idtrajet[MAX_ID], int jhebdo);
 void ecriture_resa_in_tab_places( struct UnRes tab_res ,struct UnePlace tab_dispo, int date, int billet);
 void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], int date);
 void creation_fichier_billet(struct UnBilletRegistre tab_registre[], int nb_nouveau);
 void faux_paiement();
 void interprete_position(int pos, char position[]);
 void interprete_salle(int etage, char salle[]) ;
+
+// ~~~ Outils de traitement des dates ~~~
+int  valide_date(int * jour, int * mois, int * annee) ;
+int  calcul_jour_semaine(int jour_rech, int mois_rech, int annee_rech, int jour, int mois, int annee, int jour_sem) ;
+void interprete_jour_semaine(int jhebdo_num, char jhebdo_alpha[]) ;
+void date_suivante_precedente(int *jhebdo_rech, int *jour_rech, int *mois_rech, int *annee_rech, int increment) ;
+int  date_anterieure(int jour, int mois, int annee, int jour_ref, int mois_ref, int annee_ref) ;
+void decoupe_date(int date, int *jour, int *mois, int *annee) ;
+int  assemble_date(int jour, int mois, int annee) ;
+
+// ~~~ Outils de traitement des choix
+int  lecture_choix(int deb, int fin, char lettre, int * erreur);
+void saisie_int(char invite[], int min,int max, int *mon_int);
+void saisie_text(char invite[], char sortie[]);
 
 // ~~~ Outils de traitement des chaines ~~~
 void convmaj(char chaine[]) ;
@@ -338,69 +315,15 @@ char * str_replace_all(char * chaine, char * motif_a_remplacer, char * motif_de_
 char * supprime_accent(char * chaine);
 void dump_buffer() ;
 
-// ~~~ Outils de traitement des dates ~~~
-// int  calcul_jour_semaine(int jour_rech, int mois_rech, int annee_rech, int jour, int mois, int annee) ;
-int calcul_jour_semaine(int jour_rech, int mois_rech, int annee_rech, int jour, int mois, int annee, int jour_sem) ;
-void interprete_jour_semaine(int jhebdo_num, char jhebdo_alpha[]) ;
-// void date_suivante_precedente(int jhebdo, int jour, int mois, int annee, int *jhebdo_rech, int *jour_rech, int *mois_rech, int *annee_rech, int increment) ;
-void date_suivante_precedente(int *jhebdo_rech, int *jour_rech, int *mois_rech, int *annee_rech, int increment) ;
-int date_anterieure(int jour, int mois, int annee, int jour_ref, int mois_ref, int annee_ref) ;
-void decoupe_date(int date, int *jour, int *mois, int *annee) ;
-int assemble_date(int jour, int mois, int annee) ;
-
 // ~~~ Outils d'interface système ~~~
 void date_sys(int *jour, int *mois, int *annee, int *jhebdo_num) ;
 void AfficheObjetInfo(char NomObjetInfo[]);
-// void ListerRep(char NomRep[], char **ListObjet);
-// void ListerRep(char NomRep[], char *ListObjet[]);
-// void ListerRep(char NomRep[], char ListObjet[]);
-// void ListerRep(char NomRep[], char ListObjet[4000][100]);
-int ListerRep(char NomRep[], char ListObjet[4000][100]);
+int  ListerRep(char NomRep[], char ListObjet[4000][100]);
 void supprime_repertoire(char nomrep[]) ;
-
-void test();
 
 // =========================== //
 /* === Programme principal === */
 // =========================== //
-
-void test()
-{
-  int jour, mois, annee ;
-  int date=20210615;
-  char id[MAX_ID]="OCESN008913F57057~TGF91142";
-  int retour ;
-
-  // retour = circule_date(id,date);
-  // if (retour==1)
-  // {
-  //   printf("Ça circule\n");
-  // } 
-  // else
-  // {
-  //   printf("Ça circule pas\n");
-  // }
-  // // decoupe_date(date, &jour, &mois, &annee);
-  // // printf("jour=%d mois=%d annee=%d\n",jour, mois, annee);
-
-  // char chaine[100];
-  // char sschaine1[MAX_ID];
-  // char sschaine2[MAX_ID];
-  // char sep='-';
-
-  // strcpy(chaine,"CHAMBERY CHALLES LES EAUX-VENDOME VILLIERS SUR LOIR");
-  // coupe_chaine_au_caractere(chaine,sschaine1,sschaine2,sep);
-  // printf("%s\n%s\n%s\n",chaine, sschaine1, sschaine2);
-
-  struct UnTarif untarif ;
-
-  char depart[100]="Montpellier";
-  char arrivee[100]="Toulouse";
-
-  trouve_tarif(depart, arrivee, &untarif) ;
-
-  printf("%s-%s prems=%f seconde=%f premiere=%f\n", depart, arrivee, untarif.prix0, untarif.prix2, untarif.prix1) ;
-}
 
 int main()
 {
@@ -426,8 +349,6 @@ int main()
     printf("Bienvenue chez SNCF Voyages\n");
     printf("===========================\n");
   }
-  
-  
 
   while (choix != 0)
   {    
@@ -437,22 +358,21 @@ int main()
     {
       erreur=0;
       printf("\n-1- Réserver\n")                ;
-      /*printf("-2- Consulter les horaires\n")    ;
-      printf("-3- Mes réservations\n")          ;*/
+      //printf("-2- Consulter les horaires\n")    ;
+      //printf("-3- Mes réservations\n")          ;
       printf("-0- Quitter\n")                   ;
-      saisie_int("\nChoix : ",0,1,&choix)       ;
-      // printf("\nChoix : ")                      ;
-      // scanf("%c", &lettre)                      ;
-      // choix = lecture_choix(0,3,lettre,&erreur) ; 
+      // saisie_int("\nChoix : ",0,1,&choix)       ;
+      printf("\nChoix : ")                      ;
+      scanf("%c", &lettre)                      ;
+      choix = lecture_choix(0,3,lettre,&erreur) ; 
     }
   
     // traitement selon le choix
     switch (choix)
     {
-      case 0: sauvegarde();
+      case 0: quitter();
               break ;
-      case 1: printf("à faire : ajouter les tarifs et les fonctions de reservation)\n") ;
-              lance_recherche() ;
+      case 1: lance_recherche() ;
               break ;
       case 2: printf("à faire : consulter les horaires\n") ;
               break ;
@@ -479,8 +399,8 @@ void chargement()
   chargement_tarifs()   ; // chargement des données tarifs à partir des fichiers tarifs_... .csv
   crea_date_vente(jour_sys, mois_sys, annee_sys) ;
   // printf("nbdatevente=%d\n",nbdatevente);
-  chargement_places()   ;
-  chargement_billets()  ;
+  chargement_places()   ; // chargement des places ouvertes à la vente
+  // chargement_billets()  ; // chargement des billets de voyages réservés
 }
 
 // ~~~~~~~~~~~
@@ -499,18 +419,17 @@ void chargement_horaires()
 // ~~~~~~~~~~~
 void chargement_trajet()
 {
-  FILE *f1;
-  int  i, retour;
-  char line[500] ; // pour lire ligne par ligne avec sscanf
-  char dumpchar[100] ;
-  char dumpcar;
-  int dumpint ;
+  FILE *f1           ;
+  int  i, retour     ;
+  char line[500]     ; // pour lire ligne par ligne avec fgets et sscanf
+  char dumpchar[100] ; // pour les champs non gardés
+  char dumpcar       ;
+  int  dumpint       ;
 
   /* --- Allocation de mémoire au tableau trajet --- */
   trajets = (struct UnTrajet *) malloc(sizeof(struct UnTrajet));
 
   /*--- Ouverture fichier horaires --- */
-  //f1=fopen("./data_sncf/sncf_full_test.txt", "r") ;
   f1=fopen("./data/horaire/tgv_echantillon/trips.txt","r") ;
   if (f1 == NULL)
   {
@@ -519,11 +438,10 @@ void chargement_trajet()
   else
   {
     i=0 ;
-    fgets(line, sizeof(line), f1); // lire la 1re ligne et ne rien faire (je l'enlève car il n'y a plus les entêtes dans le csv)
+    fgets(line, sizeof(line), f1); // lire la 1re ligne et ne rien faire
     while (fgets(line,sizeof(line),f1) != NULL)
     {     
       retour=sscanf(line,"%101[^,],%d,%101[^,],%d,%d,%101[^,],%101[^\n]",
-      // retour=sscanf(line,"%s,%d,%s,\"%d\",%d,%s,%s",
         dumpchar,
         &trajets[i].idservice,
          trajets[i].idtrajet,
@@ -544,7 +462,7 @@ void chargement_trajet()
   //   printf("%d \n",trajets[i].numtrain);
   //   printf("%d \n",trajets[i].direction);
   // }
-  printf("nombre de trajets %d\n",nbtrajet);
+  // printf("nombre de trajets %d\n",nbtrajet);
 }
 
 // ~~~~~~~~~~~
@@ -552,16 +470,15 @@ void chargement_trajet()
 // ~~~~~~~~~~~
 void chargement_calendrier()
 {
-  FILE *f1;
-  int  i, retour;
-  char line[500] ; // pour lire ligne par ligne avec sscanf
-  int dumpint ;
+  FILE *f1       ;
+  int  i, retour ;
+  char line[500] ; // pour lire ligne par ligne avec fgets et sscanf
+  int  dumpint   ; // pour les champs non gardés
 
   /* --- Allocation de mémoire au tableau trajet --- */
   calendriers = (struct UnCalendrier *) malloc(sizeof(struct UnCalendrier));
 
   /*--- Ouverture fichier horaires --- */
-  //f1=fopen("./data_sncf/sncf_full_test.txt", "r") ;
   f1=fopen("./data/horaire/tgv_echantillon/calendar.txt","r") ;
   if (f1 == NULL)
   {
@@ -570,11 +487,10 @@ void chargement_calendrier()
   else
   {
     i=0 ;
-    fgets(line, sizeof(line), f1); // lire la 1re ligne et ne rien faire (je l'enlève car il n'y a plus les entêtes dans le csv)
+    fgets(line, sizeof(line), f1);
     while (fgets(line,sizeof(line),f1) != NULL)
     {     
       retour=sscanf(line,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-      // retour=sscanf(line,"%s,%d,%s,\"%d\",%d,%s,%s",
         &calendriers[i].idservice,
         &calendriers[i].lun,
         &calendriers[i].mar,
@@ -596,7 +512,7 @@ void chargement_calendrier()
   //   printf("%d \n",calendriers[i].idservice);
   //   printf("%d \n",calendriers[i].lun);
   // }
-  printf("nombre de calendriers %d\n",nbcalendrier);
+  // printf("nombre de calendriers %d\n",nbcalendrier);
 }
 
 // ~~~~~~~~~~~
@@ -604,17 +520,16 @@ void chargement_calendrier()
 // ~~~~~~~~~~~
 void chargement_stop()
 {
-  FILE *f1;
-  int  i, retour;
-  char line[500] ; // pour lire ligne par ligne avec sscanf
-  int dumpint ;
-  char dumpchar ;
+  FILE *f1       ;
+  int  i, retour ;
+  char line[500] ; // pour lire ligne par ligne avec fgets et sscanf
+  int  dumpint   ; // pour les champs non gardés
+  char dumpchar  ;
 
   /* --- Allocation de mémoire au tableau trajet --- */
   stops = (struct UnStop *) malloc(sizeof(struct UnStop));
 
   /*--- Ouverture fichier horaires --- */
-  //f1=fopen("./data_sncf/sncf_full_test.txt", "r") ;
   f1=fopen("./data/horaire/tgv_echantillon/stop_times.txt","r") ;
   if (f1 == NULL)
   {
@@ -623,11 +538,10 @@ void chargement_stop()
   else
   {
     i=0 ;
-    fgets(line, sizeof(line), f1); // lire la 1re ligne et ne rien faire (je l'enlève car il n'y a plus les entêtes dans le csv)
+    fgets(line, sizeof(line), f1);
     while (fgets(line,sizeof(line),f1) != NULL)
     {     
       retour=sscanf(line,"%101[^,],%10[^,],%10[^,],%101[^,],%d,%101[^,],%d,%d,%d",
-      // retour=sscanf(line,"%s,%d,%s,\"%d\",%d,%s,%s",
         stops[i].idtrajet,
         stops[i].ha,
         stops[i].hd,
@@ -648,7 +562,7 @@ void chargement_stop()
   //   printf("%s \n",stops[i].idgare);
   //   printf("%d \n",stops[i].arrive);
   // }
-  printf("nombre de stops %d\n",nbstop);
+  // printf("nombre de stops %d\n",nbstop);
 }
 
 // ~~~~~~~~~~~
@@ -656,18 +570,17 @@ void chargement_stop()
 // ~~~~~~~~~~~
 void chargement_gare()
 {
-  FILE *f1;
-  int  i, retour;
+  FILE *f1       ;
+  int  i, retour ; // pour lire ligne par ligne avec fgets et sscanf
   char line[500] ; // pour lire ligne par ligne avec sscanf
-  int  dumpint ;
-  char dumpchar ;
+  int  dumpint   ; // pour les champs non gardés
+  char dumpchar  ;
   char pattern1[10]="GARE DE " ;
 
   /* --- Allocation de mémoire au tableau trajet --- */
   gares = (struct UneGare *) malloc(sizeof(struct UneGare));
 
   /*--- Ouverture fichier horaires --- */
-  //f1=fopen("./data_sncf/sncf_full_test.txt", "r") ;
   f1=fopen("./data/horaire/tgv_echantillon/stops.txt","r") ;
   if (f1 == NULL)
   {
@@ -676,11 +589,10 @@ void chargement_gare()
   else
   {
     i=0 ;
-    fgets(line, sizeof(line), f1); // lire la 1re ligne et ne rien faire (je l'enlève car il n'y a plus les entêtes dans le csv)
+    fgets(line, sizeof(line), f1);
     while (fgets(line,sizeof(line),f1) != NULL)
     {     
       retour=sscanf(line,"%101[^,],\"%101[^\"],%101[^,],%101[^,],%101[^,],%101[^,],%d,%101[^\n]",
-      // retour=sscanf(line,"%s,%d,%s,\"%d\",%d,%s,%s",
         gares[i].idgare,
         gares[i].nomgare,
         dumpchar,
@@ -705,7 +617,7 @@ void chargement_gare()
   //   printf("%s \n",gares[i].idgare);
   //   printf("%s \n",gares[i].nomgare);
   // }
-  printf("nombre de gares %d\n",nbgare);
+  // printf("nombre de gares %d\n",nbgare);
 }
 
 // ~~~~~~~~~~~
@@ -713,10 +625,10 @@ void chargement_gare()
 // ~~~~~~~~~~~
 void chargement_tarifs()
 {
-  FILE *f1;
-  int  i, retour;
+  FILE *f1       ;
+  int  i, retour ;
   char line[500] ; // pour lire ligne par ligne avec sscanf
-  char od[200]   ; // =origine-destination
+  char od[200]   ; // origine-destination
   char dumpchar[MAX_GARE];
   char sep='-';
   char prix0[MAX_GARE],prix2[MAX_GARE],prix1[MAX_GARE];
@@ -725,7 +637,6 @@ void chargement_tarifs()
   tarifs = (struct UnTarif *) malloc(sizeof(struct UnTarif));
 
   /*--- Ouverture fichier horaires --- */
-  //f1=fopen("./data_sncf/sncf_full_test.txt", "r") ;
   f1=fopen("./data/tarif/tarifs-tgv-par-od.csv","r") ;
   if (f1 == NULL)
   {
@@ -734,14 +645,11 @@ void chargement_tarifs()
   else
   {
     i=0 ;
-    fgets(line, sizeof(line), f1); // lire la 1re ligne et ne rien faire (je l'enlève car il n'y a plus les entêtes dans le csv)
+    fgets(line, sizeof(line), f1);
     while (fgets(line,sizeof(line),f1) != NULL)
     {
       retour=sscanf(line,"%202[^;];%101[^;];%101[^;];%101[^;];%101[^\n]",
         od,
-        //&tarifs[i].prix0,
-        //&tarifs[i].prix2,
-        //&tarifs[i].prix1,
         prix0,
         prix2,
         prix1,
@@ -758,25 +666,24 @@ void chargement_tarifs()
       tiret_to_space(tarifs[i].garedep) ;
       // supprime_accent(tarifs[i].garedep);
       // supprime_accent(tarifs[i].garearr);
-  // printf("%s-%s prems=%f seconde=%f premiere=%f\n",tarifs[i].garedep,tarifs[i].garearr,tarifs[i].prix0,tarifs[i].prix2,tarifs[i].prix1);
       i++ ;
       nbtarif = i ;
       tarifs = (struct UnTarif *) realloc(tarifs,sizeof(struct UnTarif) * (nbtarif+1)) ;
     }
     fclose(f1) ;
   }
-  printf("nombre de tarifs %d\n",nbtarif);
+  // printf("nombre de tarifs %d\n",nbtarif);
 }
 
 // ~~~~~~~~~~~
 /* --- Chargement des données places à réserver --- */
 // ~~~~~~~~~~~
-void chargement_places() // version des dossiers - 1 struct à 4 niveaux
+void chargement_places()
 {
   int i ; // compteur trajets
   int j ; // compteur date
   int k ; // compteur sequence
-  int l=0 ;// compteur places
+  int l=0;// compteur places
   int m,retour,existe;  // compteur à tout faire
 
   // chemin des répertoires
@@ -787,7 +694,7 @@ void chargement_places() // version des dossiers - 1 struct à 4 niveaux
   char fichiertrain[MAX_ID];
   char fichierplace[MAX_ID] ;
 
-  //int en chaine
+  // convertir les int en chaine
   char datechar[MAX_DATENUM] ;
   char seqdepchar[3];
 
@@ -802,10 +709,11 @@ void chargement_places() // version des dossiers - 1 struct à 4 niveaux
   int nbrep_date ;
   int nbrep_seq ;
 
+  // variables isolées identiques à celles présentes dans les structures
   char idtrajet[MAX_ID] ;
   int  wagon, classe, salle, siege, position, billet;
+
   struct UneSeq tab_sequence[30] ;
-  // struct UneSeq unesequence ;
   int  nbsequence ;
   struct UnePlace placeslues[50] ; // c'est 50 pour la démo, sinon c'est le nb de places d'un train
   int nbplacestrain=0 ;
@@ -820,9 +728,8 @@ void chargement_places() // version des dossiers - 1 struct à 4 niveaux
   strcpy(nomrep,"./data/place");
   a_sauvegarder = (struct TrajetModif *) malloc(sizeof(struct TrajetModif)) ;
 
-  // On liste le contenu de place (sous-dossiers id)
+  // On liste le contenu de data/place/ (sous-dossiers id)
   nbrep_idtrajet=ListerRep(nomrep,rep_idtrajet);
-
 
   // Pour chaque idtrajet possible
   existe=0;
@@ -837,7 +744,7 @@ void chargement_places() // version des dossiers - 1 struct à 4 niveaux
         {
           existe=1;
         }
-    // printf("existe=%d %d/%d\n",existe,nbrep_idtrajet,nbtrajet);
+        // printf("existe=%d %d/%d\n",existe,nbrep_idtrajet,nbtrajet);
         if (existe == 0)
         {
           strcpy(nomrepid,nomrep);
@@ -866,7 +773,7 @@ void chargement_places() // version des dossiers - 1 struct à 4 niveaux
   for (i=0;i<nbrep_idtrajet;i++)
   {
     strcpy(stockage_nb_rep[i].idtrajet, rep_idtrajet[i]) ;
-  // printf("i commencé = %d/%d\n",i,nbrep_idtrajet);
+    // printf("i commencé = %d/%d\n",i,nbrep_idtrajet);
 
     // On récupère la liste des places de ce type de train
     // if (strcmp(type,"TGV")==0) // À adapter si on gère plusieurs types de train
@@ -894,19 +801,18 @@ void chargement_places() // version des dossiers - 1 struct à 4 niveaux
         }
       }
       nbplacestrain=m;
-  // printf("nbplacestrain au chargement=%d\n",nbplacestrain);
+      // printf("nbplacestrain au chargement=%d\n",nbplacestrain);
     }
     fclose(f1);
     stockage_nb_rep[i].max_place = nbplacestrain ;
-  // printf("%d\n",stockage_nb_rep[i].max_place );
+    // printf("%d\n",stockage_nb_rep[i].max_place );
 
     // on reconstruit les séquences pour récupérer certaines infos
     strcpy(idtrajet,rep_idtrajet[i]);
     nbsequence = sequence(idtrajet, tab_sequence);
     stockage_nb_rep[i].max_seq = nbsequence ;
 
-  // printf de controle
-  // printf("nbsequence %d de idtrajet=%s\n",nbsequence,trajets[i].idtrajet) ;
+    // printf("nbsequence %d de idtrajet=%s\n",nbsequence,trajets[i].idtrajet) ;
 
     // On liste le contenu de id (sous-dossiers date)
     strcpy(nomrepid,nomrep);
@@ -974,7 +880,7 @@ void chargement_places() // version des dossiers - 1 struct à 4 niveaux
       // On supprime ceux qui ont une date passée
       if (atoi(rep_date[j])<tab_date_vente[0].date)
       {
-  // printf("%d\n",tab_date_vente[0].date);
+        // printf("%d\n",tab_date_vente[0].date);
         supprime_repertoire(nomrepdate) ;
       }
       else
@@ -1001,11 +907,11 @@ void chargement_places() // version des dossiers - 1 struct à 4 niveaux
             }
           }
         }
+
         // On RE-liste le contenu de date (sous-dossiers sequence)
         nbrep_seq=ListerRep(nomrepdate,rep_seq);
-  // printf("nbrep_seq ici : %d\n");
-
-  // printf("%s %s nbrepseq=%d\n", rep_idtrajet[i],rep_date[j],nbrep_seq);
+        // printf("nbrep_seq ici : %d\n");
+        // printf("%s %s nbrepseq=%d\n", rep_idtrajet[i],rep_date[j],nbrep_seq);
 
         // POUR CHAQUE DOSSIER NIVEAU SEQUENCE
         for (k=0;k<nbrep_seq;k++)
@@ -1070,13 +976,10 @@ void chargement_places() // version des dossiers - 1 struct à 4 niveaux
           else
           {
             l=0;
-            // free(tab_places) ; // suppression du bloc de données 
-            // tab_places=NULL ; /*on réinitialisae le pointeur à NULL*/
-
             while (! feof(f1) )
             {
               retour=fscanf(f1,"%d;%d;%d;%d;%d;%d",&wagon,&classe,&salle,&siege,&position,&billet) ;
- // printf("c'est pas là %d;%d;%d;%d;%d;%d\n",wagon,classe,salle,siege,position,billet);
+              // printf("c'est pas là %d;%d;%d;%d;%d;%d\n",wagon,classe,salle,siege,position,billet);
               if (retour != EOF)
               {
                 /* Création d'une nouvelle case à la fin du tableau */
@@ -1084,7 +987,7 @@ void chargement_places() // version des dossiers - 1 struct à 4 niveaux
                 a_sauvegarder = (struct TrajetModif *) realloc(a_sauvegarder, sizeof(struct TrajetModif) * (nbplaces + 1)) ;
 
                 strcpy(tab_places[i].idtrajet,rep_idtrajet[i]);
-                strcpy(tab_places[i].type,"TGV"); // on n'a mis que les TGV mais il faudrait un type selon l'idtrajet
+                strcpy(tab_places[i].type,"TGV"); // remplacer par un type selon l'idtrajet
                tab_places[i].date[j].date = atoi(rep_date[j]);
                 strcpy(tab_places[i].date[j].sequence[k].gd,tab_sequence[k].gd);
                 strcpy(tab_places[i].date[j].sequence[k].ga,tab_sequence[k].ga);
@@ -1103,11 +1006,11 @@ void chargement_places() // version des dossiers - 1 struct à 4 niveaux
                 a_sauvegarder[i].date[j].sequence[k].modifie = 0 ;
 
                 l++ ;
-// printf("Ça va i=%d=%s j=%d=%s k=%d=%d nbsequence=%d l=%d %d;%d;%d;%d;%d\n",i,rep_idtrajet[i],j,rep_date[j],k,tab_sequence[k].seqdep,nbsequence,l,wagon,classe,salle,siege,position) ;
+                // printf("Ça va i=%d=%s j=%d=%s k=%d=%d nbsequence=%d l=%d %d;%d;%d;%d;%d\n",i,rep_idtrajet[i],j,rep_date[j],k,tab_sequence[k].seqdep,nbsequence,l,wagon,classe,salle,siege,position) ;
               }
             }
             nbplaces+=l ;
-// printf("nbplaces=%d\n",nbplaces);
+            // printf("nbplaces=%d\n",nbplaces);
             fclose(f1) ;
           }
         }
@@ -1116,21 +1019,19 @@ void chargement_places() // version des dossiers - 1 struct à 4 niveaux
   // printf("i terminé = %d\n",i);
   // printf("dans stockage idtrajet=%s maxdate=%d maxseq=%d maxplace=%d\n",stockage_nb_rep[i].idtrajet,stockage_nb_rep[i].max_date, stockage_nb_rep[i].max_seq,stockage_nb_rep[i].max_place);
   }
-  printf("%d places chargées tous trains et toutes dates confondues\n",nbplaces);
+  // printf("%d places chargées tous trains et toutes dates confondues\n",nbplaces);
 }
 
 /* ---------------------------------------------- */
 /* --- Chargement des informations de billets --- */
 /* ---------------------------------------------- */
 void chargement_billets()
-{
-  
+{  
   FILE *f1;
-  
   int i;
   
   registre_billets = (struct UnBilletRegistre *) malloc(sizeof(struct UnBilletRegistre));
-  registre_billets = (struct UnBilletRegistre *) realloc(registre_billets,sizeof(struct UnBilletRegistre) * (i+1)) ;
+  //registre_billets = (struct UnBilletRegistre *) realloc(registre_billets,sizeof(struct UnBilletRegistre) * (i+1)) ;
       
   f1=fopen("data/registre_billet.txt","r");
   
@@ -1143,43 +1044,41 @@ void chargement_billets()
     strcpy(registre_billets[i].garearr,"\0");
     strcpy(registre_billets[i].nom,"\0");
     strcpy(registre_billets[i].prenom,"\0");
-    registre_billets[i].date = 0;
-    registre_billets[i].age =0;
-    registre_billets[i].classe =0;
-    registre_billets[i].wagon =0;
-    registre_billets[i].salle =0;
-    registre_billets[i].siege =0;
-    registre_billets[i].position=0;
-    registre_billets[i].billet=0;
-    f1=fopen("data/registre_billet.txt","w");
-    
+    registre_billets[i].date    = 0;
+    registre_billets[i].age     = 0;
+    registre_billets[i].classe  = 0;
+    registre_billets[i].wagon   = 0;
+    registre_billets[i].salle   = 0;
+    registre_billets[i].siege   = 0;
+    registre_billets[i].position= 0;
+    registre_billets[i].billet  = 0;
   }
   else
   {
     while((! feof(f1)))
     {
-      
-      fscanf(f1,"%101[^;];%101[^;];%101[^;];%51[^;];%51[^;];", registre_billets[i].idtrajet
-                                  , registre_billets[i].garedep
-                                  , registre_billets[i].garearr
-                                  , registre_billets[i].nom
-                                  , registre_billets[i].prenom);
+      fscanf(f1,"%101[^;];%101[^;];%101[^;];%51[^;];%51[^;];"
+        , registre_billets[i].idtrajet
+        , registre_billets[i].garedep
+        , registre_billets[i].garearr
+        , registre_billets[i].nom
+        , registre_billets[i].prenom);
                                   
-      fscanf(f1, "%d;%d;%d;%d;%d;%d;%d;%d;%f"          , &registre_billets[i].date
-                                  , &registre_billets[i].age
-                                  , &registre_billets[i].classe
-                                  , &registre_billets[i].wagon
-                                  , &registre_billets[i].salle
-                                  , &registre_billets[i].siege
-                                  , &registre_billets[i].position
-                                  , &registre_billets[i].billet   
-                                  , &registre_billets[i].prix);
+      fscanf(f1, "%d;%d;%d;%d;%d;%d;%d;%d;%f"
+        , &registre_billets[i].date
+        , &registre_billets[i].age
+        , &registre_billets[i].classe
+        , &registre_billets[i].wagon
+        , &registre_billets[i].salle
+        , &registre_billets[i].siege
+        , &registre_billets[i].position
+        , &registre_billets[i].billet   
+        , &registre_billets[i].prix);
       
-      registre_billets = (struct UnBilletRegistre *) realloc(registre_billets,sizeof(struct UnBilletRegistre) * (i+1)) ;
       i++;
+      registre_billets = (struct UnBilletRegistre *) realloc(registre_billets,sizeof(struct UnBilletRegistre) * (i+1)) ;
     }
   }
-
   nb_registre_billet=i;
   fclose(f1);
 }
@@ -1190,7 +1089,6 @@ void chargement_billets()
 void quitter()
 {
   sauvegarde();
-
   printf("À bientôt sur SNCF Voyages\n") ; 
 } 
 
@@ -1199,8 +1097,8 @@ void quitter()
 /* ---------------------------------------------- */
 void sauvegarde()
 {
-  sauvegarde_places()   ;
-  // sauveagarde_billets() ;
+  sauvegarde_places()  ;
+  // sauvegarde_billets() ;
 }
 
 /* ---------------------------------------------------------------- */
@@ -1220,12 +1118,17 @@ void sauvegarde_places()
   char seqdepchar[3];
   int  nbplacestrain;
 
+  // pour chaque idtrajet
   for (i=0;i<nbtrajet;i++)
   {
+    // chaque date ouverte de ce trajet
     for (j=0;j<stockage_nb_rep[i].max_date;j++)
     {
+      // chaque sequence
       for (k=0;k<stockage_nb_rep[i].max_seq;k++)
       {
+        // si les données ont ete modifiees au niveau de la sequence
+        // ecrire le fichier
         if (a_sauvegarder[i].date[j].sequence[k].modifie == 1 )
         {
           strcpy(fichierplace,nomrep);
@@ -1272,36 +1175,40 @@ void sauvegarde_places()
 /* ------------------------------------------------------------------- */
 /* --- Sauvegarder les données de réservation (de chaque voyageur) --- */
 /* ------------------------------------------------------------------- */
-void sauveagarde_billets()
+void sauvegarde_billets()
 {
-  
   FILE *f1;
-  
   int i;
-  
-  f1=fopen("data/registre_billet.txt","w");
-  
-  
-  //Ecriture du registre
-  for(i=0;i<nb_registre_billet;i++)
+  char fichier[MAX_ID] = "data/registre_billet.txt" ;
+
+  f1=fopen(fichier,"w");
+  if(f1 == NULL)
   {
-    fprintf(f1, "%s;%s;%s;%s;%s;%d;%d;%d;%d;%d;%d;%d;%d;%f\n",    registre_billets[i].idtrajet
-                                , registre_billets[i].garedep
-                                , registre_billets[i].garearr
-                                , registre_billets[i].nom
-                                , registre_billets[i].prenom
-                                , registre_billets[i].date
-                                , registre_billets[i].age
-                                , registre_billets[i].classe
-                                , registre_billets[i].wagon
-                                , registre_billets[i].salle
-                                , registre_billets[i].siege
-                                , registre_billets[i].position
-                                , registre_billets[i].billet
-                                , registre_billets[i].prix);
+    printf("\nImpossible d'écrire le fichier %s\n",fichier);
   }
-  
-  fclose(f1);
+  else
+  {
+    //Ecriture du registre
+    for(i=0;i<nb_registre_billet;i++)
+    {
+      fprintf(f1, "%s;%s;%s;%s;%s;%d;%d;%d;%d;%d;%d;%d;%d;%f\n"
+        , registre_billets[i].idtrajet
+        , registre_billets[i].garedep
+        , registre_billets[i].garearr
+        , registre_billets[i].nom
+        , registre_billets[i].prenom
+        , registre_billets[i].date
+        , registre_billets[i].age
+        , registre_billets[i].classe
+        , registre_billets[i].wagon
+        , registre_billets[i].salle
+        , registre_billets[i].siege
+        , registre_billets[i].position
+        , registre_billets[i].billet
+        , registre_billets[i].prix);
+    }  
+    fclose(f1);
+  }
 }
 
 /* ---------------------------------------- */
@@ -1312,9 +1219,10 @@ void lance_recherche()
   char lettre    ; // char lu au clavier
   int  choix2=-1 ; // choix utilisateur reconstitué
   int  choix_resultat; // choix utilisateur menu resultat
-  int  erreur2=0 ; // code erreur pour expressions conditionnelles
-  int  erreur3=0 ; // postériorité d'une date à une date de ref (-1=égalité 0=postérieur 1=antérieur)
-  int  erreur4=0 ;
+  // codes erreur pour expressions conditionnelles
+  int  erreur2=0 ; // la date est valide
+  int  erreur3=0 ; // antériorité de la date de voyage / date système (0=égale 1=antérieure -1=postérieure)
+  int  erreur4=0 ; // antériorité de la dernière date de voyage à la vente / date de voyage
   int  erreur5=0 ;
 
   int  i ;
@@ -1342,7 +1250,6 @@ void lance_recherche()
    
   /* === Départ === */
   
-  
   saisie_text("Gare de départ", garedep) ; // récupération saisie utilisateur Gare de départ
   convmaj(garedep)                       ; // conversion en majuscule
   tab_res_depart=recherche_horaire(garedep,&nb_res_depart) ; // recherche des passages dans cette gare
@@ -1350,10 +1257,9 @@ void lance_recherche()
   if(nb_res_depart==0) // Cas : pas de résultat au départ de la gare saisie
   {
     printf ("\nIl n'y a pas de train au départ de %s\n",garedep) ;
-    // dump_buffer() ;
   }
   else // Cas : des résultats au départ de la gare saisie
-  {    
+  {
 
   /* === Arrivée ===*/
     
@@ -1361,19 +1267,18 @@ void lance_recherche()
     convmaj(garearr)                       ; // conversion en majuscule
     tab_res_arrive = recherche_horaire(garearr,&nb_res_arrive) ; // recherche des passages dans cette gare
     
-    // tab_res_nodate = compare_nodate(res_depart,nb_res_depart,res_arrive,nb_res_arrive,&nb_res_nodate);
+    // recherche de trajets entre gare de depart et gare d'arrivee
     tab_res_nodate = compare_nodate(tab_res_depart,nb_res_depart,tab_res_arrive,nb_res_arrive,&nb_res_nodate);
 
     if(nb_res_nodate==0) // Cas : pas de train identique entre la gare de départ et la gare d'arrivée
     {     
       printf ("\nIl n'y a pas de liaison entre %s et %s\n",garedep, garearr) ;
-      // dump_buffer() ;
     }
     else // Cas : des trains identiques entre la gare de départ et la gare d'arrivée
     {
 
       /* === Date === */
-      // dump_buffer() ;
+
       printf("Date du voyage (JJ/MM/AAAA)         : ") ; // invite de saisie
       erreur2 = valide_date(&jour, &mois, &annee)      ; // lecture saisie et contrôle format + date existante
       erreur3 = date_anterieure(jour, mois, annee, jour_sys, mois_sys, annee_sys) ;
@@ -1382,7 +1287,6 @@ void lance_recherche()
         if (erreur2)
         {
           printf("\nDate incorrecte\n")                ;
-          // dump_buffer() ;
         }
         if (erreur3 == 1)
         {
@@ -1393,20 +1297,17 @@ void lance_recherche()
         printf("Date du voyage (JJ/MM/AAAA)         : ")              ;
         erreur2 = valide_date(&jour, &mois, &annee)                   ;
         erreur3 = date_anterieure(jour, mois, annee, jour_sys, mois_sys, annee_sys) ;
-
       }
-      
-      
+
       jhebdo = calcul_jour_semaine(jour, mois, annee, jour_sys, mois_sys, annee_sys, jhebdo_num_sys) ; // calcul du jour de semaine de la date de voyage
       interprete_jour_semaine(jhebdo, jhebdo_alpha) ;
-      tab_res = compare_avecdate(tab_res_nodate, nb_res_nodate, jhebdo, &nb_res_date);
+      date_int = assemble_date(jour,mois,annee) ;
       
-      //tab_places_dispo = (struct UnResPlaceDispo *) calloc(sizeof(struct UnResPlaceDispo),nb_res_date);
+      // recherche de trajets à la date donnée
+      tab_res = compare_avecdate(tab_res_nodate, nb_res_nodate, jhebdo, &nb_res_date);
       tab_places_dispo = (struct UnResPlaceDispo *) realloc(tab_places_dispo,sizeof(struct UnResPlaceDispo) * (nb_res_date)) ;
       
-      date_int = assemble_date(jour,mois,annee) ;
-
-      
+      // complete tab_res avec les nombres de places disponibles
       verification_res_dispo(tab_res, nb_res_date, tab_places_dispo, date_int);
       tri(tab_res,&nb_res_date) ;
 
@@ -1418,92 +1319,76 @@ void lance_recherche()
       {
         while (choix2 != 0)
         {
-          erreur5 = date_anterieure(tab_date_vente[nbdatevente-1].jour,
-                                tab_date_vente[nbdatevente-1].mois,
-                                tab_date_vente[nbdatevente-1].annee,
-                                jour, mois, annee) ;
-          if(erreur5)
+          erreur4 = date_anterieure(tab_date_vente[nbdatevente-1].jour,
+            tab_date_vente[nbdatevente-1].mois,
+            tab_date_vente[nbdatevente-1].annee,
+            jour, mois, annee) ;
+          if(erreur4 == 1)
           {
-            printf("Les billets pour la date que vous avez selectionnee ne sont pas encore ouverts a la vente.\n");
+            printf("\nLes billets pour la date selectionnee ne sont pas encore ouverts a la vente.\n");
           }
 
           printf("\n") ;
-          printf("---------------------------------------------------------------------------------------------------------------------------------------------\n") ;
-          // printf(" n° | Gare de départ         | Gare d'arrivée         | numéro | hh:mm | hh:mm | Type\n") ;
-          printf(" %3s | %-30s | %-30s | %6s | %8s | %8s | %5s | %7s | %10s | %10s\n","n°","Gare de départ","Gare d'arrivée","Train","hh:mm:ss","hh:mm:ss","Type","Prems","2de classe","1re classe");
-          printf("---------------------------------------------------------------------------------------------------------------------------------------------\n") ;
+          printf("----------------------------------------------------------------------------------------------------------------------------------------------\n") ;
+          printf(" %3s | %-30s | %-30s | %6s | %8s | %8s | %5s | %7s | %10s | %10s\n",
+            "n°","Gare de départ","Gare d'arrivée","Train","hh:mm:ss","hh:mm:ss","Type","Prems","2de classe","1re classe");
+          printf("----------------------------------------------------------------------------------------------------------------------------------------------\n") ;
+          
+          // Affichage des résultats
           for(i=0;i<nb_res_date;i++)
           {
-            if(erreur5)
+            // Modification des tarifs selon la disponibilité des places à réserver
+            // Si les dates sont fermées
+            if(erreur4 == 1)
             {
-              // printf("%3d | %-22s | %-22s | %6d | %2d:%02d | %2d:%02d | %s\n", i+1, 
-                printf("%3d | %-30s| %-30s| %6d | %8s | %8s |  TGV  | %7s | %10s | %10s\n", i+1, 
-                tab_res[i].garedep, tab_res[i].garearr, tab_res[i].numtrain, 
-                // tab_res[i].heure_dep/100, (tab_res[i].heure_dep-tab_res[i].heure_dep/100*100), 
-                // tab_res[i].heure_arr/100, (tab_res[i].heure_arr-tab_res[i].heure_arr/100*100), tab_res[i].type) ;
-                // tab_res[i].hd/100, tab_res[i].heure_dep%100,tab_res[i].heure_arr/100, 
-                // tab_res[i].heure_arr%100, tab_res[i].type) ;
+              printf("%3d | %-30s| %-30s| %6d | %8s | %8s |  TGV  | %7s | %10s | %10s\n", i+1, 
+                tab_res[i].garedep, tab_res[i].garearr, tab_res[i].numtrain,
                 tab_res[i].hd, tab_res[i].ha,"XXXXX","XXXXX","XXXXX");
             }
+            // Si les dates sont ouvertes
             else
             {
+              // S'il y a des places disponibles
               if(tab_res[i].dispo)
               {
+                // En premiere classe
                 if(tab_res[i].dispo_1ere)
                 {
+                  // Et en seconde classe
                   if(tab_res[i].dispo_2nde)
                   {
-                    // printf("%3d | %-22s | %-22s | %6d | %2d:%02d | %2d:%02d | %s\n", i+1, 
                     printf("%3d | %-30s| %-30s| %6d | %8s | %8s |  TGV  | %3.2f € | %8.2f € | %8.2f €\n", i+1, 
                     tab_res[i].garedep, tab_res[i].garearr, tab_res[i].numtrain, 
-                    // tab_res[i].heure_dep/100, (tab_res[i].heure_dep-tab_res[i].heure_dep/100*100), 
-                    // tab_res[i].heure_arr/100, (tab_res[i].heure_arr-tab_res[i].heure_arr/100*100), tab_res[i].type) ;
-                    // tab_res[i].hd/100, tab_res[i].heure_dep%100,tab_res[i].heure_arr/100, 
-                    // tab_res[i].heure_arr%100, tab_res[i].type) ;
                     tab_res[i].hd, tab_res[i].ha,tab_res[i].prix0,tab_res[i].prix2,tab_res[i].prix1);
                   }
+                  // Ou pas en seconde classe
                   else
                   {
-                    // printf("%3d | %-22s | %-22s | %6d | %2d:%02d | %2d:%02d | %s\n", i+1, 
                     printf("%3d | %-30s| %-30s| %6d | %8s | %8s |  TGV  | %7s | %10s | %8.2f €\n", i+1, 
                     tab_res[i].garedep, tab_res[i].garearr, tab_res[i].numtrain, 
-                    // tab_res[i].heure_dep/100, (tab_res[i].heure_dep-tab_res[i].heure_dep/100*100), 
-                    // tab_res[i].heure_arr/100, (tab_res[i].heure_arr-tab_res[i].heure_arr/100*100), tab_res[i].type) ;
-                    // tab_res[i].hd/100, tab_res[i].heure_dep%100,tab_res[i].heure_arr/100, 
-                    // tab_res[i].heure_arr%100, tab_res[i].type) ;
                     tab_res[i].hd, tab_res[i].ha,"COMPLET","COMPLET",tab_res[i].prix1);
                   }
                 }
+                // Ou déjà pas en premiere classe
                 else
                 {
-                  // printf("%3d | %-22s | %-22s | %6d | %2d:%02d | %2d:%02d | %s\n", i+1, 
-                    printf("%3d | %-30s| %-30s| %6d | %8s | %8s |  TGV  | %3.2f € | %8.2f € | %10s\n", i+1, 
+                  printf("%3d | %-30s| %-30s| %6d | %8s | %8s |  TGV  | %3.2f € | %8.2f € | %10s\n", i+1, 
                     tab_res[i].garedep, tab_res[i].garearr, tab_res[i].numtrain, 
-                    // tab_res[i].heure_dep/100, (tab_res[i].heure_dep-tab_res[i].heure_dep/100*100), 
-                    // tab_res[i].heure_arr/100, (tab_res[i].heure_arr-tab_res[i].heure_arr/100*100), tab_res[i].type) ;
-                    // tab_res[i].hd/100, tab_res[i].heure_dep%100,tab_res[i].heure_arr/100, 
-                    // tab_res[i].heure_arr%100, tab_res[i].type) ;
                     tab_res[i].hd, tab_res[i].ha,tab_res[i].prix0,tab_res[i].prix2,"COMPLET");
-                  
                 }
-                
-
               }
+              // S'il n'y a aucune place disponible
               else
               {
-                // printf("%3d | %-22s | %-22s | %6d | %2d:%02d | %2d:%02d | %s\n", i+1, 
                 printf("%3d | %-30s| %-30s| %6d | %8s | %8s |  TGV  | %7s | %10s | %10s\n", i+1, 
                 tab_res[i].garedep, tab_res[i].garearr, tab_res[i].numtrain, 
-                // tab_res[i].heure_dep/100, (tab_res[i].heure_dep-tab_res[i].heure_dep/100*100), 
-                // tab_res[i].heure_arr/100, (tab_res[i].heure_arr-tab_res[i].heure_arr/100*100), tab_res[i].type) ;
-                // tab_res[i].hd/100, tab_res[i].heure_dep%100,tab_res[i].heure_arr/100, 
-                // tab_res[i].heure_arr%100, tab_res[i].type) ;
                 tab_res[i].hd, tab_res[i].ha,"COMPLET","COMPLET","COMPLET");
-
               }
             }  
           }
-          if(erreur5)
+          // Affichage des menus
+          // Dates non ouvertes (pour consultation des horaires)
+          if(erreur4 == 1)
           {
             printf("---------------------------------------------------------------------------------------------------------------------------------------------\n") ;
             printf("\n") ;
@@ -1511,12 +1396,13 @@ void lance_recherche()
             printf("-2- Afficher les trains du jour suivant\n") ;
             printf("-0- Retour à l'accueil\n") ;
             saisie_int("\nChoix : ",0,2,&choix2) ;
+            // pour correspondre aux valeurs de choix des autres menus
             if(choix2>0)
             {
               choix2++;
             }
-            
           }
+          // Dates ouvertes à la vente
           else
           {
             erreur3=0;
@@ -1525,6 +1411,7 @@ void lance_recherche()
             mois_test=mois;
             annee_test=annee;
             jhebdo_test=jhebdo;
+            // décrémente la date (sur une variable de test) pour verifier qu'elle n'est pas antérieure à la date système
             date_suivante_precedente(&jhebdo_test, &jour_test, &mois_test, &annee_test, -1) ;
             erreur3 = date_anterieure(jour_test, mois_test, annee_test, jour_sys, mois_sys, annee_sys) ;
             
@@ -1532,12 +1419,14 @@ void lance_recherche()
             mois_test=mois;
             annee_test=annee;
             jhebdo_test=jhebdo;
+            // incrémente la date (sur une variable de test) pour vérifier qu'elle ne dépasse pas la date d'ouverte des ventes
             date_suivante_precedente(&jhebdo_test, &jour_test, &mois_test, &annee_test, 1) ;
             erreur4 = date_anterieure(tab_date_vente[nbdatevente-1].jour,
                                 tab_date_vente[nbdatevente-1].mois,
                                 tab_date_vente[nbdatevente-1].annee,
                                 jour_test, mois_test, annee_test) ;
-            if(!erreur3)
+            // Si c'est la date du jour, on ne propose pas les trains de la veille
+            if(erreur3 == 1)
             {
               printf("---------------------------------------------------------------------------------------------------------------------------------------------\n") ;
               printf("\n") ;
@@ -1550,21 +1439,22 @@ void lance_recherche()
                 choix2++;
               }
             }
-            else if(erreur4)
+            // Si c'est la dernière date ouverte à la vente, on ne propose pas les trains du lendemain
+            else if(erreur4 == 1)
             {
               printf("---------------------------------------------------------------------------------------------------------------------------------------------\n") ;
               printf("\n") ;
-              printf("-1- Choisir un train circulant le %s %d/%d/%d\n",jhebdo_alpha, jour, mois, annee) ; // faire une fonction qui actualise la date (mutualiser avec jour_semaine ?)
+              printf("-1- Choisir un train circulant le %s %d/%d/%d\n",jhebdo_alpha, jour, mois, annee) ;
               printf("-2- Afficher les trains du jour précédent\n") ;
               printf("-0- Retour à l'accueil\n") ;
               saisie_int("\nChoix : ",0,2,&choix2) ;
-              
             }
+            // Dans les autres cas, tous les menus s'affichent
             else
             {
               printf("---------------------------------------------------------------------------------------------------------------------------------------------\n") ;
               printf("\n") ;
-              printf("-1- Choisir un train circulant le %s %d/%d/%d\n",jhebdo_alpha, jour, mois, annee) ; // faire une fonction qui actualise la date (mutualiser avec jour_semaine ?)
+              printf("-1- Choisir un train circulant le %s %d/%d/%d\n",jhebdo_alpha, jour, mois, annee) ;
               printf("-2- Afficher les trains du jour précédent\n") ;
               printf("-3- Afficher les trains du jour suivant\n") ;
               printf("-0- Retour à l'accueil\n") ;
@@ -1577,40 +1467,47 @@ void lance_recherche()
           // choix2 = lecture_choix(0,4,lettre,&erreur4) ;
           switch (choix2)
           {
-            case 1: saisie_int("Choisir un train (n°) : ",1, nb_res_date, &choix_resultat);
+            case 1: saisie_int("                                 Choisir un train (n°)       : ",1, nb_res_date, &choix_resultat);
                     // printf("Choisir un train (n°) : ") ;
                     // scanf("%c",&lettre) ; // modifier, il peut y avoir plus de 10 trains
-                    // choix_resultat=lecture_choix(1,nb_res_date,lettre,&erreur5);
-                    // while (erreur5)
+                    // choix_resultat=lecture_choix(1,nb_res_date,lettre,&erreur4);
+                    // while (erreur4)
                     // {
                     //   dump_buffer() ;
                     //   printf("Choisir un train (n°) : ") ;
                     //   scanf("%c",&lettre) ;
-                    //   choix_resultat=lecture_choix(1,nb_res_date,lettre,&erreur5);
+                    //   choix_resultat=lecture_choix(1,nb_res_date,lettre,&erreur4);
                     // }
                     reservation(tab_res[choix_resultat-1],nb_res_date,tab_places_dispo[choix_resultat-1].tab_dispo,date_int);
                     free(tab_places_dispo);
+                    tab_places_dispo = NULL ;
                     free(tab_res);
+                    tab_res = NULL ;
                     free(tab_res_nodate);
+                    tab_res_nodate = NULL ;
                     free(tab_res_arrive);
+                    tab_res_arrive = NULL ;
                     free(tab_res_depart);
+                    tab_res_depart = NULL ;
                     choix2=0;
                     break;
-            case 2: date_suivante_precedente(&jhebdo, &jour, &mois, &annee, -1) ; // ajouter verif_dispo + faire quelque chose pour la struct tab_place_dispo + date_int a mettre a jour
+            case 2: date_suivante_precedente(&jhebdo, &jour, &mois, &annee, -1) ;
                     interprete_jour_semaine(jhebdo, jhebdo_alpha) ;
+                    date_int=assemble_date(jour, mois, annee) ;
                     tab_res=compare_avecdate(tab_res_nodate, nb_res_nodate, jhebdo, &nb_res_date) ;
                     free(tab_places_dispo);
+                    tab_places_dispo = NULL ;
                     tab_places_dispo = (struct UnResPlaceDispo *) realloc(tab_places_dispo,sizeof(struct UnResPlaceDispo) * (nb_res_date)) ;
-                    date_int = assemble_date(jour,mois,annee) ;
                     verification_res_dispo(tab_res, nb_res_date, tab_places_dispo, date_int);
                     tri(tab_res,&nb_res_date) ;
                     break;
-            case 3: date_suivante_precedente(&jhebdo, &jour, &mois, &annee, 1) ; // ajouter verif_dispo + faire quelque chose pour la struct tab_place_dispo + date_int a mettre a jour
+            case 3: date_suivante_precedente(&jhebdo, &jour, &mois, &annee, 1) ;
                     interprete_jour_semaine(jhebdo, jhebdo_alpha) ;
+                    date_int=assemble_date(jour, mois, annee) ;
                     tab_res=compare_avecdate(tab_res_nodate, nb_res_nodate, jhebdo, &nb_res_date) ;
                     free(tab_places_dispo);
+                    tab_places_dispo = NULL ;
                     tab_places_dispo = (struct UnResPlaceDispo *) realloc(tab_places_dispo,sizeof(struct UnResPlaceDispo) * (nb_res_date)) ;
-                    date_int = assemble_date(jour,mois,annee) ;
                     verification_res_dispo(tab_res, nb_res_date, tab_places_dispo, date_int);
                     tri(tab_res,&nb_res_date) ;
                     break;
@@ -1643,13 +1540,6 @@ struct UnHoraire * recherche_horaire(char rechgare[], int *nbres)
   char idtrajet[MAX_ID];
   int idservice;
   int numtrain;
-  // int lun;
-  // int mar;
-  // int mer;
-  // int jeu;
-  // int ven;
-  // int sam;
-  // int dim;
   int direction;
   char ha;
   char hd;
@@ -1688,20 +1578,19 @@ struct UnHoraire * recherche_horaire(char rechgare[], int *nbres)
           strcpy(listgares[l].nomgare,gares[i].nomgare) ;
           strcpy(listgares[l++].idgare, gares[i].idgare) ;
           nblistgares = l ;
-    // printf de contrôle
-    // printf("gare trouvée %d : %s %s\n",i, gares[i].nomgare, gares[i].idgare);
+          // printf de contrôle
+          // printf("gare trouvée %d : %s %s\n",i, gares[i].nomgare, gares[i].idgare);
         }
-        else                                          // sinon (les caractères comparés de la chaine et de la sous-chaine sont différents)
+        else                                      // sinon (les caractères comparés de la chaine et de la sous-chaine sont différents)
         {
-          j=position ;                                // on passe au caractère suivant dans la chaine (retour à la position retenue)
-          position=0 ;                                // la position est réinitialisée
+          j=position ;                            // on passe au caractère suivant dans la chaine (retour à la position retenue)
+          position=0 ;                            // la position est réinitialisée
         }
       } /* fin du if caractère chaine = caractère sous-chaine (on passe au caractère de la chaine suivant en repartant du 1er caractère de la sous-chaine) */
     } /* fin du for chaque caractère de la chaine */
   } /* fin du for chaque ligne de tab_horaire */
   
   // on va chercher les autres infos
-  // l=0;k=0;
   res_horaire = (struct UnHoraire *) malloc(sizeof(struct UnHoraire)) ;        
   for (i=0;i<nblistgares;i++) // pour chaque gare trouvée
   {
@@ -1722,7 +1611,7 @@ struct UnHoraire * recherche_horaire(char rechgare[], int *nbres)
                   if (trajets[m].idservice == calendriers[n].idservice)
                   {
                     res_horaire = (struct UnHoraire *) realloc(res_horaire,sizeof(struct UnHoraire) * (*nbres+1));
-  // printf("idgare copié n°%d : %s\n",k,gares[j].idgare);
+                    // printf("idgare copié n°%d : %s\n",k,gares[j].idgare);
                     strcpy(res_horaire[k].idtrajet,stops[l].idtrajet);
                     res_horaire[k].idservice = trajets[m].idservice;
                     res_horaire[k].numtrain = trajets[m].numtrain ;
@@ -1731,16 +1620,8 @@ struct UnHoraire * recherche_horaire(char rechgare[], int *nbres)
                     res_horaire[k].sequence = stops[l].sequence ;
                     strcpy(res_horaire[k].idgare,listgares[i].idgare);
                     strcpy(res_horaire[k].nomgare,listgares[i].nomgare);
-                    // res_horaire[k].lun = calendriers[n].lun;
-                    // res_horaire[k].mar = calendriers[n].mar;
-                    // res_horaire[k].mer = calendriers[n].mer;
-                    // res_horaire[k].jeu = calendriers[n].jeu;
-                    // res_horaire[k].ven = calendriers[n].ven;
-                    // res_horaire[k].sam = calendriers[n].sam;
-                    // res_horaire[k].dim = calendriers[n].dim;
                     k++;
                     *nbres=k;
-                    // res_horaire = (struct UnHoraire *) realloc(res_horaire,sizeof(struct UnHoraire) * (*nbres+1));
                   }
                 }
               }
@@ -1799,14 +1680,6 @@ struct UnRes_nodate * compare_nodate(struct UnHoraire gare_dep_trouve[], int nb_
           strcpy(tab_resultats_nodate[k].idtrajet,gare_dep_trouve[j].idtrajet); // copie des infos dans la structure UnRes_nodate
           tab_resultats_nodate[k].idservice = gare_dep_trouve[j].idservice ;
           tab_resultats_nodate[k].numtrain  = gare_dep_trouve[j].numtrain  ;
-          // tab_resultats_nodate[k].lun       = gare_dep_trouve[j].lun       ;
-          // tab_resultats_nodate[k].mar       = gare_dep_trouve[j].mar       ;
-          // tab_resultats_nodate[k].mer       = gare_dep_trouve[j].mer       ;
-          // tab_resultats_nodate[k].jeu       = gare_dep_trouve[j].jeu       ;
-          // tab_resultats_nodate[k].ven       = gare_dep_trouve[j].ven       ;
-          // tab_resultats_nodate[k].sam       = gare_dep_trouve[j].sam       ;
-          // tab_resultats_nodate[k].dim       = gare_dep_trouve[j].dim       ;
-          // tab_resultats_nodate[k].direction = gare_dep_trouve[j].direction ;
           strcpy(tab_resultats_nodate[k].hd,  gare_dep_trouve[j].hd)       ;
           strcpy(tab_resultats_nodate[k].ha,  gare_arr_trouve[i].ha)       ;
           tab_resultats_nodate[k].seqdep    = gare_dep_trouve[j].sequence  ;
@@ -1815,15 +1688,15 @@ struct UnRes_nodate * compare_nodate(struct UnHoraire gare_dep_trouve[], int nb_
           strcpy(tab_resultats_nodate[k].idgarearr, gare_arr_trouve[i].idgare) ;
           strcpy(tab_resultats_nodate[k].garedep,   gare_dep_trouve[j].nomgare) ;
           strcpy(tab_resultats_nodate[k].garearr,   gare_arr_trouve[i].nomgare) ;
-  // printf de contrôle à supprimer
-  // printf("dépar:%s | arrivée:%s | num_train:%d | hdep:%d | harr:%d | type:%s\n",
-  //  tab_resultats_nodate[k].dep_gare, 
-  //  tab_resultats_nodate[k].arr_gare, 
-  //  tab_resultats_nodate[k].num_train, 
-  //  tab_resultats_nodate[k].heure_dep, 
-  //  tab_resultats_nodate[k].heure_arr,
-  //  tab_resultats_nodate[k].type
-  // );
+          // printf de contrôle
+          // printf("dépar:%s | arrivée:%s | num_train:%d | hdep:%d | harr:%d | type:%s\n",
+          //  tab_resultats_nodate[k].dep_gare, 
+          //  tab_resultats_nodate[k].arr_gare, 
+          //  tab_resultats_nodate[k].num_train, 
+          //  tab_resultats_nodate[k].heure_dep, 
+          //  tab_resultats_nodate[k].heure_arr,
+          //  tab_resultats_nodate[k].type
+          // );
           k++;
           tab_resultats_nodate = (struct UnRes_nodate *) realloc(tab_resultats_nodate,sizeof(struct UnRes_nodate) * (k+1));          
         } // fin du if sur l'idtrajet
@@ -1846,10 +1719,9 @@ struct UnRes * compare_avecdate(struct UnRes_nodate tab_res_nodate[], int nb_res
   int j=0 ; // compteur de tab_resultat
   struct UnRes *tab_resultats ; // pointeur du tableau de résultats communs à retourner
   struct UnTarif untarif ; 
-  
+
   /* allocation de mémoire au tableau de résultats tab_resultats */
   tab_resultats = (struct UnRes *) malloc(sizeof(struct UnRes));
-
 
   for (i=0;i<nb_res_nodate;i++)
   {
@@ -1903,16 +1775,12 @@ void trouve_tarif(char garedep[], char garearr[], /*char type[],*/ struct UnTari
   int l,m,n ;
   int position, position2;
   int trouve=0;
-  
-
 
   for (i=0;i<nbtarif;i++)                           // pour chaque ligne de tarif
   {
-
     for (j=0;garedep[j]!='\0';j++)                  // pour le caractère du nom de la gare, tant qu'il est différent de \O
     {
-
-  //printf("%c\n",garedep[j]);
+      //printf("%c\n",garedep[j]);
       k=0;                                          // et du premier caractère de la sous-chaine
       if (garedep[j] == tarifs[i].garedep[k])       // si le caractère du nom de la gare est égal au caractère de la gare saisie
       {
@@ -1920,18 +1788,15 @@ void trouve_tarif(char garedep[], char garearr[], /*char type[],*/ struct UnTari
         position = j+1 ;                            // on mémorise la position de recherche
         while (garedep[j] == tarifs[i].garedep[k])  // tant que les deux caractères sont égaux...
         {
-
           j++ ;                                     // ... on passe au caractère suivant pour le nom de la gare
           k++ ;                                     // ... et pour la saisie
         }
-        if (tarifs[i].garedep[k]=='\0')            // si la sous-chaine arrive à la fin (= toute la sous-chaine a été trouvée dans la chaine)
+        if (tarifs[i].garedep[k]=='\0')             // si la sous-chaine arrive à la fin (= toute la sous-chaine a été trouvée dans la chaine)
         {
-          
           l=0;
-          while(garearr[l]!='\0' && l<MAX_GARE)
-  // printf("%s\n",tarifs[i].garedep);
-          //for (l=1;garearr[l]!='\0';l++) ;         // on cherche si la gare d'arrivée correspond
+          while(garearr[l]!='\0' && l<MAX_GARE)     // on cherche si la gare de départ correspond
           {
+            // printf("%s\n",tarifs[i].garedep);
             m=0;
             if (garearr[l] == tarifs[i].garearr[m])
             {
@@ -1939,33 +1804,25 @@ void trouve_tarif(char garedep[], char garearr[], /*char type[],*/ struct UnTari
               position2 = l+1;
               while (garearr[l] == tarifs[i].garearr[m])
               {
-                
                 l++;
                 m++;
-         // printf("%s\n",tarifs[i].garearr);
+                // printf("%s\n",tarifs[i].garearr);
               }
               if(tarifs[i].garearr[m]=='\0')
               {
                 trouve=1;
-          
-                
                 untarif->prix0 = tarifs[i].prix0 ;
-                
                 untarif->prix2 = tarifs[i].prix2 ;
-                
                 untarif->prix1 = tarifs[i].prix1 ;
-                //untarif.prix0 = tarifs[i].prix0 ;
-                //untarif.prix2 = tarifs[i].prix2 ;
-                //untarif.prix1 = tarifs[i].prix1 ;
               }
               else
               {
                 l=position2 ;
                 position2=0 ;
               }
-            } // fin du for gare d'arrivée
+            }
             l++;
-          }
+          } // fin du while gare d'arrivée
         }
         else
         {
@@ -1980,7 +1837,7 @@ void trouve_tarif(char garedep[], char garearr[], /*char type[],*/ struct UnTari
   {
     for (i=0;i<nbtarif;i++)                           // pour chaque ligne de tarif
     {
-      for (j=0;garearr[j]!='\0';j++)        // pour le caractère du nom de la gare, tant qu'il est différent de \O
+      for (j=0;garearr[j]!='\0';j++)                  // pour le caractère du nom de la gare, tant qu'il est différent de \O
       {
         k=0;                                          // et du premier caractère de la saisie (sous-chaine)
         if (garearr[j] == tarifs[i].garedep[k])       // si le caractère du nom de la gare est égal au caractère de la gare saisie
@@ -1993,7 +1850,8 @@ void trouve_tarif(char garedep[], char garearr[], /*char type[],*/ struct UnTari
           }
           if (tarifs[i].garedep[k]=='\0')             // si la sous-chaine arrive à la fin (= toute la sous-chaine a été trouvée dans la chaine)
           {
-            for (l=0;garedep[l]!='\0';l++) ; // on cherche si la gare de départ correspond
+            l=0;
+            while(garedep[l]!='\0' && l<MAX_GARE)     // on cherche si la gare de départ correspond         
             {
               m=0;
               if (garedep[l] == tarifs[i].garearr[m])
@@ -2006,20 +1864,17 @@ void trouve_tarif(char garedep[], char garearr[], /*char type[],*/ struct UnTari
                 }
                 if(tarifs[i].garearr[m]=='\0')
                 {
-            
-                untarif->prix0 = tarifs[i].prix0 ;
-                untarif->prix2 = tarifs[i].prix2 ;
-                untarif->prix1 = tarifs[i].prix1 ;
-                //  untarif.prix0 = tarifs[i].prix0 ;
-                //  untarif.prix2 = tarifs[i].prix2 ;
-                //  untarif.prix1 = tarifs[i].prix1 ;
+                  untarif->prix0 = tarifs[i].prix0 ;
+                  untarif->prix2 = tarifs[i].prix2 ;
+                  untarif->prix1 = tarifs[i].prix1 ;
                 }
                 else
                 {
                   l=position2 ;
                   position2=0 ;
                 }
-              } // fin du for gare d'arrivée
+              } // fin du while gare d'arrivée
+            l++;
             }
           }
           else
@@ -2043,14 +1898,15 @@ void verification_res_dispo(struct UnRes tab_res[], int nb_res_date, struct UnRe
   int nbplace, nbpremiere, nbseconde;
   int max_date, max_seq;
   
-//   int cpt;
-// for (cpt=0;cpt<nb_res_date;cpt++)
-// {
-//   printf("%s\n",tab_res[cpt].idtrajet);
-//   printf("%d\n",tab_res[cpt].numtrain);
-//   printf("%d\n",tab_res[cpt].seqdep);
-//   printf("%d\n",tab_res[cpt].seqarr);
-// }
+  // printf de controle
+  // int cpt;
+  // for (cpt=0;cpt<nb_res_date;cpt++)
+  // {
+  //   printf("%s\n",tab_res[cpt].idtrajet);
+  //   printf("%d\n",tab_res[cpt].numtrain);
+  //   printf("%d\n",tab_res[cpt].seqdep);
+  //   printf("%d\n",tab_res[cpt].seqarr);
+  // }
 
   m=0;
   for(z=0; z < nb_res_date; z++)  // pour chacun des resultats de tab_res
@@ -2075,13 +1931,9 @@ void verification_res_dispo(struct UnRes tab_res[], int nb_res_date, struct UnRe
           if (!strcmp(stockage_nb_rep[t].idtrajet, tab_places[i].idtrajet))
           {
             ttrouve=t;
-            
-            
-      // printf("idtrajet de stockage_nb_rep=%s ",stockage_nb_rep[t].idtrajet);max_date = stockage_nb_rep[t].max_date;
-            max_date = stockage_nb_rep[t].max_date;
 
+            max_date = stockage_nb_rep[t].max_date;
             max_seq  = stockage_nb_rep[t].max_seq ;
-     // printf("max_date=%d max_seq=%d\n",max_date,max_seq);
           }
           t++ ;
         }
@@ -2089,24 +1941,21 @@ void verification_res_dispo(struct UnRes tab_res[], int nb_res_date, struct UnRe
         j=0;
         jtrouve=0;
         while(!jtrouve && j<max_date) //rechercher dans cet id la date desiree dans la limite des dates par id 
-  // (nbdate pas forcement la bonne limite car nbdate>=nbdate_par_id)
-        {
-           
-  // printf("j=%d dans tab_place %d (comparé avec %d)\n",j,tab_places[i].date[j].date,date_int);
+        { 
+          // printf("j=%d dans tab_place %d (comparé avec %d)\n",j,tab_places[i].date[j].date,date_int);
           if(tab_places[i].date[j].date == date_int) //trouver la date desirée dans l'id desiré (en int)
           {
-  // printf("date trouvée=%d\n",tab_places[i].date[j].date);
+            // printf("date trouvée=%d\n",tab_places[i].date[j].date);
             jtrouve=j;
             
             k=0;
             ktrouve=0;
             while(!ktrouve && k<max_seq) //rechercher la sequence correspondante à la gare de depart 
             {
-
-  // printf("k=%d seqdep dans tab_place=%d (comparé avec %d\n",k,tab_places[i].date[j].sequence[k].seqdep,tab_res[z].seqdep);
+              // printf("k=%d seqdep dans tab_place=%d (comparé avec %d\n",k,tab_places[i].date[j].sequence[k].seqdep,tab_res[z].seqdep);
               if(tab_places[i].date[j].sequence[k].seqdep == tab_res[z].seqdep) //trouver la sequence correspondante à votre gare de depart
               {
-  // printf("sequence de tab_places_dispo=%d\n",tab_res[z].seqdep);
+                // printf("sequence de tab_places_dispo=%d\n",tab_res[z].seqdep);
                 ktrouve=k;
 
                 for(l=0;l<MAX_PLACES;l++) //compter les places parmi la limite de places definie par la capacité
@@ -2117,12 +1966,13 @@ void verification_res_dispo(struct UnRes tab_res[], int nb_res_date, struct UnRe
                   tab_places_dispo[m].tab_dispo[l].salle    = tab_places[i].date[j].sequence[k].place[l].salle    ;
                   tab_places_dispo[m].tab_dispo[l].siege    = tab_places[i].date[j].sequence[k].place[l].siege    ; 
                   tab_places_dispo[m].tab_dispo[l].position = tab_places[i].date[j].sequence[k].place[l].position ; 
+                  
                   // Concernant l'état de réservation
                   if(!tab_places[i].date[j].sequence[k].place[l].billet) // si la place est disponible
                   {              
                     tab_places_dispo[m].tab_dispo[l].billet = 0  ; 
                     nbplace++;
-  // printf("dans train %d nbplace=%d\n",z,nbplace) ;
+                    // printf("dans train %d nbplace=%d\n",z,nbplace) ;
                     
                     if(tab_places_dispo[m].tab_dispo[l].classe==1)
                     {
@@ -2153,16 +2003,15 @@ void verification_res_dispo(struct UnRes tab_res[], int nb_res_date, struct UnRe
     k=ktrouve;
     l=0;
       
-    //debut_seq_suivant = tab_places[itrouve].dates[jtrouve].tab_seq[ktrouve].arr_gare; // la fin de la sequence que l'on a trouv? devient notre debut de sequence
-        
-    while (tab_places[itrouve].date[jtrouve].sequence[k].seqarr != tab_res[z].seqarr  && k<max_seq) //tant que l'on a pas trouvé notre sequence d'arrivée
+    //tant que l'on a pas trouvé notre sequence d'arrivée
+    while (tab_places[itrouve].date[jtrouve].sequence[k].seqarr != tab_res[z].seqarr  && k<max_seq) 
     {
       k++; //prochaine sequence
 
       for(l=0;l<MAX_PLACES;l++)
       {
-
-        if(tab_places[itrouve].date[jtrouve].sequence[k].place[l].billet) //si la place est prise dans cette nouvelle sequence
+        //si la place est prise dans cette nouvelle sequence
+        if(tab_places[itrouve].date[jtrouve].sequence[k].place[l].billet) 
         {
           //on notifie que la place n'est plus disponible
           tab_places_dispo[m].tab_dispo[l].billet = 1; 
@@ -2214,7 +2063,7 @@ void tri(struct UnRes tab_res[], int * nb_res_date)
 }
 
 // ~~~~~~~~~~~
-/* Procedure Contenant les choix utilisateurs quat a la selection des places, + lance ecriture dans tab_places et sauvegarde dans le registre des billets */
+/* Procedure Contenant les choix utilisateurs quant a la selection des places + lance ecriture dans tab_places et sauvegarde dans le registre des billets */
 // ~~~~~~~~~~~
 void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], int date_int)
 {
@@ -2234,8 +2083,6 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
   
   struct UnBillet tab_billet[MAX_RESERVATION];
   struct UnBilletRegistre tab_registre[MAX_RESERVATION];
-  
-  
 
   //Initialisation du tableau des caracteristiques
   for(i=0;i<2;i++) // pour chaque classe
@@ -2253,7 +2100,7 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
 
   for(i=0;i<MAX_PLACES;i++)
   {
-    printf("i : %d ; wagon : %d ; classe : %d ; salle : %d ; siege : %d ; position : %d ; billet : %d\n", i,tab_dispo[i].wagon, tab_dispo[i].classe,tab_dispo[i].salle,tab_dispo[i].siege,tab_dispo[i].position,tab_dispo[i].billet );
+    printf("i=%d ; wagon=%d ; classe=%d ; salle=%d ; siege=%d ; position=%d ; billet=%d\n", i,tab_dispo[i].wagon, tab_dispo[i].classe,tab_dispo[i].salle,tab_dispo[i].siege,tab_dispo[i].position,tab_dispo[i].billet );
   }
   */
 
@@ -2262,28 +2109,23 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
   {
     if( ! tab_dispo[j].billet)
     {
-        
       switch(tab_dispo[j].position)
       {
-        case 0 :
-      
+        case 0 : 
           tab_caract[tab_dispo[j].classe-1].position[tab_dispo[j].salle].fenetre++;
           tab_caract[tab_dispo[j].classe-1].position[tab_dispo[j].salle].salle++;
           break;
         case 1 :
-        
           tab_caract[tab_dispo[j].classe-1].position[tab_dispo[j].salle].couloir++;
           tab_caract[tab_dispo[j].classe-1].position[tab_dispo[j].salle].salle++;
           break;
         case 2 :
-          
           tab_caract[tab_dispo[j].classe-1].position[tab_dispo[j].salle].isole++;
           tab_caract[tab_dispo[j].classe-1].position[tab_dispo[j].salle].salle++;
           break;
-      }   
+      }
     }
-  }
-  
+  }  
 
   /*-----------------------------------------------
   -------Debut des choix utilisateur---------------
@@ -2292,7 +2134,7 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
   {
     if(tab_res.dispo_1ere && tab_res.dispo_2nde)
     {
-      saisie_int("\n(0 pour choisir un autre train)\nVoyager en classe (1 ou 2) : ",0, 2, &classe);
+      saisie_int("(0 pour choisir un autre train)  Voyager en classe (1 ou 2)  : ",0, 2, &classe);
     }
     else
     {
@@ -2313,11 +2155,11 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
     {
       if(classe==2)
       {
-        saisie_int("(0 pour choisir un autre train)\nNombre de voyageurs        : ",0, tab_res.dispo_2nde, &nbpassagers);
+        saisie_int("(0 pour choisir un autre train)  Nombre de voyageurs         : ",0, tab_res.dispo_2nde, &nbpassagers);
       }
       else
       {
-        saisie_int("(0 pour choisir un autre train)\nNombre de voyageurs        : ",0, tab_res.dispo_1ere, &nbpassagers); 
+        saisie_int("(0 pour choisir un autre train)  Nombre de voyageurs         : ",0, tab_res.dispo_1ere, &nbpassagers); 
       }
       
       if(nbpassagers)
@@ -2333,10 +2175,10 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
         annulation=0;
         while(i<nbpassagers && !annulation)
         {
-          printf("INFORMATIONS VOYAGEUR %d\n",i+1) ;
-          saisie_text("Nom   ", nom);
-          saisie_text("Prénom", prenom);
-          saisie_int("Age                         : ",1, 200, &age);
+          printf("INFORMATIONS VOYAGEUR %d        ",i+1) ;
+          saisie_text("  Nom   ", nom);
+          saisie_text("                                 Prénom", prenom);
+          saisie_int("                                 Age                         : ",1, 200, &age);
 
           // En seconde classe
           if(classe==2)
@@ -2344,7 +2186,7 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
             // choix de la salle
             if(tab_caract[classe-1].position[0].salle && tab_caract[classe-1].position[1].salle) // s'il y a des places aux deux etages
             {
-              saisie_int("Salle (0=salle basse, 1=salle haute)",0,1,&choix_salle);
+              saisie_int("(0=salle basse, 1=salle haute)   Salle                       : ",0,1,&choix_salle);
             }
 
             else if(tab_caract[classe-1].position[0].salle) // si il n'y a de places qu'au rdc
@@ -2365,63 +2207,23 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
               // && tab_caract[classe-1].position[choix_salle].isole 
               )     // si il reste les trois options, proposer
             {
-              saisie_int("Placement (0=fenetre, 1=couloir)",0,1,&choix_position);
+              saisie_int("(0=fenetre, 1=couloir)           Placement                   : ",0,1,&choix_position);
             }
-            else  // s'il reste une seule ou deux options : fenetre,couloir,isole, fenetre ou isole, fenetre ou couloir, couloir ou isole
+            else
             {
               if(tab_caract[classe-1].position[choix_salle].fenetre)
               {
-                /*
-                if(tab_caract[classe-1].position[choix_salle].couloir)
-                {
-                  printf("Placement (0=fenetre, 1=couloir) : ");
-                  choix_position = lecture_choix(0,1,lettre,&erreur4) ;
-                }
-                else if(tab_caract[classe-1].position[choix_salle].isole)
-                {
-                  printf("Placement (0=fenetre, 1=couloir) : ");
-                  choix_position = lecture_choix(0,1,lettre,&erreur4) ;
-                  if(choix_position==1)
-                  {
-                    choix_position=2;
-                  }
-                }
-                else
-                {
-                  */
-                  printf("Il ne reste plus que des places fenetres.\n");
-                  choix_position=0;
-                //}
+                printf("Il ne reste plus que des places fenetres.\n");
+                choix_position=0;
               }
-              /*
-              else if (tab_caract[classe-1].position[choix_salle].couloir)
-              {
-
-                if(tab_caract[classe-1].position[choix_salle].isole)
-                {
-                  printf("Placement (0=fenetre, 1=couloir) : ");
-                  choix_position = lecture_choix(0,1,lettre,&erreur4) ;
-                  choix_position++;
-                }
-                else
-                {
-                  printf("Il ne reste plus que des places couloirs.\n");
-                  choix_position=1;
-                  printf("Il ne reste plus que des places isolées.\n");
-                choix_position=2;
-                }
-              }
-              */
               else
               {
-                
                 printf("Il ne reste plus que des places couloirs.\n");
                 choix_position=1;
               }
             }
 
-            saisie_int("Voulez vous continuer ? (1 pour continuer, 0 pour revenir au menu des resultats)",0,1,&continuer);
-          
+            saisie_int("(0=retour 1=continuer)           Voulez-vous continuer ?     : ",0,1,&continuer);
             if(continuer)
             {
               j=0;
@@ -2489,7 +2291,6 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
                   {
                     interprete_position(tab_dispo[j].position, position);
                     interprete_salle(tab_dispo[j].salle, salle) ;
-                    // printf("-----------------------------------------------------------------------\n");
                     printf("| %11d | %5d | %5s | %5d | %8s |\n"
                                        ,j+1
                                        ,tab_dispo[j].wagon
@@ -2502,9 +2303,11 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
               printf("--------------------------------------------------\n");
 
               saisie_int("Veuillez selectionner un Identifiant de place\n(0 pour revenir au choix des resultats) : ",0, j, &choix_place);
-              choix_place--;
-              if(choix_place)
+              // saisie_int("Veuillez selectionner un siege \n(0 pour revenir au choix des resultats) : ",0, j, &choix_place);
+              // choix_place--;
+              if(choix_place>0)
               {
+                choix_place--;
                 if(!tab_dispo[choix_place].billet && tab_dispo[choix_place].classe==1)
                 {
                   deja_utilise=0;
@@ -2567,15 +2370,11 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
     printf("Il ne reste aucune place disponible pour ce train.\n");
     annulation=1;
   }
-  
-  
-  
-  
+
   if(!annulation)
-  {
-    
-    printf("Le montant total de votre commande est : %10.2f\n", montant_total);
-    
+  {    
+    printf("\n                      Le montant total de votre commande est : %6.2f\n\n", montant_total);
+
     faux_paiement();
     
     for(i=0;i<nbpassagers;i++)
@@ -2597,10 +2396,11 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
       
       tab_registre[i].prix  = tab_billet[i].prix;
       
-     
+      // printf("%d %s %s %s %s %s classe=%d siege=%d",tab_registre[i].date,tab_registre[i].idtrajet,
+      //   tab_registre[i].garedep,tab_registre[i].garearr,tab_registre[i].nom,tab_registre[i].prenom,
+      //   tab_registre[i].classe,tab_registre[i].siege);
+
       ecriture_resa_in_tab_places(tab_res ,tab_dispo[tab_billet[i].place], date_int, tab_billet[i].billet);
-    
-      
     }
     
     // creation_fichier_billet(tab_registre, nbpassagers);
@@ -2623,149 +2423,60 @@ void reservation(struct UnRes tab_res, int nb_res, struct UnePlace tab_dispo[], 
   }
 }
 
-// ~~~~~~~~~~~
-/* Ecriture des reservation dans tab_places */
-// ~~~~~~~~~~~
-void ecriture_resa_in_tab_places( struct UnRes tab_res ,struct UnePlace tab_dispo, int date_int, int billet)
+/* ---------------------------------------------- */
+/* -- Interpretation du int position en string -- */
+/* ---------------------------------------------- */
+void interprete_position(int pos, char position[])
 {  
-  int i, j, k, l, t, z;
-  int itrouve, jtrouve, ktrouve, ttrouve;
-  int nbplace;
-  int max_date,max_seq;
-  
-  nbplace=0;
-  i=0;
-  itrouve=0;
-  while(!itrouve && i<nbtrajet) // rechercher des tous les id dans la limite des id existants, jusqu'?avoir trouv?l'id desir?
-  {  
-    if(!strcmp(tab_places[i].idtrajet, tab_res.idtrajet)) //trouver l'id desir?
-    {  
-      itrouve=i;
-      /*
-      t=0;
-      while(strcmp(stockage_nb_rep[t].idtrajet, tab_places[i].idtrajet) && t<nbtrajet)
-      {
-        if(!strcmp(stockage_nb_rep[t].idtrajet, tab_places[i].idtrajet))
-        {
-          max_date = stockage_nb_rep[t].max_date ;
-          max_seq  = stockage_nb_rep[t].max_seq  ;
-        }
-        t++;
-      }
-      */
-        t=0;
-        ttrouve=0;
-        while(!ttrouve && t<nbtrajet) // rechercher les bons compteurs dans stockage_nb_rep
-        {
-          if (!strcmp(stockage_nb_rep[t].idtrajet, tab_places[i].idtrajet))
-          {
-            ttrouve=t;
-            
-            
-      // printf("idtrajet de stockage_nb_rep=%s ",stockage_nb_rep[t].idtrajet);max_date = stockage_nb_rep[t].max_date;
-            max_date = stockage_nb_rep[t].max_date;
-
-            max_seq  = stockage_nb_rep[t].max_seq ;
-     // printf("max_date=%d max_seq=%d\n",max_date,max_seq);
-          }
-          t++ ;
-        }
-
-      
-      j=0;
-      jtrouve=0;
-      while(!jtrouve && j<max_date) //rechercher dans cet id la date desiree dans la limite des dates par id (nbdate pas forcement la bonne limite car nbdate>=nbdate_par_id)
-      {      
-        if(tab_places[i].date[j].date == date_int)//trouver la date desir? dans l'id desir? (en char)
-        {        
-          jtrouve=j;
-          /*
-          while(!ktrouve && k< stock.max_seq)
-          {
-            
-          }
-          */
-          for(k=tab_res.seqdep; k<tab_res.seqarr;k++)
-          {        
-            for(l=0;l<MAX_PLACES;l++) //compter les places parmi la limite de places definie par la capacit?
-            {
-              if(tab_places[i].date[j].sequence[k].place[l].wagon == tab_dispo.wagon
-                && tab_places[i].date[j].sequence[k].place[l].siege == tab_dispo.siege)
-              {
-                tab_places[i].date[j].sequence[k].place[l].billet = billet ;
-                a_sauvegarder[i].date[j].sequence[k].modifie = 1           ;
-                //printf("%d\n",tab_places[i].date[j].sequence[k].place[l].billet);
-              }
-            }//fin du for des places
-          }//fin du for des sequences
-        }//fin du if date trouve
-        j++;
-      }//fin du while des dates
-    }//fin du if id trouve
-    i++;
-  }//fin du while des id
+  switch(pos)
+  {
+    case 0:
+      strcpy(position, "fenetre");
+      break;
+    case 1:
+      strcpy(position, "couloir");
+      break;
+    case 2:
+      strcpy(position, "isole");
+      break;
+  }
 }
 
-// ~~~~~~~~~~~
-/* Ecriture/Sauvegarde des reservation dans le fichier registre_billets */
-// ~~~~~~~~~~~
-void creation_fichier_billet(struct UnBilletRegistre tab_registre[], int nb_nouveau){
-  
-  
-  int i;
-  
-  //Ajout des nouveaux billets
-  
-  for(i=0;i<nb_nouveau;i++)
+/* ------------------------------------------- */
+/* -- Interpretation du int salle en string -- */
+/* ------------------------------------------- */
+void interprete_salle(int etage, char salle[])
+{
+  switch(etage)
   {
-  
-    strcpy(registre_billets[nb_registre_billet+i].idtrajet, tab_registre[i].idtrajet);
-    strcpy(registre_billets[nb_registre_billet+i].garedep, tab_registre[i].garedep);
-    strcpy(registre_billets[nb_registre_billet+i].garearr,tab_registre[i].garearr);
-    strcpy(registre_billets[nb_registre_billet+i].nom, tab_registre[i].nom);
-    strcpy(registre_billets[nb_registre_billet+i].prenom,tab_registre[i].prenom);
-    registre_billets[nb_registre_billet+i].date = tab_registre[i].date;
-    registre_billets[nb_registre_billet+i].age = tab_registre[i].age;
-    registre_billets[nb_registre_billet+i].classe = tab_registre[i].classe;
-    registre_billets[nb_registre_billet+i].wagon = tab_registre[i].wagon;
-    registre_billets[nb_registre_billet+i].salle = tab_registre[i].salle;
-    registre_billets[nb_registre_billet+i].siege = tab_registre[i].siege;
-    registre_billets[nb_registre_billet+i].position = tab_registre[i].position;
-    registre_billets[nb_registre_billet+i].billet = tab_registre[i].billet;
-    
-    registre_billets[nb_registre_billet+i].prix = tab_registre[i].prix;
-
-    registre_billets = (struct UnBilletRegistre *) realloc(registre_billets,sizeof(struct UnBilletRegistre) * (nb_registre_billet+i)) ;
-  printf("Ça va après le realloc\n") ;
+    case 0:
+      strcpy(salle, "basse");
+      break;
+    case 1:
+      strcpy(salle, "haute");
+      break;
   }
-  nb_registre_billet = nb_registre_billet+i;
-  if(nb_registre_billet)
-  {
-    nb_registre_billet++;
-  } 
 }
 
 // ~~~~~~~~~~~
 /* Procedure simulant la saisie de coordonnees bancaires */
 // ~~~~~~~~~~~
-void faux_paiement(){
-  
-  int j;
-  int i;
-  int erreur, booleen, test;
+void faux_paiement()
+{
+  int  j;
+  int  i;
+  int  erreur, booleen, test;
   char lettre;
   char dump;
-  char digit[MAX_DIGIT];  //MAX_AGE a creer
-  
+  char digit[MAX_DIGIT];
+
   int num_bancaire, date_bancaire, cvc_bancaire;
   int len_num;
-  
+
   /*-- Carte Bancaire -- */
-  
   erreur=1;
   while(erreur)
   {
-    
     i=0;
     erreur = 1;
     while(erreur)
@@ -2773,11 +2484,12 @@ void faux_paiement(){
       i=0;
       erreur=0;
       lettre=50;
-      printf("Veuillez saisir votre numero de carte bancaire : ");
+
+      printf("                                 Numero de carte bancaire    : ");
       while(!erreur && i<MAX_DIGIT && lettre!='\n' && ( (lettre<58) && (lettre>47)) )    
       {
         scanf("%c", &lettre);
-        
+
         if( lettre!='\n')
         {
           if( (lettre<58) && (lettre>47) ) 
@@ -2789,7 +2501,6 @@ void faux_paiement(){
           else
           {
             erreur=1;
-            
           } 
         }
         else
@@ -2804,7 +2515,7 @@ void faux_paiement(){
       if(i>=MAX_DIGIT)
       {
         erreur=1;
-        printf("Saisie superieure a 25 caracteres. ");
+        printf("Saisie superieure a 16 caracteres. ");
       }
       
       if(erreur)
@@ -2845,7 +2556,7 @@ void faux_paiement(){
         i=0;
         erreur=0;
         lettre=50;
-        printf("Veuillez saisir la date d'expiration de votre carte bancaire au format MMAA : ");
+        printf("                                 Date d'expiration (MMAA)    : ");
         while(!erreur && i<MAX_DIGIT && lettre!='\n' && ( (lettre<58) && (lettre>47)) )    
         {
           scanf("%c", &lettre);
@@ -2915,7 +2626,7 @@ void faux_paiement(){
           i=0;
           erreur=0;
           lettre=50;
-          printf("Veuillez saisir le code CVC de votre carte bancaire : ");
+          printf("                                 Code de sécurité (au dos)   : ");
           while(!erreur && i<MAX_DIGIT && lettre!='\n' && ( (lettre<58) && (lettre>47)) )
           {
             scanf("%c", &lettre);
@@ -2969,7 +2680,7 @@ void faux_paiement(){
             }
             lettre=50;
             dump='a';
-            printf("Veuillez saisir un code cvc valide.\n");
+            printf("Veuillez saisir un code de sécurité valide.\n");
           }
         }//Fin du while(erreur) de cvc_bancaire
         cvc_bancaire=test;
@@ -2999,12 +2710,254 @@ void faux_paiement(){
       erreur=1;
       printf("Carte bancaire non valide.\n");
     }
-    
-    
   }//Fin grande boucle while(erreur)
-  
-  
 }
+
+// ~~~~~~~~~~~
+/* Ecriture des reservation dans tab_places */
+// ~~~~~~~~~~~
+void ecriture_resa_in_tab_places( struct UnRes tab_res ,struct UnePlace tab_dispo, int date_int, int billet)
+{  
+  int i, j, k, l, t, z;
+  int itrouve, jtrouve, ktrouve, ttrouve;
+  int nbplace;
+  int max_date,max_seq;
+  
+  nbplace=0;
+  i=0;
+  itrouve=0;
+  while(!itrouve && i<nbtrajet) // rechercher des tous les id dans la limite des id existants, jusqu'?avoir trouv?l'id desir?
+  {  
+    if(!strcmp(tab_places[i].idtrajet, tab_res.idtrajet)) //trouver l'id desir?
+    {  
+      itrouve=i;
+      /*
+      t=0;
+      while(strcmp(stockage_nb_rep[t].idtrajet, tab_places[i].idtrajet) && t<nbtrajet)
+      {
+        if(!strcmp(stockage_nb_rep[t].idtrajet, tab_places[i].idtrajet))
+        {
+          max_date = stockage_nb_rep[t].max_date ;
+          max_seq  = stockage_nb_rep[t].max_seq  ;
+        }
+        t++;
+      }
+      */
+        t=0;
+        ttrouve=0;
+        while(!ttrouve && t<nbtrajet) // rechercher les bons compteurs dans stockage_nb_rep
+        {
+          if (!strcmp(stockage_nb_rep[t].idtrajet, tab_places[i].idtrajet))
+          {
+            ttrouve=t;
+            
+            // printf("idtrajet de stockage_nb_rep=%s ",stockage_nb_rep[t].idtrajet);max_date = stockage_nb_rep[t].max_date;
+            max_date = stockage_nb_rep[t].max_date;
+            max_seq  = stockage_nb_rep[t].max_seq ;
+            // printf("max_date=%d max_seq=%d\n",max_date,max_seq);
+          }
+          t++ ;
+        }
+
+      
+      j=0;
+      jtrouve=0;
+      while(!jtrouve && j<max_date) //rechercher dans cet id la date desiree dans la limite des dates par id (nbdate pas forcement la bonne limite car nbdate>=nbdate_par_id)
+      {      
+        if(tab_places[i].date[j].date == date_int)//trouver la date desir? dans l'id desir? (en char)
+        {        
+          jtrouve=j;
+          /*
+          while(!ktrouve && k< stock.max_seq)
+          {
+            
+          }
+          */
+          for(k=tab_res.seqdep; k<tab_res.seqarr;k++)
+          {        
+            for(l=0;l<MAX_PLACES;l++) //compter les places parmi la limite de places definie par la capacit?
+            {
+              if(tab_places[i].date[j].sequence[k].place[l].wagon == tab_dispo.wagon
+                && tab_places[i].date[j].sequence[k].place[l].siege == tab_dispo.siege)
+              {
+                tab_places[i].date[j].sequence[k].place[l].billet = billet ;
+                a_sauvegarder[i].date[j].sequence[k].modifie = 1           ;
+                //printf("%d\n",tab_places[i].date[j].sequence[k].place[l].billet);
+              }
+            }//fin du for des places
+          }//fin du for des sequences
+        }//fin du if date trouve
+        j++;
+      }//fin du while des dates
+    }//fin du if id trouve
+    i++;
+  }//fin du while des id
+}
+
+
+// ~~~~~~~~~~~
+/* Copie des nouvelles reservations dans le registre */
+// ~~~~~~~~~~~
+void creation_fichier_billet(struct UnBilletRegistre tab_registre[], int nb_nouveau)
+{
+  int i;
+
+  //Ajout des nouveaux billets
+  for(i=0;i<nb_nouveau;i++)
+  {
+    registre_billets = (struct UnBilletRegistre *) realloc(registre_billets,sizeof(struct UnBilletRegistre) * (nb_registre_billet+1)) ;
+    strcpy(registre_billets[nb_registre_billet+1].idtrajet, tab_registre[i].idtrajet);
+    strcpy(registre_billets[nb_registre_billet+1].garedep, tab_registre[i].garedep);
+    strcpy(registre_billets[nb_registre_billet+1].garearr,tab_registre[i].garearr);
+    strcpy(registre_billets[nb_registre_billet+1].nom, tab_registre[i].nom);
+    strcpy(registre_billets[nb_registre_billet+1].prenom,tab_registre[i].prenom);
+    registre_billets[nb_registre_billet+1].date = tab_registre[i].date;
+    registre_billets[nb_registre_billet+1].age = tab_registre[i].age;
+    registre_billets[nb_registre_billet+1].classe = tab_registre[i].classe;
+    registre_billets[nb_registre_billet+1].wagon = tab_registre[i].wagon;
+    registre_billets[nb_registre_billet+1].salle = tab_registre[i].salle;
+    registre_billets[nb_registre_billet+1].siege = tab_registre[i].siege;
+    registre_billets[nb_registre_billet+1].position = tab_registre[i].position;
+    registre_billets[nb_registre_billet+1].billet = tab_registre[i].billet;
+    
+    registre_billets[nb_registre_billet+i].prix = tab_registre[i].prix;
+    nb_registre_billet = nb_registre_billet+1;
+  }
+}
+
+/* --------------------------------- */
+/* -- Tableau des dates à traiter -- */
+/* --------------------------------- */
+void crea_date_vente(int jour, int mois, int annee)
+{
+  int jour_end, mois_end, annee_end;
+  int i, j, m, a, date;
+  // int i, nbdate; // je l'ai passé en global
+  char chdate[MAX_DATENUM];
+  jour_end=jour;
+  mois_end=mois;
+  annee_end=annee;
+  
+  j=jour;
+  m=mois;
+  a=annee;
+  
+  for(i=0; i<1;i++) // mettre i<4 pour ouvrir les places à la vente sur 4 mois 
+  {
+    mois_end++;
+    if(mois_end>12)
+    {
+      mois_end=1;
+      annee_end++;
+    }
+  }
+  // calcule la date la plus loin des ventes ouvertes (dans 4 mois)
+  switch(mois_end)
+  {
+    case 4: case 6: case 9: case 11:
+      while(jour_end>30)
+      {
+        jour_end--;
+      }
+      break;
+    case 2 :
+      if((mois_end % 4 == 0 && mois_end % 100 != 0) || mois_end % 400 == 0)
+      {
+        while(jour_end>29)
+        {
+          jour_end--;
+        }
+      }
+      else
+      {
+        while(jour_end>28)
+        {
+          jour_end--;
+        }
+      }
+      break;
+    default :
+      break ;
+  }
+
+  // calcule toutes les dates intermédiaires
+  tab_date_vente = (struct date *) malloc(sizeof(struct date));
+  
+  i=0;
+  while( (j!=jour_end) | (m!=mois_end ) | (a!=annee_end))
+  {
+    tab_date_vente[i].jhebdo=calcul_jour_semaine(j,m,a,jour_sys,mois_sys,annee_sys,jhebdo_num_sys) ;
+    tab_date_vente[i].jour=j;
+    tab_date_vente[i].mois=m;
+    tab_date_vente[i].annee=a;
+    
+    chdate[0]=(a/1000)+48; 
+    chdate[1]=((a%1000)/100)+48;
+    chdate[2]=((a%100)/10)+48;
+    chdate[3]=(a%10)+48;
+    chdate[4]=(m/10)+48;
+    chdate[5]=(m%10)+48;
+    chdate[6]=(j/10)+48;
+    chdate[7]=(j%10)+48;
+    chdate[8]='\0';
+    // strcpy(tab_date_vente[i].date,chdate); // je remplace par un int, c'est plus simple à traiter
+    date = atoi(chdate) ;
+    tab_date_vente[i].date = date ;
+    
+ // printf("%d\n", tab_date[i].date);
+    
+    j++;
+    
+    i++;
+    nbdatevente=i;
+    tab_date_vente = (struct date *) realloc(tab_date_vente,sizeof(struct date) * (nbdatevente+1)) ;
+    
+    switch(m)
+    {
+      case 1: case 3: case 5: case 7: case 8: case 10: case 12:
+        if( j>31)
+        {
+         j=1;
+         m++;
+        }
+        break;
+      case 4: case 6: case 9: case 11:
+        if( j>30)
+        {
+         j=1;
+         m++;
+        }
+        break;
+      case 2 :
+        if((m % 4 == 0 && m % 100 != 0) || m % 400 == 0)
+        {
+          if( j>29)
+          {
+           j=1;
+           m++;
+          }
+        }
+        else
+        {
+          if( j>28)
+          {
+           j=1;
+           m++;
+          }
+        }
+        break;
+      default :
+        break ;
+    }
+    
+    if(m>12)
+    {
+      m=1;
+      a++;
+    }
+  }
+}
+
 
 // ~~~~~~~~~~~
 /* Calcule si un train circule pour un trajet et une date */
@@ -3156,305 +3109,9 @@ int sequence(char idtrajet[MAX_ID], struct UneSeq tab_sequence[])
   return nbsequence ;
 }
 
-
 // ============================================= //
 /* === Fonctions et procédures sur les dates === */
 // ============================================= //
-
-/* --------------------- */
-/* -- Date du système -- */
-/* --------------------- */
-// void date_sys(int *jour, int *mois, int *annee)
-void date_sys(int *jour, int *mois, int *annee, int *jhebdo_num)
-{
-  time_t nb_sec_1970, temps ;
-  struct tm date ;
-
-  /* -- met la date en francais -- */
-  setlocale(LC_ALL,"");
-
-  /*-- Récupère la date système -- */
-  nb_sec_1970 = time(&temps);      // Secondes depuis 01/01/1970
-  date = *localtime(&nb_sec_1970); // Conversion en date
-
-  /* Éléments intelligibles de la date du système */
-  *jour       = date.tm_mday       ; // jour du système
-  *mois       = date.tm_mon  +1    ; // mois du système
-  *annee      = date.tm_year +1900 ; // année du système
-  *jhebdo_num = date.tm_wday       ; // jour de semaine du système (0 à 6)
-}
-
-/* ----------------------------- */
-/* -- Postériorité d'une date -- */
-/* ----------------------------- */
-int date_anterieure(int jour, int mois, int annee, int jour_ref, int mois_ref, int annee_ref)
-{
-  int erreur=0;
-
-  if (annee < annee_ref)
-  {
-    erreur=1;
-  }
-  else if (annee == annee_ref)
-  {
-    if (mois < mois_ref)
-    {
-      erreur=1;
-    }
-    else if (mois == mois_ref)
-    {
-      if (jour < jour_ref)
-      {
-        erreur=1;
-      }
-      else if (jour = jour_ref)
-      {
-        erreur = -1;
-      }
-    }
-  }
-  return erreur ;
-}
-
-/* --------------------------------- */
-/* -- Tableau des dates à traiter -- */
-/* --------------------------------- */
-void crea_date_vente(int jour, int mois, int annee)
-{
-  int jour_end, mois_end, annee_end;
-  int i, j, m, a, date;
-  // int i, nbdate; // je l'ai passé en global
-  char chdate[MAX_DATENUM];
-  jour_end=jour;
-  mois_end=mois;
-  annee_end=annee;
-  
-  j=jour;
-  m=mois;
-  a=annee;
-  
-  for(i=0; i<1;i++) // mettre i<4 pour ouvrir les places à la vente sur 4 mois 
-  {
-    mois_end++;
-    if(mois_end>12)
-    {
-      mois_end=1;
-      annee_end++;
-    }
-  }
-  // calcule la date la plus loin des ventes ouvertes (dans 4 mois)
-  switch(mois_end)
-  {
-    case 4: case 6: case 9: case 11:
-      while(jour_end>30)
-      {
-        jour_end--;
-      }
-      break;
-    case 2 :
-      if((mois_end % 4 == 0 && mois_end % 100 != 0) || mois_end % 400 == 0)
-      {
-        while(jour_end>29)
-        {
-          jour_end--;
-        }
-      }
-      else
-      {
-        while(jour_end>28)
-        {
-          jour_end--;
-        }
-      }
-      break;
-    default :
-      break ;
-  }
-
-  // calcule toutes les dates intermédiaires
-  tab_date_vente = (struct date *) malloc(sizeof(struct date));
-  
-  i=0;
-  while( (j!=jour_end) | (m!=mois_end ) | (a!=annee_end))
-  {
-    tab_date_vente[i].jhebdo=calcul_jour_semaine(j,m,a,jour_sys,mois_sys,annee_sys,jhebdo_num_sys) ;
-    tab_date_vente[i].jour=j;
-    tab_date_vente[i].mois=m;
-    tab_date_vente[i].annee=a;
-    
-    chdate[0]=(a/1000)+48; 
-    chdate[1]=((a%1000)/100)+48;
-    chdate[2]=((a%100)/10)+48;
-    chdate[3]=(a%10)+48;
-    chdate[4]=(m/10)+48;
-    chdate[5]=(m%10)+48;
-    chdate[6]=(j/10)+48;
-    chdate[7]=(j%10)+48;
-    chdate[8]='\0';
-    // strcpy(tab_date_vente[i].date,chdate); // je remplace par un int, c'est plus simple à traiter
-    date = atoi(chdate) ;
-    tab_date_vente[i].date = date ;
-    
- // printf("%d\n", tab_date[i].date);
-    
-    j++;
-    
-    i++;
-    nbdatevente=i;
-    tab_date_vente = (struct date *) realloc(tab_date_vente,sizeof(struct date) * (nbdatevente+1)) ;
-    
-    switch(m)
-    {
-      case 1: case 3: case 5: case 7: case 8: case 10: case 12:
-        if( j>31)
-        {
-         j=1;
-         m++;
-        }
-        break;
-      case 4: case 6: case 9: case 11:
-        if( j>30)
-        {
-         j=1;
-         m++;
-        }
-        break;
-      case 2 :
-        if((m % 4 == 0 && m % 100 != 0) || m % 400 == 0)
-        {
-          if( j>29)
-          {
-           j=1;
-           m++;
-          }
-        }
-        else
-        {
-          if( j>28)
-          {
-           j=1;
-           m++;
-          }
-        }
-        break;
-      default :
-        break ;
-    }
-    
-    if(m>12)
-    {
-      m=1;
-      a++;
-    }
-  }
-}
-
-/* ------------------------------- */
-/* -- Calcul du jour de semaine -- */
-/* ------------------------------- */
-// incrémente les 4 variables d'une date donnéee connue 
-// (jour de semaine, jour, mois, année) jusqu'à atteindre
-// la date recherchée pour en connaitre le jour de semaine
-int calcul_jour_semaine(int jour_rech, int mois_rech, int annee_rech, int jour, int mois, int annee, int jhebdo)
-{
-  int jhebdo_rech=jhebdo ; // jour de semaine à retourner (commence au jour de semaine fourni)
-  int i, j=0 ;
-  int annee_bi[10];        // tableau d'années bissextiles
-
-  /* -- Construction du tableau des prochaines annees bissextiles -- */
-  for(i=annee; i<=annee_rech;i++)  /* Est-ce qu'on a vraiment besoin de ça ? 
-  On n'a qu'à juste utiliser le if qui dit si annee_rech est bissextile*/
-  {                              
-    if((i % 4 == 0 && i % 100 != 0) || i % 400 == 0)
-    {
-      annee_bi[j++]=i;
-    }
-  }
-  j=0;
-
-  /* -- Incrementation des jours -- */
-  while((jour != jour_rech) | (mois != mois_rech) | (annee != annee_rech)) // tant qu'on n'atteint pas la date recherchée
-  {                                                                        // on incrémente les 4 variables de date
-    switch(mois)                                                           // (jour et mois selon le nombre de jours du mois)
-    {
-      case 1 : case 3 : case 5 : case 7 : case 8 : case 10 : case 12 : // les mois de 31 jours
-        if(jour<31)            // si le jour n'est pas le 31
-        {
-          jour++;              // incrémentation du jour
-        }
-        else                   // si le jour est le 31 (dernier du mois)
-        {
-          jour=1;              // le prochain jour est le 1er
-          mois++;              // du mois suivant
-        }
-        break;
-      case 2 :                 // en février
-        if(annee==annee_bi[j]) // si l'année est bissextile
-        {
-          if(jour<29)          // si le jour n'est pas 29 (dernier du mois)
-          {
-            jour++;            // incrémentation du jour
-          }
-          else                 // sinon (le jour est le dernier du mois)
-          {
-            jour=1;            // le prochain jour est le 01/03
-            mois++;
-            // j++;
-          }
-        }
-        else                   // si l'année n'est pas bissextile
-        {
-          if(jour<28)          // si le jour n'est pas 28 (dernier du mois)
-          {         
-            jour++;            // incrémentation du jour
-          }
-          else                 // sinon (le jour est le dernier du mois)
-          {
-            jour=1;            // le prochain jour est le 01/03
-            mois++;
-          }
-        }
-        break;
-      default :                // pour tous les autres mois (ceux de 30 jours)
-        if(jour<30)            // si le jour n'est pas le 30 (dernier du mois)
-        {
-          jour++;              // incrémentation du jour
-        }
-        else                   // sinon (le jour est le dernier du mois)
-        {
-          jour=1;              // le prochain jour est le 1er
-          mois++;              // du mois suivant
-        }
-        break;
-    } // fin du switch (selon le nombre de jours du mois)
-    if(mois==13)                                                          // (année si on a changé d'année dans le switch)
-    {
-      mois=1;
-      annee++;
-    }
-    jhebdo_rech++;                                                        // (jour de semaine)
-    if (jhebdo_rech==7)
-      jhebdo_rech=0;                                                      // remise à 0 si jour de la semaine 7 (convention : 0 à 6)          
-  } /* fin du while d'incrémentation d'un jour hebdo */
-  return jhebdo_rech; // renvoie un int (0 à 6)
-}
-
-/* --------------------------------------- */
-/* -- Interprétation du jour de semaine -- */
-/* --------------------------------------- */
-void interprete_jour_semaine(int jhebdo_num, char jhebdo_alpha[])
-{
-  switch(jhebdo_num)
-  {
-    case 0: strcpy(jhebdo_alpha,"dimanche") ; break ;
-    case 1: strcpy(jhebdo_alpha,"lundi")    ; break ;
-    case 2: strcpy(jhebdo_alpha,"mardi")    ; break ;
-    case 3: strcpy(jhebdo_alpha,"mercredi") ; break ;
-    case 4: strcpy(jhebdo_alpha,"jeudi")    ; break ;
-    case 5: strcpy(jhebdo_alpha,"vendredi") ; break ;
-    case 6: strcpy(jhebdo_alpha,"samedi")   ; break ;
-  }
-}
 
 /* ------------------------------------------------------- */
 /* -- Lecture et contrôle de validité d'une date saisie -- */
@@ -3567,6 +3224,114 @@ int valide_date(int * jour, int * mois, int * annee)
       break ;
   }
   return erreur ;
+}
+
+
+/* ------------------------------- */
+/* -- Calcul du jour de semaine -- */
+/* ------------------------------- */
+// incrémente les 4 variables d'une date donnéee connue 
+// (jour de semaine, jour, mois, année) jusqu'à atteindre
+// la date recherchée pour en connaitre le jour de semaine
+int calcul_jour_semaine(int jour_rech, int mois_rech, int annee_rech, int jour, int mois, int annee, int jhebdo)
+{
+  int jhebdo_rech=jhebdo ; // jour de semaine à retourner (commence au jour de semaine fourni)
+  int i, j=0 ;
+  int annee_bi[10];        // tableau d'années bissextiles
+
+  /* -- Construction du tableau des prochaines annees bissextiles -- */
+  for(i=annee; i<=annee_rech;i++)  /* Est-ce qu'on a vraiment besoin de ça ? 
+  On n'a qu'à juste utiliser le if qui dit si annee_rech est bissextile*/
+  {                              
+    if((i % 4 == 0 && i % 100 != 0) || i % 400 == 0)
+    {
+      annee_bi[j++]=i;
+    }
+  }
+  j=0;
+
+  /* -- Incrementation des jours -- */
+  while((jour != jour_rech) | (mois != mois_rech) | (annee != annee_rech)) // tant qu'on n'atteint pas la date recherchée
+  {                                                                        // on incrémente les 4 variables de date
+    switch(mois)                                                           // (jour et mois selon le nombre de jours du mois)
+    {
+      case 1 : case 3 : case 5 : case 7 : case 8 : case 10 : case 12 : // les mois de 31 jours
+        if(jour<31)            // si le jour n'est pas le 31
+        {
+          jour++;              // incrémentation du jour
+        }
+        else                   // si le jour est le 31 (dernier du mois)
+        {
+          jour=1;              // le prochain jour est le 1er
+          mois++;              // du mois suivant
+        }
+        break;
+      case 2 :                 // en février
+        if(annee==annee_bi[j]) // si l'année est bissextile
+        {
+          if(jour<29)          // si le jour n'est pas 29 (dernier du mois)
+          {
+            jour++;            // incrémentation du jour
+          }
+          else                 // sinon (le jour est le dernier du mois)
+          {
+            jour=1;            // le prochain jour est le 01/03
+            mois++;
+            // j++;
+          }
+        }
+        else                   // si l'année n'est pas bissextile
+        {
+          if(jour<28)          // si le jour n'est pas 28 (dernier du mois)
+          {         
+            jour++;            // incrémentation du jour
+          }
+          else                 // sinon (le jour est le dernier du mois)
+          {
+            jour=1;            // le prochain jour est le 01/03
+            mois++;
+          }
+        }
+        break;
+      default :                // pour tous les autres mois (ceux de 30 jours)
+        if(jour<30)            // si le jour n'est pas le 30 (dernier du mois)
+        {
+          jour++;              // incrémentation du jour
+        }
+        else                   // sinon (le jour est le dernier du mois)
+        {
+          jour=1;              // le prochain jour est le 1er
+          mois++;              // du mois suivant
+        }
+        break;
+    } // fin du switch (selon le nombre de jours du mois)
+    if(mois==13)                                                          // (année si on a changé d'année dans le switch)
+    {
+      mois=1;
+      annee++;
+    }
+    jhebdo_rech++;                                                        // (jour de semaine)
+    if (jhebdo_rech==7)
+      jhebdo_rech=0;                                                      // remise à 0 si jour de la semaine 7 (convention : 0 à 6)          
+  } /* fin du while d'incrémentation d'un jour hebdo */
+  return jhebdo_rech; // renvoie un int (0 à 6)
+}
+
+/* --------------------------------------- */
+/* -- Interprétation du jour de semaine -- */
+/* --------------------------------------- */
+void interprete_jour_semaine(int jhebdo_num, char jhebdo_alpha[])
+{
+  switch(jhebdo_num)
+  {
+    case 0: strcpy(jhebdo_alpha,"dimanche") ; break ;
+    case 1: strcpy(jhebdo_alpha,"lundi")    ; break ;
+    case 2: strcpy(jhebdo_alpha,"mardi")    ; break ;
+    case 3: strcpy(jhebdo_alpha,"mercredi") ; break ;
+    case 4: strcpy(jhebdo_alpha,"jeudi")    ; break ;
+    case 5: strcpy(jhebdo_alpha,"vendredi") ; break ;
+    case 6: strcpy(jhebdo_alpha,"samedi")   ; break ;
+  }
 }
 
 /* ---------------------------------------------- */
@@ -3733,6 +3498,42 @@ void date_suivante_precedente(int *jhebdo_rech, int *jour_rech, int *mois_rech, 
   *annee_rech  = annee  ;
 }
 
+/* ----------------------------- */
+/* -- Antériorité d'une date -- */
+/* ----------------------------- */
+// compare la premiere date passee et la deuxième
+// erreur  1 : la première date est antérieure 
+// erreur  0 : les dates sont identiques
+// erreur -1 : la première date est postérieure
+int date_anterieure(int jour, int mois, int annee, int jour_ref, int mois_ref, int annee_ref)
+{
+  int erreur=0;
+
+  if (annee < annee_ref)
+  {
+    erreur=1;
+  }
+  else if (annee == annee_ref)
+  {
+    if (mois < mois_ref)
+    {
+      erreur=1;
+    }
+    else if (mois == mois_ref)
+    {
+      if (jour < jour_ref)
+      {
+        erreur=1;
+      }
+      else if (jour = jour_ref)
+      {
+        erreur = -1;
+      }
+    }
+  }
+  return erreur ;
+}
+
 /* --------------------------------------------------------------- */
 /* -- Convertit une date AAAAMMJJ en éléments jour, mois, annee -- */
 /* --------------------------------------------------------------- */
@@ -3768,43 +3569,7 @@ void decoupe_date(int date, int *jour, int *mois, int *annee)
 int assemble_date(int jour, int mois, int annee)
 {
   int date_int;
-  /*
-  char datechar[MAX_DATENUM],anneechar[5], moischar[3], jourchar[3];
-  char moischar1[2], jourchar1[2] ;
 
-  int date_int ;
-
-  sprintf(anneechar,"%d",annee);
-  
-  if (mois<10)
-  {
-    moischar[0]='0';
-    sprintf(moischar1,"%d",mois);
-    strcat(moischar,moischar1) ;
-  }
-  else
-  {
-    sprintf(moischar,"%d",mois);
-  }
-
-  if (jour<10)
-  {
-    jourchar[0]='0';
-    sprintf(jourchar1,"%d",jour);
-    strcat(jourchar,moischar1) ;
-  }
-  else
-  {
-    sprintf(jourchar,"%d",jour);
-  }
-
-
-  strcpy(datechar,anneechar);
-  strcat(datechar,moischar) ;
-  strcat(datechar,jourchar) ;
-
-  date_int = atoi(datechar) ;
-  */
   date_int= annee*10000;
   date_int= date_int+(mois*100);
   date_int= date_int+jour;
@@ -3813,207 +3578,8 @@ int assemble_date(int jour, int mois, int annee)
 }
 
 // ====================================== //
-/* === Fonctions et procédures outils === */
+// === Outils de traitement des choix === //
 // ====================================== //
-
-/* ------------------------------------------ */
-/* -- Conversion d'une chaine en majuscule -- */
-/* ------------------------------------------ */
-void convmaj(char chaine[])
-{
-  int i ;
-
-  for (i=0 ; i < strlen(chaine) ; i++)
-  {
-    chaine[i] = toupper(chaine[i]) ;
-  }
-}
-/* ----------------------------------------- */
-/* -- Remplacer les tiret par des espaces -- */
-/* ----------------------------------------- */
-void tiret_to_space(char chaine[])
-{    
-  int i,max;
-  max = strlen(chaine);
-  
-  for(i=0;i<max;i++)
-  {
-    if(chaine[i]==45)
-    {
-      chaine[i]=32;
-    }
-  }
-}
-
-/* ----------------------------------------- */
-/* -- Couper une chaine en 2 sous chaines -- */
-/* ----------------------------------------- */
-void coupe_chaine_au_caractere(char chaine[], char sschaine1[], char sschaine2[], char sep)
-{
-  int i=0,j=0,k=0,max;
-  max = strlen(chaine);
-
-  while ((i<max) && (chaine[i]!=sep))
-  {
-    sschaine1[j++] = chaine[i++] ;
-  }
-  i++;
-  sschaine1[j]='\0';
-  while (i<max)
-  {
-    sschaine2[k++] = chaine[i++] ;
-  }
-  sschaine2[k]='\0';
-}
-
-/* --------------------------------------------------- */
-/* -- Enlever une sous-chaine au début d'une chaine -- */
-/* --------------------------------------------------- */
-void nettoie_debut_chaine(char chaine[], char pattern[])
-{
-  
-  int i,j=0,trouve=0 ;
-  char tmpchar[MAX_GARE] ;
-
-  for (i=0;i<strlen(pattern);i++)
-  {
-    if (chaine[i] = pattern[i])
-    {
-      trouve++;
-    }
-  }
-
-  if (trouve == strlen(pattern))
-  {
-    for(i=strlen(pattern);i<strlen(chaine);i++)
-    {
-      tmpchar[j++] = chaine[i] ;
-    }
-    tmpchar[j] = '\0' ;
-    strcpy(chaine,tmpchar) ;
-  }
-}
-
-void trim(char *ch)
-{
-  char chaine1[200] ;
-  int i = 0, j = 0 , k = 0 , taille = 0 ;
-  if (strcmp(ch,"") != 0) /* On teste si la chaine n'est pas vide */
-  {
-    /* --- suppression des espaces en début de chaine --- */
-    while (isspace(ch[i++])); /* on passe les espaces du début */
-    taille = strlen(ch);
-    /* recopie des caractères APRES les espaces */
-    for (j=i-1 ; j<taille ; j++) chaine1[k++] = ch[j];
-    chaine1[k++] = '\0' ; /* on finalise la chaine */
-    strcpy(ch,chaine1) ; /* on recopie la chaine traitée dans ch */
-    /* --- suppression des espaces en fin de chaine --- */
-    i = strlen(ch);
-    while (isspace(ch[--i])); /* on passe les espaces */
-    ch[++i] = '\0' ; /* on finalise la chaine */
-  }
-}
-
-
-
-/* ------------------------------------------------------------------------------ */
-/* Remplace toutes les occurrences de motif_a_remplacer par motif_de_remplacement */
-/* ------------------------------------------------------------------------------ */
-char * str_replace_all(char * chaine, char * motif_a_remplacer, char * motif_de_remplacement)
-{
-  char * pt_motif_a_remplacer = strstr(chaine, motif_a_remplacer), * chaine_retour = NULL;
-  int taille_pt_motif_a_remplacer, taille_motif_a_remplacer, taille_motif_de_remplacement ;
-  while (pt_motif_a_remplacer != NULL)
-  {
-    taille_pt_motif_a_remplacer = strlen(pt_motif_a_remplacer) ;
-    taille_motif_a_remplacer = strlen(motif_a_remplacer) ;
-    taille_motif_de_remplacement = strlen(motif_de_remplacement) ;
-    if (taille_motif_a_remplacer != taille_motif_de_remplacement)
-    {
-      /* Ajuster la taille pour pouvoir placer motif_de_remplacement */
-      memmove(pt_motif_a_remplacer + taille_motif_de_remplacement,
-      pt_motif_a_remplacer + taille_motif_a_remplacer, taille_pt_motif_a_remplacer);
-    }
-    /* Remplacer par motif_de_remplacement */
-    strncpy(pt_motif_a_remplacer, motif_de_remplacement,
-    taille_motif_de_remplacement);
-    /* On prépare pour la prochaine itération */
-    pt_motif_a_remplacer = strstr(chaine, motif_a_remplacer);
-    /* On met a jour la chaine de retour */
-    chaine_retour = chaine;
-  }
-  return chaine_retour;
-}
-
-//* ------------------------------------------------ */
-// --- fonction outil de suppression des accents --- */
-/* ------------------------------------------------- */
-char * supprime_accent(char * chaine)
-// void supprime_accent(char chaine[])
-{
-  char * chaine_retour = chaine, *motif_a_remplacer, *motif_de_remplacement ;
-  size_t nb_elements ;
-  int i ;
-  /* tableau de tous les caractères accentués à remplacer */
-  const char * tab_caracteres_a_remplacer[]
-   = {"À", "Á", "Â", "Ã", "Ä", "Å",
-  "Æ", "Ç", "È", "É", "Ê", "Ë", "Ì", "Í", "Î", "Ï", "Ð", "Ñ", "Ò", "Ó", "Ô", "Õ",
-  "Ö", "Ø", "Ù", "Ú", "Û", "Ü", "Ý", "ß", "à", "á", "â", "ã", "ä", "å", "æ", "ç",
-  "è", "é", "ê", "ë", "ì", "í", "î", "ï", "ñ", "ò", "ó", "ô", "õ", "ö", "ø", "ù",
-  "ú", "û", "ü", "ý", "ÿ", "Ā", "ā", "Ă", "ă", "Ą", "ą", "Ć", "ć", "Ĉ", "ĉ", "Ċ",
-  "ċ", "Č", "č", "Ď", "ď", "Đ", "đ", "Ẽ", "ẽ", "Ē", "ē", "Ĕ", "ĕ", "Ė", "ė", "Ę",
-  "ę", "Ě", "ě", "Ĝ", "ĝ", "Ğ", "ğ", "Ġ", "ġ", "Ģ", "ģ", "Ĥ", "ĥ", "Ħ", "ħ", "Ĩ",
-  "ĩ", "Ī", "ī", "Ĭ", "ĭ", "Į", "į", "İ", "ı", "IJ", "ij", "Ĵ", "ĵ", "Ķ", "ķ", "Ĺ",
-  "ĺ", "Ļ", "ļ", "Ľ", "ľ", "L·", "l·", "Ł", "ł", "Ń", "ń", "Ņ", "ņ", "Ň", "ň", "ʼn",
-  "Ō", "ō", "Ŏ", "ŏ", "Ő", "ő", "Œ", "œ", "Ŕ", "ŕ", "Ŗ", "ŗ", "Ř", "ř", "Ś", "ś",
-  "Ŝ", "ŝ", "Ş", "ş", "Š", "š", "Ţ", "ţ", "Ť", "ť", "Ŧ", "ŧ", "Ũ", "ũ", "Ū", "ū",
-  "Ŭ", "ŭ", "Ů", "ů", "Ű", "ű", "Ų", "ų", "Ŵ", "ŵ", "Ŷ", "ŷ", "Ÿ", "ÿ", "Ź", "ź",
-  "Ż", "ż", "Ž", "ž", "s", "ƒ", "Ơ", "ơ", "Ư", "ư", "Ǎ", "ǎ", "Ǐ", "ǐ", "Ǒ", "ǒ",
-  "Ǔ", "ǔ", "Ǖ", "ǖ", "Ǘ", "ǘ", "Ǚ", "ǚ", "Ǜ", "ǜ", "Ǻ", "ǻ", "Ǽ", "ǽ", "Ǿ", "ǿ"};
-  /* tableau de tous les caractères sans accent de remplacement */
-  const char * tab_caracteres_de_remplacement[] = {"A", "A", "A", "A", "A", "A",
-  "AE", "C", "E", "E", "E", "E", "I", "I", "I", "I", "D", "N", "O", "O", "O", "O",
-  "O", "O", "U", "U", "U", "U", "Y", "s", "a", "a", "a", "a", "a", "a", "ae", "c",
-  "e", "e", "e", "e", "i", "i", "i", "i", "n", "o", "o", "o", "o", "o", "o", "u",
-  "u", "u", "u", "y", "y", "A", "a", "A", "a", "A", "a", "C", "c", "C", "c", "C",
-  "c", "C", "c", "D", "d", "D", "d", "E", "e", "E", "e", "E", "e", "E", "e", "E",
-  "e", "E", "e", "G", "g", "G", "g", "G", "g", "G", "g", "H", "h", "H", "h", "I",
-  "i", "I", "i", "I", "i", "I", "i", "I", "i", "IJ", "ij", "J", "j", "K", "k",
-  "L", "l", "L", "l", "L", "l", "L", "l", "l", "l", "N", "n", "N", "n", "N", "n",
-  "n", "O", "o", "O", "o", "O", "o", "OE", "oe", "R", "r", "R", "r", "R", "r",
-  "S", "s", "S", "s", "S", "s", "S", "s", "T", "t", "T", "t", "T", "t", "U", "u",
-  "U", "u", "U", "u", "U", "u", "U", "u", "U", "u", "W", "w", "Y", "y", "Y", "y",
-  "Z", "z", "Z", "z", "Z", "z", "s", "f", "O", "o", "U", "u", "A", "a", "I", "i",
-  "O", "o", "U", "u", "U", "u", "U", "u", "U", "u", "U", "u", "A", "a", "AE",
-  "ae", "O", "o"};
-  nb_elements = sizeof(tab_caracteres_de_remplacement) / sizeof(*tab_caracteres_de_remplacement) ;
-  /* boucle de traitement de tous les caractères */
-  for (i = 0 ; i < nb_elements ; i++)
-  {
-    motif_a_remplacer = (char * ) tab_caracteres_a_remplacer[i] ;
-    motif_de_remplacement= (char * ) tab_caracteres_de_remplacement[i] ;
-    chaine_retour = str_replace_all(chaine, motif_a_remplacer,
-    motif_de_remplacement) ;
-    if (chaine_retour != NULL)
-    {
-      chaine = chaine_retour;
-    }
-  }
-  return chaine;
-}
-
-
-/* ------------------------------ */
-/* -- Lecture/vidage du buffer -- */
-/* ------------------------------ */
-void dump_buffer() 
-{
-  char dump ;
-  while(dump!='\n')
-  {
-    scanf("%c", &dump);
-  }
-}
 
 /* ---------------------------------------- */
 /* -- Conversion du choix de char en int -- */
@@ -4191,44 +3757,239 @@ void saisie_int(char invite[],int min,int max, int *mon_int){
   }
 }
 
-/* ---------------------------------------------- */
-/* -- Interpretation du int position en string -- */
-/* ---------------------------------------------- */
-void interprete_position(int pos, char position[])
-{  
-  switch(pos)
-  {
-    case 0:
-      strcpy(position, "fenetre");
-      break;
-    case 1:
-      strcpy(position, "couloir");
-      break;
-    case 2:
-      strcpy(position, "isole");
-      break;
-  }
-}
+// ======================================== //
+// === Outils de traitement des chaines === //
+// ======================================== //
 
-/* ------------------------------------------- */
-/* -- Interpretation du int salle en string -- */
-/* ------------------------------------------- */
-void interprete_salle(int etage, char salle[])
+/* --------------------------------------- */
+/* -- Convertir une chaine en majuscule -- */
+/* --------------------------------------- */
+void convmaj(char chaine[])
 {
-  switch(etage)
+  int i ;
+
+  for (i=0 ; i < strlen(chaine) ; i++)
   {
-    case 0:
-      strcpy(salle, "basse");
-      break;
-    case 1:
-      strcpy(salle, "haute");
-      break;
+    chaine[i] = toupper(chaine[i]) ;
+  }
+}
+/* ----------------------------------------- */
+/* -- Remplacer les tiret par des espaces -- */
+/* ----------------------------------------- */
+void tiret_to_space(char chaine[])
+{    
+  int i,max;
+  max = strlen(chaine);
+  
+  for(i=0;i<max;i++)
+  {
+    if(chaine[i]==45)
+    {
+      chaine[i]=32;
+    }
   }
 }
 
-/* ------------------------------------- */
+/* ----------------------------------------- */
+/* -- Couper une chaine en 2 sous chaines -- */
+/* ----------------------------------------- */
+void coupe_chaine_au_caractere(char chaine[], char sschaine1[], char sschaine2[], char sep)
+{
+  int i=0,j=0,k=0,max;
+  max = strlen(chaine);
+
+  while ((i<max) && (chaine[i]!=sep))
+  {
+    sschaine1[j++] = chaine[i++] ;
+  }
+  i++;
+  sschaine1[j]='\0';
+  while (i<max)
+  {
+    sschaine2[k++] = chaine[i++] ;
+  }
+  sschaine2[k]='\0';
+}
+
+/* --------------------------------------------------- */
+/* -- Enlever une sous-chaine au début d'une chaine -- */
+/* --------------------------------------------------- */
+void nettoie_debut_chaine(char chaine[], char pattern[])
+{
+  
+  int i,j=0,trouve=0 ;
+  char tmpchar[MAX_GARE] ;
+
+  for (i=0;i<strlen(pattern);i++)
+  {
+    if (chaine[i] = pattern[i])
+    {
+      trouve++;
+    }
+  }
+
+  if (trouve == strlen(pattern))
+  {
+    for(i=strlen(pattern);i<strlen(chaine);i++)
+    {
+      tmpchar[j++] = chaine[i] ;
+    }
+    tmpchar[j] = '\0' ;
+    strcpy(chaine,tmpchar) ;
+  }
+}
+
+/* ------------------------------------------------------- */
+/* -- Enlever les espaces aux début et fin d'une chaine -- */
+/* ------------------------------------------------------- */
+void trim(char *ch)
+{
+  char chaine1[200] ;
+  int i = 0, j = 0 , k = 0 , taille = 0 ;
+  if (strcmp(ch,"") != 0) /* On teste si la chaine n'est pas vide */
+  {
+    /* --- suppression des espaces en début de chaine --- */
+    while (isspace(ch[i++])); /* on passe les espaces du début */
+    taille = strlen(ch);
+    /* recopie des caractères APRES les espaces */
+    for (j=i-1 ; j<taille ; j++) chaine1[k++] = ch[j];
+    chaine1[k++] = '\0' ; /* on finalise la chaine */
+    strcpy(ch,chaine1) ; /* on recopie la chaine traitée dans ch */
+    /* --- suppression des espaces en fin de chaine --- */
+    i = strlen(ch);
+    while (isspace(ch[--i])); /* on passe les espaces */
+    ch[++i] = '\0' ; /* on finalise la chaine */
+  }
+}
+
+/* ------------------------------------------------------------------------------ */
+/* Remplace toutes les occurrences de motif_a_remplacer par motif_de_remplacement */
+/* ------------------------------------------------------------------------------ */
+char * str_replace_all(char * chaine, char * motif_a_remplacer, char * motif_de_remplacement)
+{
+  char * pt_motif_a_remplacer = strstr(chaine, motif_a_remplacer), * chaine_retour = NULL;
+  int taille_pt_motif_a_remplacer, taille_motif_a_remplacer, taille_motif_de_remplacement ;
+  while (pt_motif_a_remplacer != NULL)
+  {
+    taille_pt_motif_a_remplacer = strlen(pt_motif_a_remplacer) ;
+    taille_motif_a_remplacer = strlen(motif_a_remplacer) ;
+    taille_motif_de_remplacement = strlen(motif_de_remplacement) ;
+    if (taille_motif_a_remplacer != taille_motif_de_remplacement)
+    {
+      /* Ajuster la taille pour pouvoir placer motif_de_remplacement */
+      memmove(pt_motif_a_remplacer + taille_motif_de_remplacement,
+      pt_motif_a_remplacer + taille_motif_a_remplacer, taille_pt_motif_a_remplacer);
+    }
+    /* Remplacer par motif_de_remplacement */
+    strncpy(pt_motif_a_remplacer, motif_de_remplacement,
+    taille_motif_de_remplacement);
+    /* On prépare pour la prochaine itération */
+    pt_motif_a_remplacer = strstr(chaine, motif_a_remplacer);
+    /* On met a jour la chaine de retour */
+    chaine_retour = chaine;
+  }
+  return chaine_retour;
+}
+
+//* ------------------------------------------------ */
+// --- fonction outil de suppression des accents --- */
+/* ------------------------------------------------- */
+char * supprime_accent(char * chaine)
+// void supprime_accent(char chaine[])
+{
+  char * chaine_retour = chaine, *motif_a_remplacer, *motif_de_remplacement ;
+  size_t nb_elements ;
+  int i ;
+  /* tableau de tous les caractères accentués à remplacer */
+  const char * tab_caracteres_a_remplacer[]
+   = {"À", "Á", "Â", "Ã", "Ä", "Å",
+  "Æ", "Ç", "È", "É", "Ê", "Ë", "Ì", "Í", "Î", "Ï", "Ð", "Ñ", "Ò", "Ó", "Ô", "Õ",
+  "Ö", "Ø", "Ù", "Ú", "Û", "Ü", "Ý", "ß", "à", "á", "â", "ã", "ä", "å", "æ", "ç",
+  "è", "é", "ê", "ë", "ì", "í", "î", "ï", "ñ", "ò", "ó", "ô", "õ", "ö", "ø", "ù",
+  "ú", "û", "ü", "ý", "ÿ", "Ā", "ā", "Ă", "ă", "Ą", "ą", "Ć", "ć", "Ĉ", "ĉ", "Ċ",
+  "ċ", "Č", "č", "Ď", "ď", "Đ", "đ", "Ẽ", "ẽ", "Ē", "ē", "Ĕ", "ĕ", "Ė", "ė", "Ę",
+  "ę", "Ě", "ě", "Ĝ", "ĝ", "Ğ", "ğ", "Ġ", "ġ", "Ģ", "ģ", "Ĥ", "ĥ", "Ħ", "ħ", "Ĩ",
+  "ĩ", "Ī", "ī", "Ĭ", "ĭ", "Į", "į", "İ", "ı", "IJ", "ij", "Ĵ", "ĵ", "Ķ", "ķ", "Ĺ",
+  "ĺ", "Ļ", "ļ", "Ľ", "ľ", "L·", "l·", "Ł", "ł", "Ń", "ń", "Ņ", "ņ", "Ň", "ň", "ʼn",
+  "Ō", "ō", "Ŏ", "ŏ", "Ő", "ő", "Œ", "œ", "Ŕ", "ŕ", "Ŗ", "ŗ", "Ř", "ř", "Ś", "ś",
+  "Ŝ", "ŝ", "Ş", "ş", "Š", "š", "Ţ", "ţ", "Ť", "ť", "Ŧ", "ŧ", "Ũ", "ũ", "Ū", "ū",
+  "Ŭ", "ŭ", "Ů", "ů", "Ű", "ű", "Ų", "ų", "Ŵ", "ŵ", "Ŷ", "ŷ", "Ÿ", "ÿ", "Ź", "ź",
+  "Ż", "ż", "Ž", "ž", "s", "ƒ", "Ơ", "ơ", "Ư", "ư", "Ǎ", "ǎ", "Ǐ", "ǐ", "Ǒ", "ǒ",
+  "Ǔ", "ǔ", "Ǖ", "ǖ", "Ǘ", "ǘ", "Ǚ", "ǚ", "Ǜ", "ǜ", "Ǻ", "ǻ", "Ǽ", "ǽ", "Ǿ", "ǿ"};
+  /* tableau de tous les caractères sans accent de remplacement */
+  const char * tab_caracteres_de_remplacement[] = {"A", "A", "A", "A", "A", "A",
+  "AE", "C", "E", "E", "E", "E", "I", "I", "I", "I", "D", "N", "O", "O", "O", "O",
+  "O", "O", "U", "U", "U", "U", "Y", "s", "a", "a", "a", "a", "a", "a", "ae", "c",
+  "e", "e", "e", "e", "i", "i", "i", "i", "n", "o", "o", "o", "o", "o", "o", "u",
+  "u", "u", "u", "y", "y", "A", "a", "A", "a", "A", "a", "C", "c", "C", "c", "C",
+  "c", "C", "c", "D", "d", "D", "d", "E", "e", "E", "e", "E", "e", "E", "e", "E",
+  "e", "E", "e", "G", "g", "G", "g", "G", "g", "G", "g", "H", "h", "H", "h", "I",
+  "i", "I", "i", "I", "i", "I", "i", "I", "i", "IJ", "ij", "J", "j", "K", "k",
+  "L", "l", "L", "l", "L", "l", "L", "l", "l", "l", "N", "n", "N", "n", "N", "n",
+  "n", "O", "o", "O", "o", "O", "o", "OE", "oe", "R", "r", "R", "r", "R", "r",
+  "S", "s", "S", "s", "S", "s", "S", "s", "T", "t", "T", "t", "T", "t", "U", "u",
+  "U", "u", "U", "u", "U", "u", "U", "u", "U", "u", "W", "w", "Y", "y", "Y", "y",
+  "Z", "z", "Z", "z", "Z", "z", "s", "f", "O", "o", "U", "u", "A", "a", "I", "i",
+  "O", "o", "U", "u", "U", "u", "U", "u", "U", "u", "U", "u", "A", "a", "AE",
+  "ae", "O", "o"};
+  nb_elements = sizeof(tab_caracteres_de_remplacement) / sizeof(*tab_caracteres_de_remplacement) ;
+  /* boucle de traitement de tous les caractères */
+  for (i = 0 ; i < nb_elements ; i++)
+  {
+    motif_a_remplacer = (char * ) tab_caracteres_a_remplacer[i] ;
+    motif_de_remplacement= (char * ) tab_caracteres_de_remplacement[i] ;
+    chaine_retour = str_replace_all(chaine, motif_a_remplacer,
+    motif_de_remplacement) ;
+    if (chaine_retour != NULL)
+    {
+      chaine = chaine_retour;
+    }
+  }
+  return chaine;
+}
+
+/* ------------------------------ */
+/* -- Lecture/vidage du buffer -- */
+/* ------------------------------ */
+void dump_buffer() 
+{
+  char dump ;
+  while(dump!='\n')
+  {
+    scanf("%c", &dump);
+  }
+}
+
+// ================================== //
+/* === Outils d'interface système === */
+// ================================== //
+
+/* --------------------- */
+/* -- Date du système -- */
+/* --------------------- */
+void date_sys(int *jour, int *mois, int *annee, int *jhebdo_num)
+{
+  time_t nb_sec_1970, temps ;
+  struct tm date ;
+
+  /* -- met la date en francais -- */
+  setlocale(LC_ALL,"");
+
+  /*-- Récupère la date système -- */
+  nb_sec_1970 = time(&temps);      // Secondes depuis 01/01/1970
+  date = *localtime(&nb_sec_1970); // Conversion en date
+
+  /* Éléments intelligibles de la date du système */
+  *jour       = date.tm_mday       ; // jour du système
+  *mois       = date.tm_mon  +1    ; // mois du système
+  *annee      = date.tm_year +1900 ; // année du système
+  *jhebdo_num = date.tm_wday       ; // jour de semaine du système (0 à 6)
+}
+
+/* ---------------------- ------------------------------ */
+/* -- Récupère les informations d'un objet du système -- */
+/* ---------------------- ------------------------------ */
 void AfficheObjetInfo(char NomObjetInfo[])
-/* ------------------------------------- */
 {
   int code_erreur;
   struct stat TableInode ;
@@ -4269,9 +4030,10 @@ void AfficheObjetInfo(char NomObjetInfo[])
   }
 }
 
-/* ------------------------- */
+/* ---------------------- -------------------------- */
+/* -- Liste les répertoires d'un répertoire donné -- */
+/* ---------------------- -------------------------- */
 int ListerRep(char NomRep[], char ListObjet[4000][100])
-/* ------------------------- */
 {
   int i=0;
   DIR *Rep ; /* Descripteur du répertoire */
@@ -4295,9 +4057,6 @@ int ListerRep(char NomRep[], char ListObjet[4000][100])
         /* On affiche les informations */
         if ((strcmp(NomObjet,".")!=0)&&(strcmp(NomObjet,"..")!=0))
         {
-          // print de controle
-          //printf("Ça va\n");
-
           strcpy(ListObjet[i++],NomObjet);
           // strcpy(TmpNom,NomRep);
           // strcat(TmpNom,"/");
