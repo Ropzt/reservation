@@ -299,10 +299,11 @@ int  date_anterieure(int jour, int mois, int annee, int jour_ref, int mois_ref, 
 void decoupe_date(int date, int *jour, int *mois, int *annee) ;
 int  assemble_date(int jour, int mois, int annee) ;
 
-// ~~~ Outils de traitement des choix
+// ~~~ Outils de traitement des saisies
 int  lecture_choix(int deb, int fin, char lettre, int * erreur);
 void saisie_int(char invite[], int min,int max, int *mon_int);
 void saisie_text(char invite[], char sortie[]);
+void dump_buffer() ;
 
 // ~~~ Outils de traitement des chaines ~~~
 void convmaj(char chaine[]) ;
@@ -313,7 +314,6 @@ void trim(char *ch) ;
 char * str_replace_all(char * chaine, char * motif_a_remplacer, char * motif_de_remplacement) ;
 // void supprime_accent(char chaine[]) ;
 char * supprime_accent(char * chaine);
-void dump_buffer() ;
 
 // ~~~ Outils d'interface système ~~~
 void date_sys(int *jour, int *mois, int *annee, int *jhebdo_num) ;
@@ -462,7 +462,7 @@ void chargement_trajet()
   //   printf("%d \n",trajets[i].numtrain);
   //   printf("%d \n",trajets[i].direction);
   // }
-  // printf("nombre de trajets %d\n",nbtrajet);
+  // printf("nombre de trajet s %d\n",nbtrajet);
 }
 
 // ~~~~~~~~~~~
